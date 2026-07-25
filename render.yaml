@@ -4,7 +4,7 @@ services:
   # --------------------
   - type: web
     name: mack-trading-contest-backend-qa
-    env: python
+    runtime: python
     repo: https://github.com/mddawood/MackTSMG-TradingContest
     branch: QA
     rootDir: backend
@@ -22,14 +22,14 @@ services:
       - key: ENCRYPTION_KEY
         sync: false
 
-  - type: web
+  - type: static
     name: mack-trading-contest-frontend-qa
-    env: static
+    runtime: static
     repo: https://github.com/mddawood/MackTSMG-TradingContest
     branch: QA
     rootDir: frontend
     buildCommand: echo "{\"API_URL\":\"https://$API_URL\"}" > config.json
-    publishDir: .
+    publishPath: .
     envVars:
       - key: API_URL
         fromService:
@@ -42,7 +42,7 @@ services:
   # --------------------
   - type: web
     name: mack-trading-contest-backend-prod
-    env: python
+    runtime: python
     repo: https://github.com/mddawood/MackTSMG-TradingContest
     branch: main
     rootDir: backend
@@ -60,14 +60,14 @@ services:
       - key: ENCRYPTION_KEY
         sync: false
 
-  - type: web
+  - type: static
     name: mack-trading-contest-frontend-prod
-    env: static
+    runtime: static
     repo: https://github.com/mddawood/MackTSMG-TradingContest
     branch: main
     rootDir: frontend
     buildCommand: echo "{\"API_URL\":\"https://$API_URL\"}" > config.json
-    publishDir: .
+    publishPath: .
     envVars:
       - key: API_URL
         fromService:
