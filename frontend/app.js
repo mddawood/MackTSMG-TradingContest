@@ -874,7 +874,7 @@ async function loadAdminCompetitions() {
         tbody.innerHTML = '';
         comps.forEach(c => {
             const row = document.createElement('tr');
-            
+
             // Status badge
             const statusBadgeClass = c.is_active ? 'badge-active' : 'badge-deleted';
             const statusText = c.is_active ? 'Active' : 'Inactive';
@@ -888,7 +888,7 @@ async function loadAdminCompetitions() {
             let actionButtonsHtml = '';
             // Sync balance
             actionButtonsHtml += `<button class="btn btn-secondary" onclick="syncCompetition(${c.id})" style="height: 1.75rem; font-size: 0.7rem; padding: 0 0.5rem; margin-right: 0.25rem;">Sync Balance</button>`;
-            
+
             // Toggle active
             actionButtonsHtml += `<button class="btn btn-secondary" onclick="toggleCompActive(${c.id})" style="height: 1.75rem; font-size: 0.7rem; padding: 0 0.5rem; margin-right: 0.25rem;">Toggle Status</button>`;
 
@@ -1024,7 +1024,7 @@ async function handleCreateCompetition(e) {
         });
 
         showToast('Competition created and launched successfully!', 'success');
-        
+
         // Close modal
         const compModal = document.getElementById('comp-modal');
         if (compModal) {
