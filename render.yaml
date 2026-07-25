@@ -22,14 +22,14 @@ services:
       - key: ENCRYPTION_KEY
         sync: false
 
-  - type: static
+  - type: web
     name: mack-trading-contest-frontend-qa
     runtime: static
     repo: https://github.com/mddawood/MackTSMG-TradingContest
     branch: QA
     rootDir: frontend
     buildCommand: echo "{\"API_URL\":\"https://$API_URL\"}" > config.json
-    publishPath: .
+    staticPublishPath: .
     envVars:
       - key: API_URL
         fromService:
@@ -60,14 +60,14 @@ services:
       - key: ENCRYPTION_KEY
         sync: false
 
-  - type: static
+  - type: web
     name: mack-trading-contest-frontend-prod
     runtime: static
     repo: https://github.com/mddawood/MackTSMG-TradingContest
     branch: main
     rootDir: frontend
     buildCommand: echo "{\"API_URL\":\"https://$API_URL\"}" > config.json
-    publishPath: .
+    staticPublishPath: .
     envVars:
       - key: API_URL
         fromService:
