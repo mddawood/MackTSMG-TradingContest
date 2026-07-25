@@ -1,0 +1,26 @@
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Database files (SQLite)
+backend/delta_competition.db
+backend/delta_competition.db-journal
+backend/delta_competition.db-shm
+backend/delta_competition.db-wal
+
+# Secrets and environment configurations
+backend/.env
+.env
+
+# Editor & System configs
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
