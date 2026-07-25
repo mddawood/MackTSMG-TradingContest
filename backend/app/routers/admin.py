@@ -40,10 +40,21 @@ def get_stats(
 
 @router.get("/users")
 def list_users(
+    q: str = None,
+    page: int = 1,
+    limit: int = 10,
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
-    users = db.query(User).all()
+    query = db.query(User)
+    if q:
+        query = query.filter(
+            (User.full_name.ilike(f"%{q}%")) | (User.email.ilike(f"%{q}%"))
+        )
+    total = query.count()
+    offset = (page - 1) * limit
+    users = query.offset(offset).limit(limit).all()
+    
     result = []
     for user in users:
         api_keys_info = []
@@ -65,7 +76,12 @@ def list_users(
             "registration_count": len(user.registrations),
             "api_keys": api_keys_info
         })
-    return result
+    return {
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "users": result
+    }
 
 
 @router.post("/users/{user_id}/soft-delete")
@@ -150,3 +166,74 @@ def promote_user(
     user.role = "admin"
     db.commit()
     return {"status": "success", "message": f"User {user.email} promoted to Admin."}
+
+
+@router.get("/competitions")
+def list_competitions_admin(
+    q: str = None,
+    page: int = 1,
+    limit: int = 10,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Competition)
+    if q:
+        query = query.filter(
+            (Competition.title.ilike(f"%{q}%")) | (Competition.description.ilike(f"%{q}%"))
+        )
+    total = query.count()
+    offset = (page - 1) * limit
+    comps = query.order_by(Competition.created_at.desc()).offset(offset).limit(limit).all()
+    
+    result = []
+    for comp in comps:
+        result.append({
+            "id": comp.id,
+            "title": comp.title,
+            "description": comp.description,
+            "start_time": comp.start_time,
+            "end_time": comp.end_time,
+            "is_active": comp.is_active,
+            "registration_count": len(comp.registrations)
+        })
+    return {
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "competitions": result
+    }
+
+
+@router.post("/competitions/{comp_id}/toggle-active")
+def toggle_competition_active(
+    comp_id: int,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    comp = db.query(Competition).filter(Competition.id == comp_id).first()
+    if not comp:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Competition not found"
+        )
+    comp.is_active = not comp.is_active
+    db.commit()
+    status_str = "active" if comp.is_active else "inactive"
+    return {"status": "success", "message": f"Competition is now {status_str}."}
+
+
+@router.delete("/competitions/{comp_id}/delete")
+def delete_competition(
+    comp_id: int,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    comp = db.query(Competition).filter(Competition.id == comp_id).first()
+    if not comp:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Competition not found"
+        )
+    db.delete(comp)
+    db.commit()
+    return {"status": "success", "message": "Competition deleted successfully."}
