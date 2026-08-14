@@ -37,7 +37,4 @@ services:
     staticPublishPath: .
     envVars:
       - key: API_URL
-        fromService:
-          type: web
-          name: mack-trading-contest-backend
-          property: host
+        value: mack-trading-contest-backend.onrender.com
