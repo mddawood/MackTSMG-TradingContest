@@ -18,6 +18,8 @@ backend/delta_competition.db-wal
 # Secrets and environment configurations
 backend/.env
 .env
+frontend/config.json
+
 
 # Editor & System configs
 .vscode/

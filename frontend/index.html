@@ -38,6 +38,7 @@
                 <span class="user-greeting" id="user-greeting">Welcome, User</span>
                 <button class="btn btn-secondary" id="dashboard-nav-btn">Dashboard</button>
                 <button class="btn btn-secondary hidden" id="admin-nav-btn" style="border-color: rgba(37, 99, 235, 0.4); color: #60a5fa;">Admin Panel</button>
+                <button class="btn btn-primary hidden" id="admin-create-comp-btn">Create Competition</button>
                 <button class="btn btn-ghost" id="logout-btn">Log out</button>
             </div>
         </div>
@@ -387,61 +388,89 @@
                     </div>
                 </div>
 
-                <div class="grid-3 gap-8">
-                    <!-- Right/Center: User Management Table -->
-                    <div class="dashboard-col span-2 flex-column gap-6">
-                        <div class="card glass p-6">
-                            <h2 class="card-title flex-row align-center gap-2 mb-4">
+                <div class="flex-column gap-8">
+                    <!-- User Accounts Directory -->
+                    <div class="card glass p-6">
+                        <div class="flex-row justify-between align-center mb-4 flex-wrap gap-4">
+                            <h2 class="card-title flex-row align-center gap-2" style="margin-bottom: 0;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                                 User Accounts Directory
                             </h2>
-                            <div class="table-wrapper overflow-hidden" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
-                                <table class="leaderboard-table" style="margin-top: 0;">
-                                    <thead>
-                                        <tr>
-                                            <th>User</th>
-                                            <th>Role</th>
-                                            <th>Status</th>
-                                            <th>Keys</th>
-                                            <th class="text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="admin-users-tbody">
-                                        <tr>
-                                            <td colspan="5" class="text-center py-8 text-muted">Loading user database...</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <!-- Users Search -->
+                            <div class="flex-row gap-2" style="width: 100%; max-width: 400px;">
+                                <input type="text" id="admin-users-search" class="form-control" placeholder="Search by name or email..." style="height: 2.25rem; font-size: 0.85rem;">
+                                <button class="btn btn-secondary" id="admin-users-search-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem;">Search</button>
+                                <button class="btn btn-ghost" id="admin-users-clear-btn" style="height: 2.25rem; padding: 0 0.5rem; font-size: 0.8rem;" title="Clear search">Clear</button>
+                            </div>
+                        </div>
+                        <div class="table-wrapper overflow-hidden" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
+                            <table class="leaderboard-table" style="margin-top: 0;">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Keys</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-users-tbody">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-8 text-muted">Loading user database...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Users Pagination -->
+                        <div class="flex-row justify-between align-center mt-4 pt-2 border-top" style="border-top-style: dashed; font-size: 0.85rem; color: var(--text-secondary);">
+                            <span id="admin-users-page-info">Showing page 1 of 1</span>
+                            <div class="flex-row gap-2">
+                                <button class="btn btn-secondary" id="admin-users-prev-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Previous</button>
+                                <button class="btn btn-secondary" id="admin-users-next-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Next</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Left: Championship Creator -->
-                    <div class="dashboard-col span-1 flex-column gap-6">
-                        <div class="card glass p-6">
-                            <h2 class="card-title flex-row align-center gap-2 mb-4">
+                    <!-- Championships Directory -->
+                    <div class="card glass p-6">
+                        <div class="flex-row justify-between align-center mb-4 flex-wrap gap-4">
+                            <h2 class="card-title flex-row align-center gap-2" style="margin-bottom: 0;">
                                 🏆
-                                Create Competition
+                                Championships Directory
                             </h2>
-                            <form id="admin-comp-form" class="flex-column gap-4">
-                                <div class="form-group">
-                                    <label for="admin-comp-title">Competition Title</label>
-                                    <input type="text" id="admin-comp-title" class="form-control" placeholder="e.g. Weekly Sprint - Week 2" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="admin-comp-desc">Description</label>
-                                    <textarea id="admin-comp-desc" class="form-control" placeholder="Championship rules, terms & requirements..." rows="3" required style="resize: none;"></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label for="admin-comp-start">Start Time (UTC)</label>
-                                    <input type="datetime-local" id="admin-comp-start" class="form-control" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="admin-comp-end">End Time (UTC)</label>
-                                    <input type="datetime-local" id="admin-comp-end" class="form-control" required>
-                                </div>
-                                <button type="submit" class="btn btn-primary w-full" id="admin-comp-submit-btn">Launch Competition</button>
-                            </form>
+                            <!-- Competitions Search -->
+                            <div class="flex-row gap-2" style="width: 100%; max-width: 400px;">
+                                <input type="text" id="admin-comps-search" class="form-control" placeholder="Search by title or description..." style="height: 2.25rem; font-size: 0.85rem;">
+                                <button class="btn btn-secondary" id="admin-comps-search-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem;">Search</button>
+                                <button class="btn btn-ghost" id="admin-comps-clear-btn" style="height: 2.25rem; padding: 0 0.5rem; font-size: 0.8rem;" title="Clear search">Clear</button>
+                            </div>
+                        </div>
+                        <div class="table-wrapper overflow-hidden" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
+                            <table class="leaderboard-table" style="margin-top: 0;">
+                                <thead>
+                                    <tr>
+                                        <th>Competition</th>
+                                        <th>Start Time (UTC)</th>
+                                        <th>End Time (UTC)</th>
+                                        <th>Status</th>
+                                        <th>Participants</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-comps-tbody">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-8 text-muted">Loading competition database...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Competitions Pagination -->
+                        <div class="flex-row justify-between align-center mt-4 pt-2 border-top" style="border-top-style: dashed; font-size: 0.85rem; color: var(--text-secondary);">
+                            <span id="admin-comps-page-info">Showing page 1 of 1</span>
+                            <div class="flex-row gap-2">
+                                <button class="btn btn-secondary" id="admin-comps-prev-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Previous</button>
+                                <button class="btn btn-secondary" id="admin-comps-next-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Next</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -498,6 +527,35 @@
                     <input type="password" id="register-password" class="form-control" placeholder="Min. 6 characters" minlength="6" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg w-full mt-2">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- CREATE COMPETITION MODAL -->
+    <div id="comp-modal" class="modal-overlay hidden">
+        <div class="modal-box glass" style="max-width: 500px;">
+            <button class="modal-close-btn" id="comp-modal-close-btn">&times;</button>
+            <h2 class="card-title flex-row align-center gap-2 mb-4" style="font-size: 1.5rem; justify-content: center;">
+                🏆 Launch New Competition
+            </h2>
+            <form id="admin-comp-form-modal" class="flex-column gap-4 py-2">
+                <div class="form-group">
+                    <label for="modal-comp-title">Competition Title</label>
+                    <input type="text" id="modal-comp-title" class="form-control" placeholder="e.g. Weekly Sprint - Week 2" required>
+                </div>
+                <div class="form-group">
+                    <label for="modal-comp-desc">Description</label>
+                    <textarea id="modal-comp-desc" class="form-control" placeholder="Championship rules, terms & requirements..." rows="3" required style="resize: none;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="modal-comp-start">Start Time (UTC)</label>
+                    <input type="datetime-local" id="modal-comp-start" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="modal-comp-end">End Time (UTC)</label>
+                    <input type="datetime-local" id="modal-comp-end" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg w-full mt-2" id="modal-comp-submit-btn">Launch Competition</button>
             </form>
         </div>
     </div>

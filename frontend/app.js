@@ -7,7 +7,19 @@ let state = {
     user: null,
     competitions: [],
     apiKeys: [],
-    selectedCompId: null
+    selectedCompId: null,
+    adminUsers: {
+        q: '',
+        page: 1,
+        limit: 10,
+        total: 0
+    },
+    adminComps: {
+        q: '',
+        page: 1,
+        limit: 10,
+        total: 0
+    }
 };
 
 // ==========================================================================
@@ -35,7 +47,7 @@ function bindEvents() {
         showView('landing');
         loadPublicCompetitions();
     });
-    
+
     // Auth Modal toggle handlers
     const authModal = document.getElementById('auth-modal');
     const loginForm = document.getElementById('login-form');
@@ -72,7 +84,7 @@ function bindEvents() {
     document.getElementById('login-nav-btn').addEventListener('click', () => openAuthModal('login'));
     document.getElementById('join-nav-btn').addEventListener('click', () => openAuthModal('register'));
     document.getElementById('hero-join-btn').addEventListener('click', () => openAuthModal('register'));
-    
+
     closeBtn.addEventListener('click', closeAuthModal);
     authModal.addEventListener('click', (e) => {
         if (e.target === authModal) closeAuthModal();
@@ -85,7 +97,139 @@ function bindEvents() {
     loginForm.addEventListener('submit', handleLogin);
     registerForm.addEventListener('submit', handleRegister);
     document.getElementById('api-key-form').addEventListener('submit', handleAddAPIKey);
-    document.getElementById('admin-comp-form').addEventListener('submit', handleCreateCompetition);
+
+    // Create Competition Modal toggle handlers
+    const compModal = document.getElementById('comp-modal');
+    const adminCreateCompBtn = document.getElementById('admin-create-comp-btn');
+    const compModalCloseBtn = document.getElementById('comp-modal-close-btn');
+    const compFormModal = document.getElementById('admin-comp-form-modal');
+
+    if (adminCreateCompBtn) {
+        adminCreateCompBtn.addEventListener('click', () => {
+            compModal.classList.remove('hidden');
+        });
+    }
+
+    const closeCompModal = () => {
+        if (compModal) {
+            compModal.classList.add('hidden');
+        }
+        if (compFormModal) {
+            compFormModal.reset();
+        }
+    };
+
+    if (compModalCloseBtn) {
+        compModalCloseBtn.addEventListener('click', closeCompModal);
+    }
+
+    if (compModal) {
+        compModal.addEventListener('click', (e) => {
+            if (e.target === compModal) closeCompModal();
+        });
+    }
+
+    if (compFormModal) {
+        compFormModal.addEventListener('submit', handleCreateCompetition);
+    }
+
+    // Admin Users search and pagination controls
+    const usersSearchInput = document.getElementById('admin-users-search');
+    const usersSearchBtn = document.getElementById('admin-users-search-btn');
+    const usersClearBtn = document.getElementById('admin-users-clear-btn');
+    const usersPrevBtn = document.getElementById('admin-users-prev-btn');
+    const usersNextBtn = document.getElementById('admin-users-next-btn');
+
+    if (usersSearchBtn) {
+        usersSearchBtn.addEventListener('click', () => {
+            state.adminUsers.q = usersSearchInput.value.trim();
+            state.adminUsers.page = 1;
+            loadAdminUsers();
+        });
+    }
+    if (usersSearchInput) {
+        usersSearchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                state.adminUsers.q = usersSearchInput.value.trim();
+                state.adminUsers.page = 1;
+                loadAdminUsers();
+            }
+        });
+    }
+    if (usersClearBtn) {
+        usersClearBtn.addEventListener('click', () => {
+            usersSearchInput.value = '';
+            state.adminUsers.q = '';
+            state.adminUsers.page = 1;
+            loadAdminUsers();
+        });
+    }
+    if (usersPrevBtn) {
+        usersPrevBtn.addEventListener('click', () => {
+            if (state.adminUsers.page > 1) {
+                state.adminUsers.page--;
+                loadAdminUsers();
+            }
+        });
+    }
+    if (usersNextBtn) {
+        usersNextBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(state.adminUsers.total / state.adminUsers.limit) || 1;
+            if (state.adminUsers.page < totalPages) {
+                state.adminUsers.page++;
+                loadAdminUsers();
+            }
+        });
+    }
+
+    // Admin Competitions search and pagination controls
+    const compsSearchInput = document.getElementById('admin-comps-search');
+    const compsSearchBtn = document.getElementById('admin-comps-search-btn');
+    const compsClearBtn = document.getElementById('admin-comps-clear-btn');
+    const compsPrevBtn = document.getElementById('admin-comps-prev-btn');
+    const compsNextBtn = document.getElementById('admin-comps-next-btn');
+
+    if (compsSearchBtn) {
+        compsSearchBtn.addEventListener('click', () => {
+            state.adminComps.q = compsSearchInput.value.trim();
+            state.adminComps.page = 1;
+            loadAdminCompetitions();
+        });
+    }
+    if (compsSearchInput) {
+        compsSearchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                state.adminComps.q = compsSearchInput.value.trim();
+                state.adminComps.page = 1;
+                loadAdminCompetitions();
+            }
+        });
+    }
+    if (compsClearBtn) {
+        compsClearBtn.addEventListener('click', () => {
+            compsSearchInput.value = '';
+            state.adminComps.q = '';
+            state.adminComps.page = 1;
+            loadAdminCompetitions();
+        });
+    }
+    if (compsPrevBtn) {
+        compsPrevBtn.addEventListener('click', () => {
+            if (state.adminComps.page > 1) {
+                state.adminComps.page--;
+                loadAdminCompetitions();
+            }
+        });
+    }
+    if (compsNextBtn) {
+        compsNextBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(state.adminComps.total / state.adminComps.limit) || 1;
+            if (state.adminComps.page < totalPages) {
+                state.adminComps.page++;
+                loadAdminCompetitions();
+            }
+        });
+    }
 
     // Dashboard navigation & controls
     document.getElementById('dashboard-nav-btn').addEventListener('click', () => {
@@ -97,7 +241,7 @@ function bindEvents() {
         showView('admin');
         loadAdminData();
     });
-    
+
     document.getElementById('logout-btn').addEventListener('click', handleLogout);
     document.getElementById('refresh-dash-btn').addEventListener('click', loadDashboardData);
 
@@ -145,21 +289,25 @@ function updateNavUI() {
     const userControls = document.getElementById('nav-user-controls');
     const greetingSpan = document.getElementById('user-greeting');
     const adminNavBtn = document.getElementById('admin-nav-btn');
+    const adminCreateCompBtn = document.getElementById('admin-create-comp-btn');
 
     if (state.token && state.user) {
         authBtns.classList.add('hidden');
         userControls.classList.remove('hidden');
         greetingSpan.textContent = `Welcome, ${state.user.full_name}`;
-        
+
         if (state.user.role === 'admin') {
             adminNavBtn.classList.remove('hidden');
+            if (adminCreateCompBtn) adminCreateCompBtn.classList.remove('hidden');
         } else {
             adminNavBtn.classList.add('hidden');
+            if (adminCreateCompBtn) adminCreateCompBtn.classList.add('hidden');
         }
     } else {
         authBtns.classList.remove('hidden');
         userControls.classList.add('hidden');
         adminNavBtn.classList.add('hidden');
+        if (adminCreateCompBtn) adminCreateCompBtn.classList.add('hidden');
     }
 }
 
@@ -168,7 +316,7 @@ function updateNavUI() {
 // ==========================================================================
 async function apiRequest(endpoint, options = {}) {
     const headers = { ...options.headers };
-    
+
     if (state.token) {
         headers['Authorization'] = `Bearer ${state.token}`;
     }
@@ -180,7 +328,7 @@ async function apiRequest(endpoint, options = {}) {
 
     try {
         const response = await fetch(`${API_URL}${endpoint}`, config);
-        
+
         // Handle 401 token expiration
         if (response.status === 401 && state.token) {
             handleLogout();
@@ -245,10 +393,10 @@ async function handleLogin(e) {
 
         state.token = data.access_token;
         localStorage.setItem('token', data.access_token);
-        
+
         document.getElementById('auth-modal').classList.add('hidden');
         showToast('Logged in successfully!', 'success');
-        
+
         await fetchProfileAndLoadDashboard();
     } catch (err) {
         showToast(err.message, 'error');
@@ -260,7 +408,7 @@ async function fetchProfileAndLoadDashboard() {
         const user = await apiRequest('/auth/me');
         state.user = user;
         updateNavUI();
-        
+
         // Update user dashboard banner details
         document.getElementById('dash-user-name').textContent = user.full_name;
         document.getElementById('dash-user-email').textContent = user.email;
@@ -297,7 +445,7 @@ async function loadAPIKeys() {
 
 function renderAPIKeys() {
     const listContainer = document.getElementById('keys-list');
-    
+
     if (state.apiKeys.length === 0) {
         listContainer.innerHTML = '<div class="text-center py-4 text-muted text-sm">No API keys registered yet.</div>';
         return;
@@ -307,7 +455,7 @@ function renderAPIKeys() {
     state.apiKeys.forEach(key => {
         const keyItem = document.createElement('div');
         keyItem.className = 'key-item flex-column gap-2';
-        
+
         // Obfuscate key for display: e.g. key_1234...abcd
         const displayKey = key.api_key.substring(0, 8) + '...' + key.api_key.substring(key.api_key.length - 4);
         const statusClass = key.is_valid ? 'status-active' : 'status-invalid';
@@ -377,10 +525,10 @@ async function loadPublicCompetitions() {
     try {
         const comps = await apiRequest('/competitions/');
         state.competitions = comps;
-        
+
         const compSelect = document.getElementById('leaderboard-comp-select');
         compSelect.innerHTML = '<option value="">-- Select Active Competition --</option>';
-        
+
         comps.forEach(comp => {
             if (comp.is_active) {
                 const opt = document.createElement('option');
@@ -397,10 +545,10 @@ async function loadPublicCompetitions() {
 async function loadLeaderboard(compId) {
     const tbody = document.getElementById('leaderboard-tbody');
     tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-muted">Loading standings...</td></tr>';
-    
+
     try {
         const leaderboard = await apiRequest(`/competitions/${compId}/leaderboard`);
-        
+
         if (leaderboard.entries.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-muted">No participants registered in this competition yet.</td></tr>';
             return;
@@ -409,17 +557,17 @@ async function loadLeaderboard(compId) {
         tbody.innerHTML = '';
         leaderboard.entries.forEach(entry => {
             const row = document.createElement('tr');
-            
+
             // Format rank styles
             let rankHtml = `<span class="rank-badge">${entry.rank}</span>`;
             if (entry.rank === 1) rankHtml = `<span class="rank-badge rank-1">1</span>`;
             else if (entry.rank === 2) rankHtml = `<span class="rank-badge rank-2">2</span>`;
             else if (entry.rank === 3) rankHtml = `<span class="rank-badge rank-3">3</span>`;
-            
+
             // ROI styling
             const roiClass = entry.roi_percentage >= 0 ? 'roi-positive' : 'roi-negative';
             const roiPrefix = entry.roi_percentage >= 0 ? '+' : '';
-            
+
             // Format volume and dates
             const formattedVolume = '₹' + entry.trading_volume.toLocaleString('en-IN', { maximumFractionDigits: 2 });
             const formattedPnL = (entry.absolute_pnl >= 0 ? '+' : '') + entry.absolute_pnl.toFixed(2);
@@ -450,7 +598,7 @@ function clearLeaderboard() {
 // ==========================================================================
 async function loadDashboardData() {
     if (!state.token) return;
-    
+
     await Promise.all([
         loadAPIKeys(),
         loadDashboardCompetitions()
@@ -461,12 +609,12 @@ async function loadDashboardCompetitions() {
     try {
         const comps = await apiRequest('/competitions/');
         state.competitions = comps;
-        
+
         // Fetch active user's registrations from backend
         const myRegs = await apiRequest('/competitions/my-registrations');
-        
+
         renderMyStandings(myRegs);
-        
+
         const registeredCompIds = myRegs.map(r => r.competition_id);
         renderAvailableCompetitions(registeredCompIds);
     } catch (err) {
@@ -476,7 +624,7 @@ async function loadDashboardCompetitions() {
 
 function renderMyStandings(myRegs) {
     const container = document.getElementById('my-registrations-list');
-    
+
     if (myRegs.length === 0) {
         container.innerHTML = '<div class="text-center py-8 text-muted">Register for a championship below to track your stats.</div>';
         return;
@@ -486,11 +634,11 @@ function renderMyStandings(myRegs) {
     myRegs.forEach(reg => {
         const item = document.createElement('div');
         item.className = 'comp-item flex-column gap-3';
-        
+
         const roiClass = reg.roi_percentage >= 0 ? 'roi-positive' : 'roi-negative';
         const roiPrefix = reg.roi_percentage >= 0 ? '+' : '';
         const formattedPnL = (reg.absolute_pnl >= 0 ? '+' : '') + reg.absolute_pnl.toFixed(2);
-        
+
         item.innerHTML = `
             <div class="comp-header flex-row justify-between align-center">
                 <div>
@@ -538,7 +686,7 @@ function renderAvailableCompetitions(registeredCompIds) {
     const container = document.getElementById('dashboard-competitions-list');
     const activeComps = state.competitions.filter(c => c.is_active);
     const joinableComps = activeComps.filter(c => !registeredCompIds.includes(c.id));
-    
+
     if (joinableComps.length === 0) {
         container.innerHTML = '<div class="text-center py-6 text-muted text-sm">No new active championships available to join.</div>';
         return;
@@ -548,7 +696,7 @@ function renderAvailableCompetitions(registeredCompIds) {
     joinableComps.forEach(comp => {
         const item = document.createElement('div');
         item.className = 'comp-item flex-row justify-between align-center flex-wrap gap-4';
-        
+
         const formattedStart = new Date(comp.start_time).toLocaleDateString();
         const formattedEnd = new Date(comp.end_time).toLocaleDateString();
 
@@ -580,7 +728,7 @@ async function syncRegistration(compId) {
     try {
         await apiRequest(`/competitions/${compId}/sync`, { method: 'POST' });
         showToast('Leaderboard sync request queued in the background!', 'success');
-        
+
         // Wait 1.5 seconds and reload standings
         setTimeout(async () => {
             await loadDashboardCompetitions();
@@ -597,7 +745,8 @@ async function loadAdminData() {
     if (!state.token || state.user?.role !== 'admin') return;
     await Promise.all([
         loadAdminStats(),
-        loadAdminUsers()
+        loadAdminUsers(),
+        loadAdminCompetitions()
     ]);
 }
 
@@ -616,30 +765,36 @@ async function loadAdminStats() {
 async function loadAdminUsers() {
     const tbody = document.getElementById('admin-users-tbody');
     tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-muted">Loading user database...</td></tr>';
-    
+
     try {
-        const users = await apiRequest('/admin/users');
+        const data = await apiRequest(`/admin/users?q=${state.adminUsers.q}&page=${state.adminUsers.page}&limit=${state.adminUsers.limit}`);
+        state.adminUsers.total = data.total;
+        const users = data.users;
+
         if (users.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-muted">No users found.</td></tr>';
+            document.getElementById('admin-users-page-info').textContent = `Showing page 1 of 1`;
+            document.getElementById('admin-users-prev-btn').disabled = true;
+            document.getElementById('admin-users-next-btn').disabled = true;
             return;
         }
-        
+
         tbody.innerHTML = '';
         users.forEach(u => {
             const row = document.createElement('tr');
             if (u.is_deleted) {
                 row.className = 'soft-deleted-row';
             }
-            
+
             // Role badge
             const roleBadgeClass = u.role === 'admin' ? 'badge-admin' : 'badge-user';
             const roleHtml = `<span class="badge ${roleBadgeClass}">${u.role.toUpperCase()}</span>`;
-            
+
             // Status badge
             const statusBadgeClass = u.is_deleted ? 'badge-deleted' : 'badge-active';
             const statusText = u.is_deleted ? 'Soft Deleted' : 'Active';
             const statusHtml = `<span class="badge ${statusBadgeClass}">${statusText}</span>`;
-            
+
             // API Keys list format
             let keysHtml = '';
             if (u.api_keys.length === 0) {
@@ -650,10 +805,10 @@ async function loadAdminUsers() {
                     return `<div style="font-size:0.75rem;">${checkMark} ${k.api_key} (${k.environment})</div>`;
                 }).join('');
             }
-            
+
             // Action buttons
             let actionButtonsHtml = '';
-            
+
             if (u.id !== state.user.id) {
                 // Toggle Soft Delete / Restore
                 if (u.is_deleted) {
@@ -661,10 +816,10 @@ async function loadAdminUsers() {
                 } else {
                     actionButtonsHtml += `<button class="btn btn-secondary text-destructive" onclick="softDeleteUser(${u.id})" style="height: 1.75rem; font-size: 0.7rem; padding: 0 0.5rem; margin-right: 0.25rem;">Soft Delete</button>`;
                 }
-                
+
                 // Hard Delete
                 actionButtonsHtml += `<button class="btn btn-danger" onclick="hardDeleteUser(${u.id})" style="height: 1.75rem; font-size: 0.7rem; padding: 0 0.5rem; margin-right: 0.25rem;">Hard Delete</button>`;
-                
+
                 // Promote to Admin (if not already admin)
                 if (u.role !== 'admin') {
                     actionButtonsHtml += `<button class="btn btn-secondary" onclick="promoteUser(${u.id})" style="height: 1.75rem; font-size: 0.7rem; padding: 0 0.5rem; border-color: rgba(37, 99, 235, 0.3); color:#60a5fa;">Make Admin</button>`;
@@ -672,7 +827,7 @@ async function loadAdminUsers() {
             } else {
                 actionButtonsHtml = '<span class="text-muted" style="font-size:0.75rem;">Current Session</span>';
             }
-            
+
             row.innerHTML = `
                 <td>
                     <div style="font-weight: 600;">${u.full_name}</div>
@@ -685,11 +840,120 @@ async function loadAdminUsers() {
                     <div class="action-btn-group">${actionButtonsHtml}</div>
                 </td>
             `;
-            
+
             tbody.appendChild(row);
         });
+
+        // Update pagination UI
+        const totalPages = Math.ceil(state.adminUsers.total / state.adminUsers.limit) || 1;
+        document.getElementById('admin-users-page-info').textContent = `Showing page ${state.adminUsers.page} of ${totalPages}`;
+        document.getElementById('admin-users-prev-btn').disabled = state.adminUsers.page <= 1;
+        document.getElementById('admin-users-next-btn').disabled = state.adminUsers.page >= totalPages;
     } catch (err) {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-destructive">Failed to load user database.</td></tr>';
+    }
+}
+
+async function loadAdminCompetitions() {
+    const tbody = document.getElementById('admin-comps-tbody');
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-muted">Loading competition database...</td></tr>';
+
+    try {
+        const data = await apiRequest(`/admin/competitions?q=${state.adminComps.q}&page=${state.adminComps.page}&limit=${state.adminComps.limit}`);
+        state.adminComps.total = data.total;
+        const comps = data.competitions;
+
+        if (comps.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-muted">No competitions found.</td></tr>';
+            document.getElementById('admin-comps-page-info').textContent = `Showing page 1 of 1`;
+            document.getElementById('admin-comps-prev-btn').disabled = true;
+            document.getElementById('admin-comps-next-btn').disabled = true;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        comps.forEach(c => {
+            const row = document.createElement('tr');
+
+            // Status badge
+            const statusBadgeClass = c.is_active ? 'badge-active' : 'badge-deleted';
+            const statusText = c.is_active ? 'Active' : 'Inactive';
+            const statusHtml = `<span class="badge ${statusBadgeClass}">${statusText}</span>`;
+
+            // Format times
+            const formattedStart = new Date(c.start_time).toLocaleString();
+            const formattedEnd = new Date(c.end_time).toLocaleString();
+
+            // Action buttons
+            let actionButtonsHtml = '';
+            // Sync balance
+            actionButtonsHtml += `<button class="btn btn-secondary" onclick="syncCompetition(${c.id})" style="height: 1.75rem; font-size: 0.7rem; padding: 0 0.5rem; margin-right: 0.25rem;">Sync Balance</button>`;
+
+            // Toggle active
+            actionButtonsHtml += `<button class="btn btn-secondary" onclick="toggleCompActive(${c.id})" style="height: 1.75rem; font-size: 0.7rem; padding: 0 0.5rem; margin-right: 0.25rem;">Toggle Status</button>`;
+
+            // Delete
+            actionButtonsHtml += `<button class="btn btn-danger" onclick="deleteCompetition(${c.id})" style="height: 1.75rem; font-size: 0.7rem; padding: 0 0.5rem;">Delete</button>`;
+
+            row.innerHTML = `
+                <td>
+                    <div style="font-weight: 600;">${c.title}</div>
+                    <div class="text-muted" style="font-size: 0.75rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${c.description || ''}">${c.description || 'No description'}</div>
+                </td>
+                <td><div style="font-size: 0.8rem;">${formattedStart}</div></td>
+                <td><div style="font-size: 0.8rem;">${formattedEnd}</div></td>
+                <td>${statusHtml}</td>
+                <td class="text-center">${c.registration_count}</td>
+                <td class="text-right">
+                    <div class="action-btn-group">${actionButtonsHtml}</div>
+                </td>
+            `;
+
+            tbody.appendChild(row);
+        });
+
+        // Update pagination UI
+        const totalPages = Math.ceil(state.adminComps.total / state.adminComps.limit) || 1;
+        document.getElementById('admin-comps-page-info').textContent = `Showing page ${state.adminComps.page} of ${totalPages}`;
+        document.getElementById('admin-comps-prev-btn').disabled = state.adminComps.page <= 1;
+        document.getElementById('admin-comps-next-btn').disabled = state.adminComps.page >= totalPages;
+
+    } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-destructive">Failed to load competition database.</td></tr>';
+    }
+}
+
+async function toggleCompActive(compId) {
+    try {
+        const res = await apiRequest(`/admin/competitions/${compId}/toggle-active`, { method: 'POST' });
+        showToast(res.message, 'success');
+        await loadAdminCompetitions();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+async function deleteCompetition(compId) {
+    if (!confirm('Are you sure you want to delete this competition? All registrations and leaderboards will be deleted!')) return;
+    try {
+        await apiRequest(`/admin/competitions/${compId}/delete`, { method: 'DELETE' });
+        showToast('Competition deleted successfully.', 'success');
+        await loadAdminStats();
+        await loadAdminCompetitions();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+async function syncCompetition(compId) {
+    try {
+        const res = await apiRequest(`/competitions/${compId}/sync`, { method: 'POST' });
+        showToast('Leaderboard sync request queued in the background!', 'success');
+        setTimeout(async () => {
+            await loadAdminCompetitions();
+        }, 1500);
+    } catch (err) {
+        showToast(err.message, 'error');
     }
 }
 
@@ -738,29 +1002,39 @@ async function promoteUser(userId) {
 
 async function handleCreateCompetition(e) {
     e.preventDefault();
-    const title = document.getElementById('admin-comp-title').value;
-    const description = document.getElementById('admin-comp-desc').value;
-    const startTimeVal = document.getElementById('admin-comp-start').value;
-    const endTimeVal = document.getElementById('admin-comp-end').value;
-    const submitBtn = document.getElementById('admin-comp-submit-btn');
-    
+    const title = document.getElementById('modal-comp-title').value;
+    const description = document.getElementById('modal-comp-desc').value;
+    const startTimeVal = document.getElementById('modal-comp-start').value;
+    const endTimeVal = document.getElementById('modal-comp-end').value;
+    const submitBtn = document.getElementById('modal-comp-submit-btn');
+
     // Parse to ISO string
     const start_time = new Date(startTimeVal).toISOString();
     const end_time = new Date(endTimeVal).toISOString();
-    
+
     const originalText = submitBtn.textContent;
     submitBtn.textContent = 'Launching...';
     submitBtn.disabled = true;
-    
+
     try {
         await apiRequest('/competitions/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title, description, start_time, end_time })
         });
-        
+
         showToast('Competition created and launched successfully!', 'success');
-        document.getElementById('admin-comp-form').reset();
+
+        // Close modal
+        const compModal = document.getElementById('comp-modal');
+        if (compModal) {
+            compModal.classList.add('hidden');
+        }
+        const compFormModal = document.getElementById('admin-comp-form-modal');
+        if (compFormModal) {
+            compFormModal.reset();
+        }
+
         await loadAdminData();
     } catch (err) {
         showToast(err.message, 'error');
@@ -778,6 +1052,9 @@ window.softDeleteUser = softDeleteUser;
 window.restoreUser = restoreUser;
 window.hardDeleteUser = hardDeleteUser;
 window.promoteUser = promoteUser;
+window.toggleCompActive = toggleCompActive;
+window.deleteCompetition = deleteCompetition;
+window.syncCompetition = syncCompetition;
 
 // ==========================================================================
 // Global Window Helpers & Notification
@@ -785,10 +1062,10 @@ window.promoteUser = promoteUser;
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast-notification');
     const toastMsg = document.getElementById('toast-message');
-    
+
     toastMsg.textContent = message;
     toast.className = 'toast'; // reset classes
-    
+
     if (type === 'error') {
         toast.style.borderColor = 'rgba(239, 68, 68, 0.5)';
         toast.style.boxShadow = '0 10px 35px rgba(239, 68, 68, 0.15)';
