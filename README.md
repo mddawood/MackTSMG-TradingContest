@@ -63,7 +63,7 @@ The system implements Role-Based Access Control (RBAC) to restrict management fu
 
 ### Seed Admin Credentials
 To log in immediately with administrative rights, use:
-* **Email:** `dbzdawood@gmail.com`
+* **Email:** `testerman@gmail.com`
 * **Password:** `Password123`
 
 ---
