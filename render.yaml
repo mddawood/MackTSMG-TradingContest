@@ -6,7 +6,7 @@ services:
     name: mack-trading-contest-backend
     runtime: python
     repo: https://github.com/mddawood/MackTSMG-TradingContest
-    branch: main
+    branch: QA
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -21,6 +21,8 @@ services:
         generateValue: true
       - key: ENCRYPTION_KEY
         sync: false
+      - key: PYTHON_VERSION
+        value: 3.12.8
 
   # --------------------
   # Frontend Static Service
@@ -29,7 +31,7 @@ services:
     name: mack-trading-contest-frontend
     runtime: static
     repo: https://github.com/mddawood/MackTSMG-TradingContest
-    branch: main
+    branch: QA
     rootDir: frontend
     buildCommand: echo "{\"API_URL\":\"https://$API_URL\"}" > config.json
     staticPublishPath: .
