@@ -1,5 +1,20 @@
 // Base Backend API configuration
-const API_URL = 'http://127.0.0.1:8000';
+let API_URL = 'http://127.0.0.1:8000';
+
+async function loadConfig() {
+    try {
+        const response = await fetch('/config.json');
+        if (response.ok) {
+            const config = await response.json();
+            if (config.API_URL) {
+                API_URL = config.API_URL;
+                console.log('Loaded API URL from config:', API_URL);
+            }
+        }
+    } catch (e) {
+        console.log('Using default API URL:', API_URL);
+    }
+}
 
 // Global application state
 let state = {
@@ -25,7 +40,8 @@ let state = {
 // ==========================================================================
 // Initialization & Event Binding
 // ==========================================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadConfig();
     initApp();
     bindEvents();
 });

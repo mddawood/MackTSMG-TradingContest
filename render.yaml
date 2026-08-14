@@ -1,17 +1,17 @@
 services:
   # --------------------
-  # QA Environment
+  # Backend API Service
   # --------------------
   - type: web
-    name: mack-trading-contest-backend-qa
+    name: mack-trading-contest-backend
     runtime: python
     repo: https://github.com/mddawood/MackTSMG-TradingContest
-    branch: QA
+    branch: main
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     disk:
-      name: sqlite-data-qa
+      name: sqlite-data
       mountPath: /var/data
       sizeGB: 1
     envVars:
@@ -22,46 +22,11 @@ services:
       - key: ENCRYPTION_KEY
         sync: false
 
-  - type: web
-    name: mack-trading-contest-frontend-qa
-    runtime: static
-    repo: https://github.com/mddawood/MackTSMG-TradingContest
-    branch: QA
-    rootDir: frontend
-    buildCommand: echo "{\"API_URL\":\"https://$API_URL\"}" > config.json
-    staticPublishPath: .
-    envVars:
-      - key: API_URL
-        fromService:
-          type: web
-          name: mack-trading-contest-backend-qa
-          property: host
-
   # --------------------
-  # Production Environment
+  # Frontend Static Service
   # --------------------
   - type: web
-    name: mack-trading-contest-backend-prod
-    runtime: python
-    repo: https://github.com/mddawood/MackTSMG-TradingContest
-    branch: main
-    rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-    disk:
-      name: sqlite-data-prod
-      mountPath: /var/data
-      sizeGB: 1
-    envVars:
-      - key: DATABASE_URL
-        value: sqlite:////var/data/delta_competition.db
-      - key: SECRET_KEY
-        generateValue: true
-      - key: ENCRYPTION_KEY
-        sync: false
-
-  - type: web
-    name: mack-trading-contest-frontend-prod
+    name: mack-trading-contest-frontend
     runtime: static
     repo: https://github.com/mddawood/MackTSMG-TradingContest
     branch: main
@@ -72,5 +37,5 @@ services:
       - key: API_URL
         fromService:
           type: web
-          name: mack-trading-contest-backend-prod
+          name: mack-trading-contest-backend
           property: host
