@@ -261,6 +261,91 @@ function bindEvents() {
     document.getElementById('logout-btn').addEventListener('click', handleLogout);
     document.getElementById('refresh-dash-btn').addEventListener('click', loadDashboardData);
 
+    // Mobile Drawer event handlers
+    const mobileDrawer = document.getElementById('mobile-menu-drawer');
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const mobileMenuCloseBtn = document.getElementById('mobile-menu-close-btn');
+
+    const openMobileDrawer = () => {
+        if (mobileDrawer) mobileDrawer.classList.remove('hidden');
+    };
+
+    const closeMobileDrawer = () => {
+        if (mobileDrawer) mobileDrawer.classList.add('hidden');
+    };
+
+    if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', openMobileDrawer);
+    }
+
+    if (mobileMenuCloseBtn) {
+        mobileMenuCloseBtn.addEventListener('click', closeMobileDrawer);
+    }
+
+    if (mobileDrawer) {
+        mobileDrawer.addEventListener('click', (e) => {
+            if (e.target === mobileDrawer) closeMobileDrawer();
+        });
+        
+        // Close mobile drawer when any navigation link inside it is clicked
+        const mobileDrawerLinks = mobileDrawer.querySelectorAll('.mobile-nav-link');
+        mobileDrawerLinks.forEach(link => {
+            link.addEventListener('click', closeMobileDrawer);
+        });
+    }
+
+    // Mobile auth buttons click handlers
+    const mobileLoginBtn = document.getElementById('mobile-login-nav-btn');
+    if (mobileLoginBtn) {
+        mobileLoginBtn.addEventListener('click', () => {
+            closeMobileDrawer();
+            openAuthModal('login');
+        });
+    }
+
+    const mobileJoinBtn = document.getElementById('mobile-join-nav-btn');
+    if (mobileJoinBtn) {
+        mobileJoinBtn.addEventListener('click', () => {
+            closeMobileDrawer();
+            openAuthModal('register');
+        });
+    }
+
+    const mobileDashBtn = document.getElementById('mobile-dashboard-nav-btn');
+    if (mobileDashBtn) {
+        mobileDashBtn.addEventListener('click', () => {
+            closeMobileDrawer();
+            showView('dashboard');
+            loadDashboardData();
+        });
+    }
+
+    const mobileAdminNavBtn = document.getElementById('mobile-admin-nav-btn');
+    if (mobileAdminNavBtn) {
+        mobileAdminNavBtn.addEventListener('click', () => {
+            closeMobileDrawer();
+            showView('admin');
+            loadAdminData();
+        });
+    }
+
+    const mobileAdminCreateCompBtn = document.getElementById('mobile-admin-create-comp-btn');
+    if (mobileAdminCreateCompBtn) {
+        mobileAdminCreateCompBtn.addEventListener('click', () => {
+            closeMobileDrawer();
+            const compModal = document.getElementById('comp-modal');
+            if (compModal) compModal.classList.remove('hidden');
+        });
+    }
+
+    const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', () => {
+            closeMobileDrawer();
+            handleLogout();
+        });
+    }
+
     // Public Leaderboard selector
     const compSelect = document.getElementById('leaderboard-comp-select');
     compSelect.addEventListener('change', (e) => {
@@ -286,17 +371,17 @@ function showView(viewName) {
         landingView.classList.remove('hidden');
         dashboardView.classList.add('hidden');
         adminView.classList.add('hidden');
-        publicNav.style.display = 'flex';
+        if (publicNav) publicNav.style.display = ''; // Let CSS media query handle it responsive
     } else if (viewName === 'dashboard') {
         landingView.classList.add('hidden');
         dashboardView.classList.remove('hidden');
         adminView.classList.add('hidden');
-        publicNav.style.display = 'none';
+        if (publicNav) publicNav.style.display = 'none';
     } else if (viewName === 'admin') {
         landingView.classList.add('hidden');
         dashboardView.classList.add('hidden');
         adminView.classList.remove('hidden');
-        publicNav.style.display = 'none';
+        if (publicNav) publicNav.style.display = 'none';
     }
 }
 
@@ -307,23 +392,58 @@ function updateNavUI() {
     const adminNavBtn = document.getElementById('admin-nav-btn');
     const adminCreateCompBtn = document.getElementById('admin-create-comp-btn');
 
+    // Mobile references
+    const mobileAuthBtns = document.getElementById('mobile-nav-auth-buttons');
+    const mobileUserControls = document.getElementById('mobile-nav-user-controls');
+    const mobileGreetingSpan = document.getElementById('mobile-user-greeting');
+    const mobileAdminNavBtn = document.getElementById('mobile-admin-nav-btn');
+    const mobileAdminCreateCompBtn = document.getElementById('mobile-admin-create-comp-btn');
+    const mobileRoleBadge = document.getElementById('mobile-user-role-badge');
+
     if (state.token && state.user) {
-        authBtns.classList.add('hidden');
-        userControls.classList.remove('hidden');
-        greetingSpan.textContent = `Welcome, ${state.user.full_name}`;
+        if (authBtns) authBtns.classList.add('hidden');
+        if (userControls) userControls.classList.remove('hidden');
+        if (greetingSpan) greetingSpan.textContent = `Welcome, ${state.user.full_name}`;
+
+        // Mobile update
+        if (mobileAuthBtns) mobileAuthBtns.classList.add('hidden');
+        if (mobileUserControls) mobileUserControls.classList.remove('hidden');
+        if (mobileGreetingSpan) mobileGreetingSpan.textContent = state.user.full_name;
 
         if (state.user.role === 'admin') {
-            adminNavBtn.classList.remove('hidden');
+            if (adminNavBtn) adminNavBtn.classList.remove('hidden');
             if (adminCreateCompBtn) adminCreateCompBtn.classList.remove('hidden');
+            // Mobile Admin Controls
+            if (mobileAdminNavBtn) mobileAdminNavBtn.classList.remove('hidden');
+            if (mobileAdminCreateCompBtn) mobileAdminCreateCompBtn.classList.remove('hidden');
+            
+            if (mobileRoleBadge) {
+                mobileRoleBadge.textContent = 'System Admin';
+                mobileRoleBadge.style.color = '#60a5fa';
+            }
         } else {
-            adminNavBtn.classList.add('hidden');
+            if (adminNavBtn) adminNavBtn.classList.add('hidden');
             if (adminCreateCompBtn) adminCreateCompBtn.classList.add('hidden');
+            // Mobile Admin Controls
+            if (mobileAdminNavBtn) mobileAdminNavBtn.classList.add('hidden');
+            if (mobileAdminCreateCompBtn) mobileAdminCreateCompBtn.classList.add('hidden');
+            
+            if (mobileRoleBadge) {
+                mobileRoleBadge.textContent = 'Trader';
+                mobileRoleBadge.style.color = 'var(--text-secondary)';
+            }
         }
     } else {
-        authBtns.classList.remove('hidden');
-        userControls.classList.add('hidden');
-        adminNavBtn.classList.add('hidden');
+        if (authBtns) authBtns.classList.remove('hidden');
+        if (userControls) userControls.classList.add('hidden');
+        if (adminNavBtn) adminNavBtn.classList.add('hidden');
         if (adminCreateCompBtn) adminCreateCompBtn.classList.add('hidden');
+
+        // Mobile update
+        if (mobileAuthBtns) mobileAuthBtns.classList.remove('hidden');
+        if (mobileUserControls) mobileUserControls.classList.add('hidden');
+        if (mobileAdminNavBtn) mobileAdminNavBtn.classList.add('hidden');
+        if (mobileAdminCreateCompBtn) mobileAdminCreateCompBtn.classList.add('hidden');
     }
 }
 

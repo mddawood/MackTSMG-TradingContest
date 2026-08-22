@@ -963,6 +963,136 @@ select.form-control {
 }
 
 /* ==========================================================================
+   Mobile Navigation & Drawer Styling
+   ========================================================================== */
+.mobile-menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    transition: background-color var(--transition-fast);
+}
+
+.mobile-menu-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+.mobile-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: flex-end;
+    transition: opacity 0.3s ease;
+}
+
+.mobile-drawer-content {
+    width: 290px;
+    height: 100%;
+    background: rgba(9, 9, 11, 0.85) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0 !important;
+    padding: 2rem 1.25rem;
+    overflow-y: auto;
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.8);
+    animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slide-in {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+.mobile-drawer-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+}
+
+.mobile-drawer-close:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+/* User Card inside Drawer */
+.mobile-user-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.75rem;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.user-avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background-color: rgba(96, 165, 250, 0.1);
+    border: 1px solid rgba(96, 165, 250, 0.25);
+    flex-shrink: 0;
+}
+
+.user-card-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.user-card-role {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* Enhanced mobile navigation link style */
+.mobile-nav-link {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+}
+
+.mobile-nav-link:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.mobile-nav-link svg {
+    transition: color var(--transition-fast);
+}
+
+.mobile-nav-link:hover svg {
+    color: var(--primary);
+}
+
+/* ==========================================================================
    Mobile Responsive Adjustments
    ========================================================================== */
 @media (max-width: 768px) {
@@ -972,6 +1102,25 @@ select.form-control {
     
     .dashboard-col.span-2 {
         grid-column: span 1;
+    }
+    
+    /* Show mobile menu toggle button and hide desktop header buttons */
+    .mobile-menu-toggle {
+        display: flex;
+    }
+    
+    #nav-auth-buttons, 
+    #nav-user-controls {
+        display: none !important;
+    }
+    
+    /* Ensure tables don't squish excessively on smaller viewports */
+    #leaderboard-table {
+        min-width: 650px;
+    }
+    
+    #admin-view table {
+        min-width: 750px;
     }
 }
 
@@ -994,6 +1143,39 @@ select.form-control {
     
     .main-header .container {
         padding: 0 1rem;
+    }
+    
+    /* Stack and size actions on mobile */
+    .hero-actions {
+        flex-direction: column !important;
+        width: 100%;
+        max-w-sm: 280px;
+        margin: 2rem auto 0;
+        gap: 0.75rem;
+    }
+    
+    .hero-actions .btn {
+        width: 100%;
+    }
+    
+    /* Reduce large paddings for mobile view */
+    .py-20 {
+        padding-top: 3rem !important;
+        padding-bottom: 3rem !important;
+    }
+    
+    .py-12 {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
+    
+    .p-8 {
+        padding: 1.25rem !important;
+    }
+    
+    .modal-box {
+        padding: 1.5rem 1.25rem !important;
+        max-width: 95% !important;
     }
     
     /* Shrink logo and buttons slightly on mobile */
