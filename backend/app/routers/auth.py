@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core import security
 from app.models.user import User
+from app.models.referred_user import ReferredUser
 from app.schemas.user import UserCreate, UserResponse
 
 router = APIRouter()
@@ -15,6 +16,7 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     """
     Register a new user.
     """
+    # 1. Check if Email already exists
     db_user = db.query(User).filter(User.email == user_in.email).first()
     if db_user:
         raise HTTPException(
@@ -22,13 +24,40 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
             detail="Email already registered"
         )
 
+    # 2. Check if Delta User ID is in the referred whitelist
+    referred_entry = db.query(ReferredUser).filter(ReferredUser.delta_user_id == user_in.delta_user_id).first()
+    if not referred_entry:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Your Delta User ID is not eligible for this competition (not referred)."
+        )
+
+    # 3. Check if Delta User ID is already claimed
+    if referred_entry.is_registered:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This Delta User ID is already registered."
+        )
+
+    db_delta_user = db.query(User).filter(User.delta_user_id == user_in.delta_user_id).first()
+    if db_delta_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This Delta User ID is already associated with an account."
+        )
+
     hashed_password = security.get_password_hash(user_in.password)
     user = User(
         email=user_in.email,
         full_name=user_in.full_name,
-        hashed_password=hashed_password
+        hashed_password=hashed_password,
+        delta_user_id=user_in.delta_user_id
     )
     db.add(user)
+    
+    # Mark as registered
+    referred_entry.is_registered = True
+    
     db.commit()
     db.refresh(user)
     return user

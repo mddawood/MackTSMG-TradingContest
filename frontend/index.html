@@ -562,6 +562,54 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Referred Users Whitelist -->
+                    <div class="card glass p-6">
+                        <div class="flex-row justify-between align-center mb-4 flex-wrap gap-4">
+                            <h2 class="card-title flex-row align-center gap-2" style="margin-bottom: 0;">
+                                👤
+                                Referred Users Whitelist
+                            </h2>
+                            <!-- Whitelist Search -->
+                            <div class="flex-row gap-2" style="width: 100%; max-width: 400px;">
+                                <input type="text" id="admin-whitelist-search" class="form-control" placeholder="Search by Delta User ID..." style="height: 2.25rem; font-size: 0.85rem;">
+                                <button class="btn btn-secondary" id="admin-whitelist-search-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem;">Search</button>
+                                <button class="btn btn-ghost" id="admin-whitelist-clear-btn" style="height: 2.25rem; padding: 0 0.5rem; font-size: 0.8rem;" title="Clear search">Clear</button>
+                            </div>
+                        </div>
+
+                        <!-- Add to Whitelist Form -->
+                        <div class="flex-row gap-2 mb-6 p-4 rounded-lg" style="background: rgba(255,255,255,0.02); border: 1px dashed var(--border-color); max-width: 500px;">
+                            <input type="text" id="admin-whitelist-add-input" class="form-control" placeholder="Enter Delta User ID to Whitelist" style="height: 2.25rem; font-size: 0.85rem;">
+                            <button class="btn btn-primary" id="admin-whitelist-add-btn" style="height: 2.25rem; padding: 0 1.25rem; font-size: 0.8rem; white-space: nowrap;">+ Add User</button>
+                        </div>
+
+                        <div class="table-wrapper overflow-hidden" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
+                            <table class="leaderboard-table" style="margin-top: 0;">
+                                <thead>
+                                    <tr>
+                                        <th>Delta User ID</th>
+                                        <th>Status</th>
+                                        <th>Added At</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-whitelist-tbody">
+                                    <tr>
+                                        <td colspan="4" class="text-center py-8 text-muted">Loading whitelist database...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Whitelist Pagination -->
+                        <div class="flex-row justify-between align-center mt-4 pt-2 border-top" style="border-top-style: dashed; font-size: 0.85rem; color: var(--text-secondary);">
+                            <span id="admin-whitelist-page-info">Showing page 1 of 1</span>
+                            <div class="flex-row gap-2">
+                                <button class="btn btn-secondary" id="admin-whitelist-prev-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Previous</button>
+                                <button class="btn btn-secondary" id="admin-whitelist-next-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Next</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -614,6 +662,10 @@
                 <div class="form-group">
                     <label for="register-password">Password</label>
                     <input type="password" id="register-password" class="form-control" placeholder="Min. 6 characters" minlength="6" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-delta-id">Delta User ID</label>
+                    <input type="text" id="register-delta-id" class="form-control" placeholder="Enter your Delta User ID (referred only)" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg w-full mt-2">Create Account</button>
             </form>
