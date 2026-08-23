@@ -5,6 +5,7 @@ from app.models.competition import Competition
 from app.models.registration import CompetitionRegistration
 from app.models.snapshot import LeaderboardSnapshot
 from app.models.api_key import APIKey
+from app.models.referred_user import ReferredUser
 from app.core.security import get_password_hash
 
 def seed():
@@ -82,12 +83,31 @@ def seed():
         db.refresh(comp2)
         print("Created active competition: Weekly Options Sprint - Week 1")
 
-    # 3. Create dummy participants for the leaderboard to make it look alive
+    # 3. Seed Referred Users Whitelist
+    test_uids = [
+        {"id": "10001", "is_registered": True},
+        {"id": "10002", "is_registered": True},
+        {"id": "10003", "is_registered": True},
+        {"id": "10004", "is_registered": True},
+        {"id": "12345", "is_registered": False},
+        {"id": "67890", "is_registered": False},
+        {"id": "11111", "is_registered": False},
+        {"id": "22222", "is_registered": False},
+    ]
+    for uid_info in test_uids:
+        existing_ref = db.query(ReferredUser).filter(ReferredUser.delta_user_id == uid_info["id"]).first()
+        if not existing_ref:
+            ref = ReferredUser(delta_user_id=uid_info["id"], is_registered=uid_info["is_registered"])
+            db.add(ref)
+    db.commit()
+    print("Seeded referred users whitelist.")
+
+    # 4. Create dummy participants for the leaderboard to make it look alive
     dummy_participants = [
-        {"name": "Alice OptionTrader", "email": "alice@example.com", "roi": 45.2, "pnl": 12500.0, "volume": 150000.0},
-        {"name": "Bob Scalper", "email": "bob@example.com", "roi": 22.8, "pnl": 5700.0, "volume": 85000.0},
-        {"name": "Charlie Hodler", "email": "charlie@example.com", "roi": -5.4, "pnl": -1100.0, "volume": 12000.0},
-        {"name": "David Whale", "email": "david@example.com", "roi": 12.5, "pnl": 25000.0, "volume": 980000.0},
+        {"name": "Alice OptionTrader", "email": "alice@example.com", "roi": 45.2, "pnl": 12500.0, "volume": 150000.0, "delta_id": "10001"},
+        {"name": "Bob Scalper", "email": "bob@example.com", "roi": 22.8, "pnl": 5700.0, "volume": 85000.0, "delta_id": "10002"},
+        {"name": "Charlie Hodler", "email": "charlie@example.com", "roi": -5.4, "pnl": -1100.0, "volume": 12000.0, "delta_id": "10003"},
+        {"name": "David Whale", "email": "david@example.com", "roi": 12.5, "pnl": 25000.0, "volume": 980000.0, "delta_id": "10004"},
     ]
 
     for p in dummy_participants:
@@ -96,7 +116,8 @@ def seed():
             p_user = User(
                 email=p["email"],
                 full_name=p["name"],
-                hashed_password=get_password_hash("Password123")
+                hashed_password=get_password_hash("Password123"),
+                delta_user_id=p["delta_id"]
             )
             db.add(p_user)
             db.commit()

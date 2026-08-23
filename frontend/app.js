@@ -34,6 +34,12 @@ let state = {
         page: 1,
         limit: 10,
         total: 0
+    },
+    adminWhitelist: {
+        q: '',
+        page: 1,
+        limit: 10,
+        total: 0
     }
 };
 
@@ -243,6 +249,82 @@ function bindEvents() {
             if (state.adminComps.page < totalPages) {
                 state.adminComps.page++;
                 loadAdminCompetitions();
+            }
+        });
+    }
+
+    // Admin Whitelist search, pagination and add controls
+    const whitelistSearchInput = document.getElementById('admin-whitelist-search');
+    const whitelistSearchBtn = document.getElementById('admin-whitelist-search-btn');
+    const whitelistClearBtn = document.getElementById('admin-whitelist-clear-btn');
+    const whitelistPrevBtn = document.getElementById('admin-whitelist-prev-btn');
+    const whitelistNextBtn = document.getElementById('admin-whitelist-next-btn');
+    const whitelistAddInput = document.getElementById('admin-whitelist-add-input');
+    const whitelistAddBtn = document.getElementById('admin-whitelist-add-btn');
+
+    if (whitelistSearchBtn) {
+        whitelistSearchBtn.addEventListener('click', () => {
+            state.adminWhitelist.q = whitelistSearchInput.value.trim();
+            state.adminWhitelist.page = 1;
+            loadAdminWhitelist();
+        });
+    }
+    if (whitelistSearchInput) {
+        whitelistSearchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                state.adminWhitelist.q = whitelistSearchInput.value.trim();
+                state.adminWhitelist.page = 1;
+                loadAdminWhitelist();
+            }
+        });
+    }
+    if (whitelistClearBtn) {
+        whitelistClearBtn.addEventListener('click', () => {
+            whitelistSearchInput.value = '';
+            state.adminWhitelist.q = '';
+            state.adminWhitelist.page = 1;
+            loadAdminWhitelist();
+        });
+    }
+    if (whitelistPrevBtn) {
+        whitelistPrevBtn.addEventListener('click', () => {
+            if (state.adminWhitelist.page > 1) {
+                state.adminWhitelist.page--;
+                loadAdminWhitelist();
+            }
+        });
+    }
+    if (whitelistNextBtn) {
+        whitelistNextBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(state.adminWhitelist.total / state.adminWhitelist.limit) || 1;
+            if (state.adminWhitelist.page < totalPages) {
+                state.adminWhitelist.page++;
+                loadAdminWhitelist();
+            }
+        });
+    }
+    if (whitelistAddBtn) {
+        whitelistAddBtn.addEventListener('click', async () => {
+            const val = whitelistAddInput.value.trim();
+            if (!val) {
+                showToast('Please enter a Delta User ID.', 'error');
+                return;
+            }
+            try {
+                whitelistAddBtn.disabled = true;
+                whitelistAddBtn.textContent = 'Adding...';
+                await apiRequest(`/admin/referred-users?delta_user_id=${encodeURIComponent(val)}`, {
+                    method: 'POST'
+                });
+                showToast(`Successfully whitelisted Delta User ID: ${val}`, 'success');
+                whitelistAddInput.value = '';
+                state.adminWhitelist.page = 1;
+                await loadAdminWhitelist();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                whitelistAddBtn.disabled = false;
+                whitelistAddBtn.textContent = '+ Add User';
             }
         });
     }
@@ -496,12 +578,13 @@ async function handleRegister(e) {
     const fullName = document.getElementById('register-name').value;
     const email = document.getElementById('register-email').value;
     const password = document.getElementById('register-password').value;
+    const deltaUserId = document.getElementById('register-delta-id').value;
 
     try {
         await apiRequest('/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, full_name: fullName, password })
+            body: JSON.stringify({ email, full_name: fullName, password, delta_user_id: deltaUserId })
         });
 
         showToast('Account created successfully! Please log in.', 'success');
@@ -882,7 +965,8 @@ async function loadAdminData() {
     await Promise.all([
         loadAdminStats(),
         loadAdminUsers(),
-        loadAdminCompetitions()
+        loadAdminCompetitions(),
+        loadAdminWhitelist()
     ]);
 }
 
@@ -1180,6 +1264,95 @@ async function handleCreateCompetition(e) {
     }
 }
 
+async function loadAdminWhitelist() {
+    const tbody = document.getElementById('admin-whitelist-tbody');
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-muted">Loading whitelist database...</td></tr>';
+
+    try {
+        const data = await apiRequest(`/admin/referred-users?q=${state.adminWhitelist.q}&page=${state.adminWhitelist.page}&limit=${state.adminWhitelist.limit}`);
+        state.adminWhitelist.total = data.total;
+        const users = data.referred_users;
+
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-muted">No whitelisted user IDs found.</td></tr>';
+            document.getElementById('admin-whitelist-page-info').textContent = `Showing page 1 of 1`;
+            document.getElementById('admin-whitelist-prev-btn').disabled = true;
+            document.getElementById('admin-whitelist-next-btn').disabled = true;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        users.forEach(u => {
+            const row = document.createElement('tr');
+
+            // Status badge
+            const statusBadgeClass = u.is_registered ? 'badge-active' : 'badge-deleted';
+            const statusText = u.is_registered ? 'Registered' : 'Unclaimed';
+
+            // Build cells safely
+            const idCell = document.createElement('td');
+            const strong = document.createElement('strong');
+            strong.textContent = u.delta_user_id;
+            idCell.appendChild(strong);
+
+            const statusCell = document.createElement('td');
+            statusCell.innerHTML = `<span class="badge ${statusBadgeClass}">${statusText}</span>`;
+
+            const dateCell = document.createElement('td');
+            dateCell.textContent = new Date(u.added_at).toLocaleString();
+
+            const actionCell = document.createElement('td');
+            actionCell.className = 'text-right';
+            if (!u.is_registered) {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-danger';
+                btn.style.height = '1.75rem';
+                btn.style.fontSize = '0.7rem';
+                btn.style.padding = '0 0.5rem';
+                btn.textContent = 'Remove';
+                btn.addEventListener('click', () => deleteWhitelistUser(u.delta_user_id));
+                actionCell.appendChild(btn);
+            } else {
+                const span = document.createElement('span');
+                span.className = 'text-muted';
+                span.style.fontSize = '0.75rem';
+                span.textContent = '(Active User)';
+                actionCell.appendChild(span);
+            }
+
+            row.appendChild(idCell);
+            row.appendChild(statusCell);
+            row.appendChild(dateCell);
+            row.appendChild(actionCell);
+
+            tbody.appendChild(row);
+        });
+
+        // Pagination info
+        const totalPages = Math.ceil(state.adminWhitelist.total / state.adminWhitelist.limit) || 1;
+        document.getElementById('admin-whitelist-page-info').textContent = `Showing page ${state.adminWhitelist.page} of ${totalPages} (Total: ${state.adminWhitelist.total})`;
+        document.getElementById('admin-whitelist-prev-btn').disabled = state.adminWhitelist.page <= 1;
+        document.getElementById('admin-whitelist-next-btn').disabled = state.adminWhitelist.page >= totalPages;
+
+    } catch (err) {
+        showToast('Failed to load whitelisted users.', 'error');
+    }
+}
+
+async function deleteWhitelistUser(deltaUserId) {
+    if (!confirm(`Are you sure you want to remove Delta User ID ${deltaUserId} from the whitelist?`)) return;
+
+    try {
+        await apiRequest(`/admin/referred-users/${deltaUserId}`, {
+            method: 'DELETE'
+        });
+        showToast(`Successfully removed Delta User ID ${deltaUserId} from whitelist.`, 'success');
+        await loadAdminWhitelist();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
 // Make globally accessible for inline onclick handlers
 window.deleteAPIKey = deleteAPIKey;
 window.registerForComp = registerForComp;
@@ -1191,6 +1364,7 @@ window.promoteUser = promoteUser;
 window.toggleCompActive = toggleCompActive;
 window.deleteCompetition = deleteCompetition;
 window.syncCompetition = syncCompetition;
+window.deleteWhitelistUser = deleteWhitelistUser;
 
 // ==========================================================================
 // Global Window Helpers & Notification
