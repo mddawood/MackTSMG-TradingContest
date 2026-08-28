@@ -93,11 +93,16 @@ class DeltaClient:
 
             # Check for HTTP status errors
             if response.status_code == 401:
-                raise Exception("Authentication failed with Delta Exchange. Check your API credentials.")
+                print(f"DEBUG: Delta API 401 Response: {response.text}")
+                raise Exception(f"Authentication failed with Delta Exchange. Details: {response.text}")
+
+            if response.status_code >= 400:
+                print(f"DEBUG: Delta API {response.status_code} Response: {response.text}")
 
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
+            print(f"DEBUG: Delta API Request Exception: {str(e)}")
             raise Exception(f"HTTP request to Delta Exchange failed: {str(e)}")
 
     def get_profile(self) -> Dict[str, Any]:
