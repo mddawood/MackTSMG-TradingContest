@@ -696,8 +696,8 @@ function renderAPIKeys() {
 
 async function handleAddAPIKey(e) {
     e.preventDefault();
-    const apiKey = document.getElementById('api-key-input').value;
-    const apiSecret = document.getElementById('api-secret-input').value;
+    const apiKey = document.getElementById('api-key-input').value.trim();
+    const apiSecret = document.getElementById('api-secret-input').value.trim();
     const environment = document.getElementById('api-env-input').value;
     const submitBtn = document.getElementById('api-key-submit-btn');
 

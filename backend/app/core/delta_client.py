@@ -15,8 +15,8 @@ class DeltaClient:
     """
 
     def __init__(self, api_key: str, api_secret: str, environment: str = "testnet"):
-        self.api_key = api_key
-        self.api_secret = api_secret
+        self.api_key = api_key.strip() if api_key else ""
+        self.api_secret = api_secret.strip() if api_secret else ""
         self.environment = environment.lower()
 
         # Select base URL based on environment
@@ -93,7 +93,15 @@ class DeltaClient:
 
             # Check for HTTP status errors
             if response.status_code == 401:
+                # Reconstruct signature components for print debug
+                timestamp = headers.get("timestamp", "")
+                sig_message = method.upper() + timestamp + path + query_string + payload
                 print(f"DEBUG: Delta API 401 Response: {response.text}")
+                print(f"DEBUG: Request URL: {url}")
+                print(f"DEBUG: Request Method: {method}")
+                print(f"DEBUG: Signature Message: {repr(sig_message)}")
+                print(f"DEBUG: API Key: '{self.api_key[:6]}...{self.api_key[-4:]}' (Length: {len(self.api_key)})")
+                print(f"DEBUG: API Secret: '{self.api_secret[:6]}...{self.api_secret[-4:]}' (Length: {len(self.api_secret)})")
                 raise Exception(f"Authentication failed with Delta Exchange. Details: {response.text}")
 
             if response.status_code >= 400:
