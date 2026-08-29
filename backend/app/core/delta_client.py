@@ -114,8 +114,27 @@ class DeltaClient:
             raise Exception(f"HTTP request to Delta Exchange failed: {str(e)}")
 
     def get_profile(self) -> Dict[str, Any]:
-        """Fetch user profile details (GET /v2/profile)"""
-        return self.request("GET", "/v2/profile")
+        """
+        Fetch user profile details (GET /v2/profile).
+        Falls back gracefully if the endpoint is deprecated/restricted for API keys.
+        """
+        try:
+            return self.request("GET", "/v2/profile")
+        except Exception as e:
+            if "Authentication failed" in str(e) or "401" in str(e):
+                try:
+                    balances = self.get_balances()
+                    # Extract user_id from the first balance record
+                    if isinstance(balances, dict) and "result" in balances and len(balances["result"]) > 0:
+                        user_id = balances["result"][0].get("user_id", "")
+                        return {"result": {"id": str(user_id), "volume_30d": 0.0}}
+                    elif isinstance(balances, list) and len(balances) > 0:
+                        user_id = balances[0].get("user_id", "")
+                        return {"result": {"id": str(user_id), "volume_30d": 0.0}}
+                except Exception:
+                    pass
+                return {"result": {"id": "", "volume_30d": 0.0}}
+            raise e
 
     def get_balances(self) -> Any:
         """Fetch account wallet balances (GET /v2/wallet/balances)"""
