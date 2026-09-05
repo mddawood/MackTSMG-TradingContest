@@ -39,7 +39,7 @@ def create_api_key(
     )
 
     try:
-        client.get_profile()
+        client.get_balances()
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
