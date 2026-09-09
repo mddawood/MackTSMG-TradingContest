@@ -235,6 +235,25 @@ def sync_user_snapshot(registration_id: int):
         else:
             roi_percentage = 0.0
 
+        # Calculate Tier based on starting balance (INR / USD equivalent)
+        # Rookie: <= 50,000 | Trader: <= 1,00,000 | Pro: <= 3,00,000 | Whale: > 3,00,000
+        if reg.starting_balance <= 50000:
+            assigned_tier = "Rookie"
+        elif reg.starting_balance <= 100000:
+            assigned_tier = "Trader"
+        elif reg.starting_balance <= 300000:
+            assigned_tier = "Pro"
+        else:
+            assigned_tier = "Whale"
+
+        # Fetch recent fills to calculate trade count
+        trade_count = 0
+        try:
+            fills = client.get_fills(limit=100)
+            trade_count = len(fills) if isinstance(fills, list) else 0
+        except Exception:
+            trade_count = 0
+
         # Update or create leaderboard snapshot record
         snapshot = db.query(LeaderboardSnapshot).filter(
             LeaderboardSnapshot.registration_id == reg.id
@@ -246,6 +265,9 @@ def sync_user_snapshot(registration_id: int):
             snapshot.absolute_pnl = absolute_pnl
             snapshot.roi_percentage = roi_percentage
             snapshot.trading_volume = volume
+            snapshot.tier = assigned_tier
+            if trade_count > 0:
+                snapshot.trade_count = trade_count
             snapshot.last_updated = datetime.utcnow()
         else:
             snapshot = LeaderboardSnapshot(
@@ -254,7 +276,11 @@ def sync_user_snapshot(registration_id: int):
                 current_equity=equity,
                 absolute_pnl=absolute_pnl,
                 roi_percentage=roi_percentage,
-                trading_volume=volume
+                trading_volume=volume,
+                tier=assigned_tier,
+                trade_count=trade_count,
+                win_streak=0,
+                rank_change=0
             )
             db.add(snapshot)
 
@@ -303,10 +329,15 @@ def sync_competition_leaderboard(
 
 
 @router.get("/{id}/leaderboard", response_model=LeaderboardResponse)
-def get_competition_leaderboard(id: int, db: Session = Depends(get_db)):
+def get_competition_leaderboard(
+    id: int,
+    tier: str = None,
+    period: str = None,
+    db: Session = Depends(get_db)
+):
     """
     Retrieve the sorted leaderboard entries based on participants' ROI.
-    Obfuscates user details by displaying full_name.
+    Supports filtering by tier (Rookie, Trader, Pro, Whale) and period.
     """
     comp = db.query(Competition).filter(Competition.id == id).first()
     if not comp:
@@ -331,17 +362,34 @@ def get_competition_leaderboard(id: int, db: Session = Depends(get_db)):
             pnl = snapshot.absolute_pnl
             vol = snapshot.trading_volume
             last_upd = snapshot.last_updated
+            snap_tier = getattr(snapshot, "tier", "Trader") or "Trader"
+            trade_count = getattr(snapshot, "trade_count", 0) or 0
+            win_streak = getattr(snapshot, "win_streak", 0) or 0
+            rank_change = getattr(snapshot, "rank_change", 0) or 0
         else:
             roi = 0.0
             pnl = 0.0
             vol = 0.0
             last_upd = reg.registered_at
+            snap_tier = "Trader"
+            trade_count = 0
+            win_streak = 0
+            rank_change = 0
+
+        # Filter by tier if specified and not 'All'
+        if tier and tier.lower() != "all" and snap_tier.lower() != tier.lower():
+            continue
 
         entries.append({
             "full_name": reg.user.full_name,
             "roi_percentage": roi,
             "absolute_pnl": pnl,
             "trading_volume": vol,
+            "tier": snap_tier,
+            "trade_count": trade_count,
+            "win_streak": win_streak,
+            "rank_change": rank_change,
+            "verified": getattr(reg.user, "uid_status", "verified") == "verified",
             "last_updated": last_upd
         })
 
@@ -358,6 +406,11 @@ def get_competition_leaderboard(id: int, db: Session = Depends(get_db)):
                 roi_percentage=entry["roi_percentage"],
                 absolute_pnl=entry["absolute_pnl"],
                 trading_volume=entry["trading_volume"],
+                tier=entry["tier"],
+                trade_count=entry["trade_count"],
+                win_streak=entry["win_streak"],
+                rank_change=entry["rank_change"],
+                verified=entry["verified"],
                 last_updated=entry["last_updated"]
             )
         )

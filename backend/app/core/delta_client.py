@@ -197,3 +197,33 @@ class DeltaClient:
         except Exception as e:
             # Re-raise with local context
             raise Exception(f"Failed to calculate equity and volume: {str(e)}")
+
+    def get_fills(self, limit: int = 50) -> Any:
+        """
+        Fetch recent fills/trades (GET /v2/fills).
+        Used for displaying trading activity in the user dashboard.
+        """
+        query_params = {"limit": limit}
+        try:
+            res = self.request("GET", "/v2/fills", query_params=query_params)
+            if isinstance(res, dict) and "result" in res:
+                return res["result"]
+            elif isinstance(res, list):
+                return res
+            return []
+        except Exception as e:
+            print(f"DEBUG: Delta get_fills error: {str(e)}")
+            return []
+
+    def validate_key(self) -> Dict[str, Any]:
+        """
+        Validates the API key by querying balances.
+        Returns basic account info if valid.
+        """
+        balances = self.get_balances()
+        profile = self.get_profile()
+        return {
+            "valid": True,
+            "profile": profile.get("result", {}) if isinstance(profile, dict) else {},
+            "balances_count": len(balances.get("result", [])) if isinstance(balances, dict) and "result" in balances else 0
+        }

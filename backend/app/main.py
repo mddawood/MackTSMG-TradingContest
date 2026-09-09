@@ -19,12 +19,49 @@ def run_auto_migrations():
         
         if "delta_user_id" not in columns:
             print("Production Migration: Adding delta_user_id column to users table...")
-            # SQLite safe ALTER TABLE
             conn.execute(text("ALTER TABLE users ADD COLUMN delta_user_id VARCHAR"))
-            # Create unique index for lookup speed and uniqueness
             conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_delta_user_id ON users (delta_user_id)"))
             conn.commit()
             print("Production Migration: Completed successfully.")
+
+        if "phone" not in columns:
+            print("Production Migration: Adding phone column to users table...")
+            conn.execute(text("ALTER TABLE users ADD COLUMN phone VARCHAR"))
+            conn.commit()
+
+        if "assigned_tier" not in columns:
+            print("Production Migration: Adding assigned_tier column to users table...")
+            conn.execute(text("ALTER TABLE users ADD COLUMN assigned_tier VARCHAR DEFAULT 'Rookie'"))
+            conn.commit()
+
+        if "uid_status" not in columns:
+            print("Production Migration: Adding uid_status column to users table...")
+            conn.execute(text("ALTER TABLE users ADD COLUMN uid_status VARCHAR DEFAULT 'verified'"))
+            conn.commit()
+
+        # Check leaderboard_snapshots table columns
+        cursor = conn.execute(text("PRAGMA table_info(leaderboard_snapshots)"))
+        snap_cols = [row[1] for row in cursor.fetchall()]
+
+        if "tier" not in snap_cols:
+            print("Production Migration: Adding tier column to leaderboard_snapshots...")
+            conn.execute(text("ALTER TABLE leaderboard_snapshots ADD COLUMN tier VARCHAR DEFAULT 'Trader'"))
+            conn.commit()
+
+        if "trade_count" not in snap_cols:
+            print("Production Migration: Adding trade_count column to leaderboard_snapshots...")
+            conn.execute(text("ALTER TABLE leaderboard_snapshots ADD COLUMN trade_count INTEGER DEFAULT 0"))
+            conn.commit()
+
+        if "win_streak" not in snap_cols:
+            print("Production Migration: Adding win_streak column to leaderboard_snapshots...")
+            conn.execute(text("ALTER TABLE leaderboard_snapshots ADD COLUMN win_streak INTEGER DEFAULT 0"))
+            conn.commit()
+
+        if "rank_change" not in snap_cols:
+            print("Production Migration: Adding rank_change column to leaderboard_snapshots...")
+            conn.execute(text("ALTER TABLE leaderboard_snapshots ADD COLUMN rank_change INTEGER DEFAULT 0"))
+            conn.commit()
 
 run_auto_migrations()
 

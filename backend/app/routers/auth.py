@@ -24,40 +24,33 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
             detail="Email already registered"
         )
 
-    # 2. Check if Delta User ID is in the referred whitelist
-    referred_entry = db.query(ReferredUser).filter(ReferredUser.delta_user_id == user_in.delta_user_id).first()
-    if not referred_entry:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Your Delta User ID is not eligible for this competition (not referred)."
-        )
-
-    # 3. Check if Delta User ID is already claimed
-    if referred_entry.is_registered:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This Delta User ID is already registered."
-        )
-
-    db_delta_user = db.query(User).filter(User.delta_user_id == user_in.delta_user_id).first()
-    if db_delta_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This Delta User ID is already associated with an account."
-        )
+    # 2. Check Delta User ID if provided
+    uid_status = "pending"
+    if user_in.delta_user_id:
+        db_delta_user = db.query(User).filter(User.delta_user_id == user_in.delta_user_id).first()
+        if db_delta_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This Delta User ID is already associated with an account."
+            )
+        referred_entry = db.query(ReferredUser).filter(ReferredUser.delta_user_id == user_in.delta_user_id).first()
+        if referred_entry:
+            referred_entry.is_registered = True
+            uid_status = "verified"
+        else:
+            uid_status = "verified"  # Allow registration and mark verified for competition
 
     hashed_password = security.get_password_hash(user_in.password)
     user = User(
         email=user_in.email,
         full_name=user_in.full_name,
         hashed_password=hashed_password,
-        delta_user_id=user_in.delta_user_id
+        delta_user_id=user_in.delta_user_id,
+        phone=user_in.phone,
+        uid_status=uid_status,
+        assigned_tier="Rookie"
     )
     db.add(user)
-    
-    # Mark as registered
-    referred_entry.is_registered = True
-    
     db.commit()
     db.refresh(user)
     return user
