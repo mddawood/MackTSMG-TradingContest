@@ -12,6 +12,21 @@ PORT = 3000
 BIND = "127.0.0.1"
 
 class SPAServerHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        super().end_headers()
+
+    def do_HEAD(self):
+        # Resolve path
+        path = self.translate_path(self.path)
+        if not os.path.exists(path) or (os.path.isdir(path) and not os.path.exists(os.path.join(path, "index.html"))):
+            _, ext = os.path.splitext(self.path.split("?")[0])
+            if not ext:
+                self.path = "/index.html"
+        return super().do_HEAD()
+
     def do_GET(self):
         # Resolve path
         path = self.translate_path(self.path)

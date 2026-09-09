@@ -4,6 +4,7 @@ export class Router {
     constructor() {
         this.routes = [];
         this.currentRoute = null;
+        this.routeListeners = [];
         this.authCheck = () => false;
         this.adminCheck = () => false;
         this.onAuthRequired = null;
@@ -22,6 +23,22 @@ export class Router {
                 if (href) {
                     this.navigate(href);
                 }
+            }
+        });
+    }
+
+    onRouteChange(listener) {
+        if (typeof listener === 'function') {
+            this.routeListeners.push(listener);
+        }
+    }
+
+    notifyRouteChange(pathname) {
+        this.routeListeners.forEach(listener => {
+            try {
+                listener(pathname);
+            } catch (err) {
+                console.error('Error in route listener:', err);
             }
         });
     }
@@ -66,6 +83,8 @@ export class Router {
             }
         }
 
+        if (!route) return;
+
         // Check guards
         if (route.requiresAuth && !this.authCheck()) {
             if (this.onAuthRequired) {
@@ -86,6 +105,9 @@ export class Router {
         if (route.handler) {
             route.handler(pathname);
         }
+
+        // Notify subscribers of route change
+        this.notifyRouteChange(pathname);
 
         // Scroll to top or to hash anchor
         if (window.location.hash) {

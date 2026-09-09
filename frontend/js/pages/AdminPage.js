@@ -70,7 +70,7 @@ export class AdminPage {
                             </div>
                         </div>
 
-                        <div class="table-wrapper overflow-hidden" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
+                        <div class="table-wrapper" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
                             <table class="leaderboard-table" style="margin-top: 0;">
                                 <thead>
                                     <tr>
@@ -113,7 +113,7 @@ export class AdminPage {
                             </div>
                         </div>
 
-                        <div class="table-wrapper overflow-hidden" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
+                        <div class="table-wrapper" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
                             <table class="leaderboard-table" style="margin-top: 0;">
                                 <thead>
                                     <tr>
@@ -155,13 +155,66 @@ export class AdminPage {
                             </div>
                         </div>
 
-                        <!-- Add to Whitelist Form -->
-                        <div class="flex-row gap-2 mb-6 p-4 rounded-lg" style="background: rgba(255,255,255,0.02); border: 1px dashed var(--border-color); max-width: 500px;">
-                            <input type="text" id="admin-whitelist-add-input" class="form-control" placeholder="Enter Delta User ID to Whitelist" style="height: 2.25rem; font-size: 0.85rem;">
-                            <button class="btn btn-primary" id="admin-whitelist-add-btn" style="height: 2.25rem; padding: 0 1.25rem; font-size: 0.8rem; white-space: nowrap;">+ Add User</button>
+                        <!-- Whitelist Ingestion & Addition Controls -->
+                        <div class="whitelist-controls-grid mb-6">
+                            <!-- Single User Add Card -->
+                            <div class="whitelist-action-card">
+                                <div class="whitelist-action-header">
+                                    <span class="whitelist-action-icon">➕</span>
+                                    <span class="whitelist-action-title">Manual Single Add</span>
+                                </div>
+                                <p class="whitelist-action-desc">Quickly whitelist an individual Delta User ID.</p>
+                                <div class="flex-row gap-2">
+                                    <input type="text" id="admin-whitelist-add-input" class="form-control" placeholder="Enter Delta User ID" style="height: 2.25rem; font-size: 0.85rem;">
+                                    <button class="btn btn-primary" id="admin-whitelist-add-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem; white-space: nowrap;">+ Add</button>
+                                </div>
+                            </div>
+
+                            <!-- Bulk CSV Upload Card -->
+                            <div class="whitelist-action-card">
+                                <div class="whitelist-action-header justify-between">
+                                    <div class="flex-row align-center gap-2">
+                                        <span class="whitelist-action-icon">📄</span>
+                                        <span class="whitelist-action-title">Bulk CSV Whitelist Upload</span>
+                                    </div>
+                                    <span class="text-muted" style="font-size: 0.72rem;">Delta CSV Export</span>
+                                </div>
+                                <p class="whitelist-action-desc">Upload a Delta exported CSV (with <code>user_id</code> column) to bulk whitelist users automatically.</p>
+                                
+                                <div class="csv-upload-dropzone" id="admin-whitelist-dropzone">
+                                    <input type="file" id="admin-whitelist-file-input" accept=".csv,text/csv" style="display: none;">
+                                    <div id="admin-whitelist-dropzone-prompt" class="flex-row align-center justify-between gap-3 flex-wrap">
+                                        <div class="flex-row align-center gap-2">
+                                            <button type="button" class="btn btn-secondary" id="admin-whitelist-browse-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem;">
+                                                📁 Choose CSV File
+                                            </button>
+                                            <span class="text-muted" style="font-size: 0.78rem;">or drag & drop file here</span>
+                                        </div>
+                                        <span class="badge" style="background: rgba(255,255,255,0.06); font-size: 0.7rem; color: var(--text-secondary);">.csv only</span>
+                                    </div>
+                                    <div id="admin-whitelist-file-selected" class="flex-row align-center justify-between gap-2 flex-wrap" style="display: none;">
+                                        <div class="flex-row align-center gap-2">
+                                            <span class="csv-file-pill">
+                                                <span>📊</span>
+                                                <span id="admin-whitelist-filename" style="font-weight: 600;">users.csv</span>
+                                                <span id="admin-whitelist-filesize" class="text-muted" style="font-size: 0.75rem;">(1.2 KB)</span>
+                                            </span>
+                                            <span id="admin-whitelist-detected-badge" class="csv-preview-badge">Detecting...</span>
+                                        </div>
+                                        <div class="flex-row align-center gap-2">
+                                            <button type="button" class="btn btn-primary" id="admin-whitelist-upload-btn" style="height: 2.25rem; padding: 0 1.25rem; font-size: 0.8rem; font-weight: 600;">
+                                                🚀 Upload & Whitelist
+                                            </button>
+                                            <button type="button" class="btn btn-ghost text-muted" id="admin-whitelist-file-cancel-btn" style="height: 2.25rem; padding: 0 0.5rem; font-size: 0.8rem;" title="Remove file">
+                                                ✕
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="table-wrapper overflow-hidden" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
+                        <div class="table-wrapper" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
                             <table class="leaderboard-table" style="margin-top: 0;">
                                 <thead>
                                     <tr>
@@ -359,7 +412,7 @@ export class AdminPage {
         }
 
         if (whitelistAddBtn) {
-            whitelistAddBtn.addEventListener('click', async () => {
+            const handleAddSingle = async () => {
                 const val = whitelistAddInput.value.trim();
                 if (!val) {
                     showToast('Please enter a Delta User ID.', 'error');
@@ -377,7 +430,140 @@ export class AdminPage {
                     showToast(err.message, 'error');
                 } finally {
                     whitelistAddBtn.disabled = false;
-                    whitelistAddBtn.textContent = '+ Add User';
+                    whitelistAddBtn.textContent = '+ Add';
+                }
+            };
+
+            whitelistAddBtn.addEventListener('click', handleAddSingle);
+            if (whitelistAddInput) {
+                whitelistAddInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') handleAddSingle();
+                });
+            }
+        }
+
+        // Whitelist CSV Bulk Upload handlers
+        const whitelistFileInput = document.getElementById('admin-whitelist-file-input');
+        const whitelistBrowseBtn = document.getElementById('admin-whitelist-browse-btn');
+        const whitelistDropzone = document.getElementById('admin-whitelist-dropzone');
+        const whitelistDropPrompt = document.getElementById('admin-whitelist-dropzone-prompt');
+        const whitelistFileSelected = document.getElementById('admin-whitelist-file-selected');
+        const whitelistFilename = document.getElementById('admin-whitelist-filename');
+        const whitelistFilesize = document.getElementById('admin-whitelist-filesize');
+        const whitelistDetectedBadge = document.getElementById('admin-whitelist-detected-badge');
+        const whitelistUploadBtn = document.getElementById('admin-whitelist-upload-btn');
+        const whitelistCancelBtn = document.getElementById('admin-whitelist-file-cancel-btn');
+
+        let selectedCsvFile = null;
+
+        const formatBytes = (bytes) => {
+            if (bytes < 1024) return `${bytes} B`;
+            return `${(bytes / 1024).toFixed(1)} KB`;
+        };
+
+        const resetCsvState = () => {
+            selectedCsvFile = null;
+            if (whitelistFileInput) whitelistFileInput.value = '';
+            if (whitelistFileSelected) whitelistFileSelected.style.display = 'none';
+            if (whitelistDropPrompt) whitelistDropPrompt.style.display = 'flex';
+            if (whitelistDropzone) whitelistDropzone.classList.remove('dragover');
+        };
+
+        const processSelectedFile = (file) => {
+            if (!file) return;
+            if (!file.name.toLowerCase().endsWith('.csv') && file.type && !file.type.includes('csv')) {
+                showToast('Please select a valid .csv file.', 'error');
+                return;
+            }
+
+            selectedCsvFile = file;
+            if (whitelistFilename) whitelistFilename.textContent = file.name;
+            if (whitelistFilesize) whitelistFilesize.textContent = `(${formatBytes(file.size)})`;
+            if (whitelistDetectedBadge) whitelistDetectedBadge.textContent = 'Analyzing...';
+
+            if (whitelistDropPrompt) whitelistDropPrompt.style.display = 'none';
+            if (whitelistFileSelected) whitelistFileSelected.style.display = 'flex';
+
+            // Fast client-side row estimation
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const text = e.target.result;
+                    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                    if (lines.length === 0) {
+                        if (whitelistDetectedBadge) whitelistDetectedBadge.textContent = 'Empty file';
+                        return;
+                    }
+                    const firstLower = lines[0].toLowerCase();
+                    const knownHeaders = ['user_id', 'userid', 'user id', 'delta_user_id', 'id', 'uid', 'delta'];
+                    const hasHeader = knownHeaders.some(h => firstLower.includes(h));
+                    const estCount = hasHeader ? Math.max(0, lines.length - 1) : lines.length;
+                    if (whitelistDetectedBadge) {
+                        whitelistDetectedBadge.textContent = `${estCount} ID${estCount === 1 ? '' : 's'} detected`;
+                    }
+                } catch (err) {
+                    if (whitelistDetectedBadge) whitelistDetectedBadge.textContent = 'CSV ready';
+                }
+            };
+            reader.readAsText(file.slice(0, 102400)); // Read first 100KB for preview
+        };
+
+        if (whitelistBrowseBtn && whitelistFileInput) {
+            whitelistBrowseBtn.addEventListener('click', () => whitelistFileInput.click());
+            whitelistFileInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                    processSelectedFile(e.target.files[0]);
+                }
+            });
+        }
+
+        if (whitelistCancelBtn) {
+            whitelistCancelBtn.addEventListener('click', resetCsvState);
+        }
+
+        if (whitelistDropzone) {
+            whitelistDropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                whitelistDropzone.classList.add('dragover');
+            });
+
+            whitelistDropzone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                whitelistDropzone.classList.remove('dragover');
+            });
+
+            whitelistDropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                whitelistDropzone.classList.remove('dragover');
+                if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    processSelectedFile(e.dataTransfer.files[0]);
+                }
+            });
+        }
+
+        if (whitelistUploadBtn) {
+            whitelistUploadBtn.addEventListener('click', async () => {
+                if (!selectedCsvFile) {
+                    showToast('Please select a CSV file first.', 'error');
+                    return;
+                }
+
+                try {
+                    whitelistUploadBtn.disabled = true;
+                    whitelistUploadBtn.textContent = 'Uploading...';
+                    const res = await adminAPI.uploadWhitelist(selectedCsvFile);
+                    showToast(res.message || 'CSV whitelist processed successfully!', 'success');
+                    resetCsvState();
+                    this.adminWhitelist.page = 1;
+                    await this.loadWhitelist();
+                } catch (err) {
+                    showToast(err.message, 'error');
+                } finally {
+                    whitelistUploadBtn.disabled = false;
+                    whitelistUploadBtn.textContent = '🚀 Upload & Whitelist';
                 }
             });
         }

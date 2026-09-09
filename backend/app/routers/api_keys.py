@@ -110,3 +110,62 @@ def delete_api_key(
     db.delete(db_key)
     db.commit()
     return
+
+
+@router.post("/validate")
+def validate_delta_key(key_in: APIKeyCreate):
+    """
+    Validate a Delta Exchange API key and secret without saving it.
+    Used during the onboarding wizard for instantaneous feedback.
+    """
+    client = DeltaClient(
+        api_key=key_in.api_key,
+        api_secret=key_in.api_secret,
+        environment=key_in.environment
+    )
+    try:
+        val_res = client.validate_key()
+        profile_data = val_res.get("profile", {})
+        delta_uid = profile_data.get("id", "")
+        return {
+            "valid": True,
+            "delta_user_id": str(delta_uid) if delta_uid else "",
+            "message": "Delta Exchange API Key validated successfully!"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Validation failed with Delta Exchange: {str(e)}"
+        )
+
+
+@router.get("/trades")
+def get_user_trades(
+    limit: int = 50,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Fetch recent trade executions for the current user using their Delta read-only key.
+    """
+    api_key_rec = db.query(APIKey).filter(
+        APIKey.user_id == current_user.id,
+        APIKey.is_valid.is_(True)
+    ).order_by(APIKey.environment.desc()).first()
+
+    if not api_key_rec:
+        return []
+
+    try:
+        api_secret = security.decrypt_secret(api_key_rec.encrypted_api_secret)
+        client = DeltaClient(
+            api_key=api_key_rec.api_key,
+            api_secret=api_secret,
+            environment=api_key_rec.environment
+        )
+        fills = client.get_fills(limit=limit)
+        return fills
+    except Exception as e:
+        print(f"Error fetching trades for user {current_user.id}: {str(e)}")
+        return []
+
