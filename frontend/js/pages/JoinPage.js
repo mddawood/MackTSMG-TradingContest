@@ -4,8 +4,9 @@ import { router } from '../router.js';
 import { showToast } from '../components/Toast.js';
 
 export class JoinPage {
-    constructor() {
+    constructor({ onLoginSuccess } = {}) {
         this.container = null;
+        this.onLoginSuccess = onLoginSuccess;
         this.mode = 'choice'; // 'choice', 'existing', 'new'
         this.step = 1; // 1 to 4 for existing member wizard
         this.existingData = {
@@ -293,6 +294,9 @@ export class JoinPage {
                     <button type="submit" class="btn btn-primary btn-lg w-full mt-4" id="new-reg-submit-btn">
                         Create Account &amp; Proceed to Exchange →
                     </button>
+                    <p class="text-center text-muted text-xs mt-4">
+                        Already have an MWM account? <a href="/login" class="text-primary hover-underline" data-link>Log in here</a>
+                    </p>
                 </form>
             </div>
             `;
@@ -475,7 +479,7 @@ export class JoinPage {
 
                 try {
                     // Check if user is logged in, or register/login on the fly
-                    if (!state.token) {
+                    if (!localStorage.getItem('token')) {
                         // Create user account with UID
                         const tempEmail = `${this.existingData.uid}@championship.delta`;
                         const tempPassword = `Delta_${this.existingData.uid}_2026`;
@@ -488,7 +492,11 @@ export class JoinPage {
                                 delta_user_id: this.existingData.uid
                             });
                             const loginRes = await authAPI.login(tempEmail, tempPassword);
-                            await handleLoginSuccess(loginRes.access_token);
+                            if (typeof this.onLoginSuccess === 'function') {
+                                await this.onLoginSuccess(loginRes.access_token, false);
+                            } else {
+                                localStorage.setItem('token', loginRes.access_token);
+                            }
                         } catch (err) {
                             // If email exists, prompt login
                             showToast('An account for this UID exists. Please log in first.', 'error');
@@ -549,14 +557,22 @@ export class JoinPage {
 
                     // Login automatically
                     const loginRes = await authAPI.login(email, password);
-                    await handleLoginSuccess(loginRes.access_token);
+                    if (typeof this.onLoginSuccess === 'function') {
+                        await this.onLoginSuccess(loginRes.access_token, false);
+                    } else {
+                        localStorage.setItem('token', loginRes.access_token);
+                    }
 
                     this.newMemberPhase = 2;
                     this.container.innerHTML = this.render();
                     this.bindEvents();
                     showToast('Account created successfully!', 'success');
                 } catch (err) {
-                    showToast(`Registration failed: ${err.message}`, 'error');
+                    if (err.message && err.message.includes('Email already registered')) {
+                        showToast('This email is already registered. Please log in instead.', 'error');
+                    } else {
+                        showToast(`Registration failed: ${err.message}`, 'error');
+                    }
                     submitBtn.disabled = false;
                     submitBtn.innerText = 'Create Account & Proceed to Exchange →';
                 }

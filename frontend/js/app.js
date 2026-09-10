@@ -51,16 +51,18 @@ export function handleLogout() {
     showToast('Logged out successfully.', 'success');
 }
 
-export async function handleLoginSuccess(token) {
+export async function handleLoginSuccess(token, redirect = true) {
     state.token = token;
     localStorage.setItem('token', token);
     try {
         state.user = await authAPI.getMe();
         updateNavbar(state.user);
-        if (state.user?.role === 'admin') {
-            router.navigate('/admin');
-        } else {
-            router.navigate('/dashboard');
+        if (redirect) {
+            if (state.user?.role === 'admin') {
+                router.navigate('/admin');
+            } else {
+                router.navigate('/dashboard');
+            }
         }
     } catch (err) {
         console.error('Failed to get user after login:', err);
@@ -73,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Instantiate Page Components now that all modules have evaluated
     landingPage = new LandingPage();
     leaderboardPage = new LeaderboardPage();
-    joinPage = new JoinPage();
+    joinPage = new JoinPage({ onLoginSuccess: handleLoginSuccess });
     loginPage = new LoginPage({ onLoginSuccess: handleLoginSuccess });
     signupPage = new SignupPage({ onLoginSuccess: handleLoginSuccess });
     dashboardPage = new DashboardPage();
