@@ -1,4 +1,4 @@
-// Admin Page Component
+// Admin Page Component with Dashboard-matched Sidebar Layout
 import { adminAPI, competitionsAPI } from '../api.js';
 import { showToast } from '../components/Toast.js';
 import { openCreateCompModal } from '../components/CreateCompModal.js';
@@ -7,6 +7,8 @@ export class AdminPage {
     constructor() {
         this.container = null;
         this.currentUser = null;
+        this.activeTab = 'competitions'; // 'competitions' (default / first), 'users', 'whitelist'
+        this.stats = null;
 
         this.adminUsers = { q: '', page: 1, limit: 10, total: 0 };
         this.adminComps = { q: '', page: 1, limit: 10, total: 0 };
@@ -14,231 +16,338 @@ export class AdminPage {
     }
 
     render() {
+        const adminName = this.currentUser?.full_name || 'Admin';
+        const adminInitials = adminName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AD';
+
         return `
-        <div id="admin-view" class="view-section py-12">
-            <div class="container">
-                <!-- Admin Header -->
-                <div class="admin-header glass p-8 mb-8 flex-row justify-between align-center flex-wrap gap-4">
-                    <div>
-                        <div class="flex-row align-center gap-3">
-                            <h1 class="welcome-title">Admin Command Center</h1>
-                            <span class="badge" style="background: rgba(37, 99, 235, 0.2); color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.4);">RESTRICTED</span>
+        <div id="admin-view" class="view-section">
+            <div class="dashboard-layout">
+                <!-- Sidebar -->
+                <aside class="dashboard-sidebar">
+                    <div class="p-3 mb-2 flex-row align-center gap-3">
+                        <div class="avatar-circle" style="width: 2.25rem; height: 2.25rem; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
+                            ${adminInitials}
                         </div>
-                        <p class="text-muted mt-1">Manage competitions, user lifecycles, and view live exchange sync operations.</p>
+                        <div class="flex-column" style="overflow: hidden;">
+                            <span style="font-weight: 700; font-size: 0.9rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${adminName}</span>
+                            <span class="badge badge-admin" style="width: fit-content; font-size: 0.65rem; padding: 0.1rem 0.4rem; margin-top: 0.15rem;">Administrator</span>
+                        </div>
                     </div>
-                    <div class="flex-row gap-3">
-                        <button class="btn btn-primary flex-row align-center gap-2" id="admin-launch-comp-btn" style="background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
-                            Launch New Competition
+
+                    <nav class="flex-column gap-1" id="admin-sidebar-nav">
+                        <button class="sidebar-link ${this.activeTab === 'competitions' ? 'active' : ''}" data-tab="competitions">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                            Competitions
                         </button>
+                        <button class="sidebar-link ${this.activeTab === 'users' ? 'active' : ''}" data-tab="users">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            Users
+                        </button>
+                        <button class="sidebar-link ${this.activeTab === 'whitelist' ? 'active' : ''}" data-tab="whitelist">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                            Whitelist
+                        </button>
+                    </nav>
+
+                </aside>
+
+                <!-- Main Content Area -->
+                <main class="dashboard-main" id="admin-tab-content">
+                    ${this.renderActiveTabContent()}
+                </main>
+            </div>
+        </div>
+        `;
+    }
+
+    renderActiveTabContent() {
+        if (this.activeTab === 'competitions') {
+            return this.renderCompetitionsTab();
+        } else if (this.activeTab === 'users') {
+            return this.renderUsersTab();
+        } else if (this.activeTab === 'whitelist') {
+            return this.renderWhitelistTab();
+        }
+        return '';
+    }
+
+    renderCompetitionsTab() {
+        const usersCount = this.stats ? this.stats.total_users : '-';
+        const deletedCount = this.stats ? this.stats.deleted_users : '-';
+        const keysCount = this.stats ? `${this.stats.valid_api_keys} / ${this.stats.total_api_keys}` : '-';
+        const compsCount = this.stats ? this.stats.total_competitions : '-';
+
+        return `
+        <div class="flex-column gap-6">
+            <!-- Header Banner -->
+            <div class="card glass p-6 flex-row justify-between align-center flex-wrap gap-4" style="border: 1px solid var(--border-color); border-radius: 1rem;">
+                <div>
+                    <div class="flex-row align-center gap-3">
+                        <h2 style="font-size: 1.5rem; font-weight: 700;">Admin Command Center</h2>
+                        <span class="badge badge-admin" style="font-size: 0.68rem; padding: 0.2rem 0.5rem; letter-spacing: 0.05em;">RESTRICTED</span>
+                    </div>
+                    <p class="text-secondary text-sm mt-1">Manage competitions, user lifecycles, and view live exchange sync operations.</p>
+                </div>
+                <div class="flex-row gap-3">
+                    <button class="btn btn-primary flex-row align-center gap-2" id="admin-launch-comp-btn" style="background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                        Launch New Competition
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Metrics Grid -->
+            <div class="grid-4 gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="stat-card glass p-5 text-center">
+                    <div class="text-muted text-xs text-uppercase font-mono mb-1">Total Registered Traders</div>
+                    <div class="stat-value font-mono text-primary" id="admin-stat-users" style="font-size: 1.6rem; font-weight: 800;">${usersCount}</div>
+                </div>
+                <div class="stat-card glass p-5 text-center">
+                    <div class="text-muted text-xs text-uppercase font-mono mb-1">Inactive / Soft-Deleted</div>
+                    <div class="stat-value font-mono text-destructive" id="admin-stat-deleted" style="font-size: 1.6rem; font-weight: 800;">${deletedCount}</div>
+                </div>
+                <div class="stat-card glass p-5 text-center">
+                    <div class="text-muted text-xs text-uppercase font-mono mb-1">Valid API Keys</div>
+                    <div class="stat-value font-mono text-accent" id="admin-stat-keys" style="font-size: 1.6rem; font-weight: 800;">${keysCount}</div>
+                </div>
+                <div class="stat-card glass p-5 text-center">
+                    <div class="text-muted text-xs text-uppercase font-mono mb-1">Active Competitions</div>
+                    <div class="stat-value font-mono text-secondary" id="admin-stat-comps" style="font-size: 1.6rem; font-weight: 800;">${compsCount}</div>
+                </div>
+            </div>
+
+            <!-- Competitions Management Section -->
+            <div class="card glass p-6" style="border: 1px solid var(--border-color); border-radius: 1rem;">
+                <div class="flex-row justify-between align-center mb-4 flex-wrap gap-4">
+                    <h3 class="card-title flex-row align-center gap-2" style="margin-bottom: 0; font-size: 1.15rem; font-weight: 700;">
+                        🏆 Competitions Management
+                    </h3>
+                    <div class="flex-row gap-2" style="width: 100%; max-width: 400px;">
+                        <input type="text" id="admin-comps-search" class="form-control" placeholder="Search competitions..." value="${this.adminComps.q || ''}" style="height: 2.25rem; font-size: 0.85rem;">
+                        <button class="btn btn-secondary" id="admin-comps-search-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem;">Search</button>
+                        <button class="btn btn-ghost" id="admin-comps-clear-btn" style="height: 2.25rem; padding: 0 0.5rem; font-size: 0.8rem;" title="Clear search">Clear</button>
                     </div>
                 </div>
 
-                <!-- Admin Quick Stats -->
-                <div class="grid-4 gap-6 mb-8">
-                    <div class="stat-card glass text-center">
-                        <div class="stat-value" id="admin-stat-users">-</div>
-                        <div class="stat-label">Total Registered Traders</div>
+                <div class="table-wrapper" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
+                    <table class="leaderboard-table" style="margin-top: 0;">
+                        <thead>
+                            <tr>
+                                <th>Competition</th>
+                                <th>Start Time (UTC)</th>
+                                <th>End Time (UTC)</th>
+                                <th>Status</th>
+                                <th>Participants</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-comps-tbody">
+                            <tr>
+                                <td colspan="6" class="text-center py-8 text-muted">Loading competition database...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Competitions Pagination -->
+                <div class="flex-row justify-between align-center mt-4 pt-2 border-top" style="border-top-style: dashed; font-size: 0.85rem; color: var(--text-secondary);">
+                    <span id="admin-comps-page-info">Showing page ${this.adminComps.page} of 1</span>
+                    <div class="flex-row gap-2">
+                        <button class="btn btn-secondary" id="admin-comps-prev-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Previous</button>
+                        <button class="btn btn-secondary" id="admin-comps-next-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Next</button>
                     </div>
-                    <div class="stat-card glass text-center">
-                        <div class="stat-value text-destructive" id="admin-stat-deleted">-</div>
-                        <div class="stat-label">Inactive / Soft-Deleted</div>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
+    renderUsersTab() {
+        const usersCount = this.stats ? this.stats.total_users : '-';
+        const deletedCount = this.stats ? this.stats.deleted_users : '-';
+        const keysCount = this.stats ? `${this.stats.valid_api_keys} / ${this.stats.total_api_keys}` : '-';
+
+        return `
+        <div class="flex-column gap-6">
+            <!-- Header Banner -->
+            <div class="card glass p-6 flex-row justify-between align-center flex-wrap gap-4" style="border: 1px solid var(--border-color); border-radius: 1rem;">
+                <div>
+                    <div class="flex-row align-center gap-3">
+                        <h2 style="font-size: 1.5rem; font-weight: 700;">User Accounts Directory</h2>
+                        <span class="badge badge-user" style="font-size: 0.68rem; padding: 0.2rem 0.5rem;">TRADERS</span>
                     </div>
-                    <div class="stat-card glass text-center">
-                        <div class="stat-value" id="admin-stat-keys">-</div>
-                        <div class="stat-label">Valid API Keys</div>
-                    </div>
-                    <div class="stat-card glass text-center">
-                        <div class="stat-value" id="admin-stat-comps">-</div>
-                        <div class="stat-label">Active Competitions</div>
+                    <p class="text-secondary text-sm mt-1">Manage trader accounts, roles, API credentials, and lifecycle states.</p>
+                </div>
+            </div>
+
+            <!-- Quick User Metrics Grid -->
+            <div class="grid-3 gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="stat-card glass p-5 text-center">
+                    <div class="text-muted text-xs text-uppercase font-mono mb-1">Total Traders</div>
+                    <div class="stat-value font-mono text-primary" id="admin-stat-users-tab" style="font-size: 1.5rem; font-weight: 800;">${usersCount}</div>
+                </div>
+                <div class="stat-card glass p-5 text-center">
+                    <div class="text-muted text-xs text-uppercase font-mono mb-1">Inactive / Soft-Deleted</div>
+                    <div class="stat-value font-mono text-destructive" id="admin-stat-deleted-tab" style="font-size: 1.5rem; font-weight: 800;">${deletedCount}</div>
+                </div>
+                <div class="stat-card glass p-5 text-center">
+                    <div class="text-muted text-xs text-uppercase font-mono mb-1">Valid API Keys</div>
+                    <div class="stat-value font-mono text-accent" id="admin-stat-keys-tab" style="font-size: 1.5rem; font-weight: 800;">${keysCount}</div>
+                </div>
+            </div>
+
+            <!-- User Accounts Directory Card -->
+            <div class="card glass p-6" style="border: 1px solid var(--border-color); border-radius: 1rem;">
+                <div class="flex-row justify-between align-center mb-4 flex-wrap gap-4">
+                    <h3 class="card-title flex-row align-center gap-2" style="margin-bottom: 0; font-size: 1.15rem; font-weight: 700;">
+                        👥 Registered Traders
+                    </h3>
+                    <div class="flex-row gap-2" style="width: 100%; max-width: 400px;">
+                        <input type="text" id="admin-users-search" class="form-control" placeholder="Search by name or email..." value="${this.adminUsers.q || ''}" style="height: 2.25rem; font-size: 0.85rem;">
+                        <button class="btn btn-secondary" id="admin-users-search-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem;">Search</button>
+                        <button class="btn btn-ghost" id="admin-users-clear-btn" style="height: 2.25rem; padding: 0 0.5rem; font-size: 0.8rem;" title="Clear search">Clear</button>
                     </div>
                 </div>
 
-                <!-- Admin Tabs / Tables Area -->
-                <div class="flex-column gap-8">
-                    <!-- Competitions Management Section -->
-                    <div class="card glass p-6">
-                        <div class="flex-row justify-between align-center mb-4 flex-wrap gap-4">
-                            <h2 class="card-title flex-row align-center gap-2" style="margin-bottom: 0;">
-                                🏆
-                                Competitions Management
-                            </h2>
-                            <div class="flex-row gap-2" style="width: 100%; max-width: 400px;">
-                                <input type="text" id="admin-comps-search" class="form-control" placeholder="Search competitions..." style="height: 2.25rem; font-size: 0.85rem;">
-                                <button class="btn btn-secondary" id="admin-comps-search-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem;">Search</button>
-                                <button class="btn btn-ghost" id="admin-comps-clear-btn" style="height: 2.25rem; padding: 0 0.5rem; font-size: 0.8rem;" title="Clear search">Clear</button>
-                            </div>
-                        </div>
+                <div class="table-wrapper" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
+                    <table class="leaderboard-table" style="margin-top: 0;">
+                        <thead>
+                            <tr>
+                                <th>User Details</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Registered Keys</th>
+                                <th class="text-right">Lifecycle Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-users-tbody">
+                            <tr>
+                                <td colspan="5" class="text-center py-8 text-muted">Loading user database...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Users Pagination -->
+                <div class="flex-row justify-between align-center mt-4 pt-2 border-top" style="border-top-style: dashed; font-size: 0.85rem; color: var(--text-secondary);">
+                    <span id="admin-users-page-info">Showing page ${this.adminUsers.page} of 1</span>
+                    <div class="flex-row gap-2">
+                        <button class="btn btn-secondary" id="admin-users-prev-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Previous</button>
+                        <button class="btn btn-secondary" id="admin-users-next-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    }
 
-                        <div class="table-wrapper" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
-                            <table class="leaderboard-table" style="margin-top: 0;">
-                                <thead>
-                                    <tr>
-                                        <th>Competition</th>
-                                        <th>Start Time (UTC)</th>
-                                        <th>End Time (UTC)</th>
-                                        <th>Status</th>
-                                        <th>Participants</th>
-                                        <th class="text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="admin-comps-tbody">
-                                    <tr>
-                                        <td colspan="6" class="text-center py-8 text-muted">Loading competition database...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+    renderWhitelistTab() {
+        return `
+        <div class="flex-column gap-6">
+            <!-- Header Banner -->
+            <div class="card glass p-6 flex-row justify-between align-center flex-wrap gap-4" style="border: 1px solid var(--border-color); border-radius: 1rem;">
+                <div>
+                    <div class="flex-row align-center gap-3">
+                        <h2 style="font-size: 1.5rem; font-weight: 700;">Referred Users Whitelist</h2>
+                        <span class="badge badge-active" style="font-size: 0.68rem; padding: 0.2rem 0.5rem;">ACCESS CONTROL</span>
+                    </div>
+                    <p class="text-secondary text-sm mt-1">Authorize referred Delta Exchange accounts manually or via bulk Delta CSV export.</p>
+                </div>
+            </div>
+
+            <!-- Whitelist Ingestion & Addition Controls -->
+            <div class="whitelist-controls-grid">
+                <!-- Single User Add Card -->
+                <div class="whitelist-action-card">
+                    <div class="whitelist-action-header">
+                        <span class="whitelist-action-icon">➕</span>
+                        <span class="whitelist-action-title">Manual Single Add</span>
+                    </div>
+                    <p class="whitelist-action-desc">Quickly whitelist an individual Delta User ID.</p>
+                    <div class="flex-row gap-2">
+                        <input type="text" id="admin-whitelist-add-input" class="form-control" placeholder="Enter Delta User ID" style="height: 2.25rem; font-size: 0.85rem;">
+                        <button class="btn btn-primary" id="admin-whitelist-add-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem; white-space: nowrap;">+ Add</button>
+                    </div>
+                </div>
+
+                <!-- Bulk CSV Upload Card -->
+                <div class="whitelist-action-card">
+                    <div class="whitelist-action-header justify-between">
+                        <div class="flex-row align-center gap-2">
+                            <span class="whitelist-action-icon">📄</span>
+                            <span class="whitelist-action-title">Bulk CSV Whitelist Upload</span>
                         </div>
-                        <!-- Competitions Pagination -->
-                        <div class="flex-row justify-between align-center mt-4 pt-2 border-top" style="border-top-style: dashed; font-size: 0.85rem; color: var(--text-secondary);">
-                            <span id="admin-comps-page-info">Showing page 1 of 1</span>
-                            <div class="flex-row gap-2">
-                                <button class="btn btn-secondary" id="admin-comps-prev-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Previous</button>
-                                <button class="btn btn-secondary" id="admin-comps-next-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Next</button>
+                        <span class="text-muted" style="font-size: 0.72rem;">Delta CSV Export</span>
+                    </div>
+                    <p class="whitelist-action-desc">Upload a Delta exported CSV (with <code>user_id</code> column) to bulk whitelist users automatically.</p>
+                    
+                    <div class="csv-upload-dropzone" id="admin-whitelist-dropzone">
+                        <input type="file" id="admin-whitelist-file-input" accept=".csv,text/csv" style="display: none;">
+                        <div id="admin-whitelist-dropzone-prompt" class="flex-row align-center justify-between gap-3 flex-wrap">
+                            <div class="flex-row align-center gap-2">
+                                <button type="button" class="btn btn-secondary" id="admin-whitelist-browse-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem;">
+                                    📁 Choose CSV File
+                                </button>
+                                <span class="text-muted" style="font-size: 0.78rem;">or drag & drop file here</span>
+                            </div>
+                            <span class="badge" style="background: rgba(255,255,255,0.06); font-size: 0.7rem; color: var(--text-secondary);">.csv only</span>
+                        </div>
+                        <div id="admin-whitelist-file-selected" class="flex-row align-center justify-between gap-2 flex-wrap" style="display: none;">
+                            <div class="flex-row align-center gap-2">
+                                <span class="csv-file-pill">
+                                    <span>📊</span>
+                                    <span id="admin-whitelist-filename" style="font-weight: 600;">users.csv</span>
+                                    <span id="admin-whitelist-filesize" class="text-muted" style="font-size: 0.75rem;">(1.2 KB)</span>
+                                </span>
+                                <span id="admin-whitelist-detected-badge" class="csv-preview-badge">Detecting...</span>
+                            </div>
+                            <div class="flex-row align-center gap-2">
+                                <button type="button" class="btn btn-primary" id="admin-whitelist-upload-btn" style="height: 2.25rem; padding: 0 1.25rem; font-size: 0.8rem; font-weight: 600;">
+                                    🚀 Upload & Whitelist
+                                </button>
+                                <button type="button" class="btn btn-ghost text-muted" id="admin-whitelist-file-cancel-btn" style="height: 2.25rem; padding: 0 0.5rem; font-size: 0.8rem;" title="Remove file">
+                                    ✕
+                                </button>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- User Accounts Directory -->
-                    <div class="card glass p-6">
-                        <div class="flex-row justify-between align-center mb-4 flex-wrap gap-4">
-                            <h2 class="card-title flex-row align-center gap-2" style="margin-bottom: 0;">
-                                👥
-                                User Accounts Directory
-                            </h2>
-                            <div class="flex-row gap-2" style="width: 100%; max-width: 400px;">
-                                <input type="text" id="admin-users-search" class="form-control" placeholder="Search by name or email..." style="height: 2.25rem; font-size: 0.85rem;">
-                                <button class="btn btn-secondary" id="admin-users-search-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem;">Search</button>
-                                <button class="btn btn-ghost" id="admin-users-clear-btn" style="height: 2.25rem; padding: 0 0.5rem; font-size: 0.8rem;" title="Clear search">Clear</button>
-                            </div>
-                        </div>
-
-                        <div class="table-wrapper" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
-                            <table class="leaderboard-table" style="margin-top: 0;">
-                                <thead>
-                                    <tr>
-                                        <th>User Details</th>
-                                        <th>Role</th>
-                                        <th>Status</th>
-                                        <th>Registered Keys</th>
-                                        <th class="text-right">Lifecycle Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="admin-users-tbody">
-                                    <tr>
-                                        <td colspan="5" class="text-center py-8 text-muted">Loading user database...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <!-- Users Pagination -->
-                        <div class="flex-row justify-between align-center mt-4 pt-2 border-top" style="border-top-style: dashed; font-size: 0.85rem; color: var(--text-secondary);">
-                            <span id="admin-users-page-info">Showing page 1 of 1</span>
-                            <div class="flex-row gap-2">
-                                <button class="btn btn-secondary" id="admin-users-prev-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Previous</button>
-                                <button class="btn btn-secondary" id="admin-users-next-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Next</button>
-                            </div>
-                        </div>
+            <!-- Whitelist Table Card -->
+            <div class="card glass p-6" style="border: 1px solid var(--border-color); border-radius: 1rem;">
+                <div class="flex-row justify-between align-center mb-4 flex-wrap gap-4">
+                    <h3 class="card-title flex-row align-center gap-2" style="margin-bottom: 0; font-size: 1.15rem; font-weight: 700;">
+                        👤 Whitelisted Delta User IDs
+                    </h3>
+                    <div class="flex-row gap-2" style="width: 100%; max-width: 400px;">
+                        <input type="text" id="admin-whitelist-search" class="form-control" placeholder="Search by Delta User ID..." value="${this.adminWhitelist.q || ''}" style="height: 2.25rem; font-size: 0.85rem;">
+                        <button class="btn btn-secondary" id="admin-whitelist-search-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem;">Search</button>
+                        <button class="btn btn-ghost" id="admin-whitelist-clear-btn" style="height: 2.25rem; padding: 0 0.5rem; font-size: 0.8rem;" title="Clear search">Clear</button>
                     </div>
+                </div>
 
-                    <!-- Referred Users Whitelist -->
-                    <div class="card glass p-6">
-                        <div class="flex-row justify-between align-center mb-4 flex-wrap gap-4">
-                            <h2 class="card-title flex-row align-center gap-2" style="margin-bottom: 0;">
-                                👤
-                                Referred Users Whitelist
-                            </h2>
-                            <div class="flex-row gap-2" style="width: 100%; max-width: 400px;">
-                                <input type="text" id="admin-whitelist-search" class="form-control" placeholder="Search by Delta User ID..." style="height: 2.25rem; font-size: 0.85rem;">
-                                <button class="btn btn-secondary" id="admin-whitelist-search-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem;">Search</button>
-                                <button class="btn btn-ghost" id="admin-whitelist-clear-btn" style="height: 2.25rem; padding: 0 0.5rem; font-size: 0.8rem;" title="Clear search">Clear</button>
-                            </div>
-                        </div>
-
-                        <!-- Whitelist Ingestion & Addition Controls -->
-                        <div class="whitelist-controls-grid mb-6">
-                            <!-- Single User Add Card -->
-                            <div class="whitelist-action-card">
-                                <div class="whitelist-action-header">
-                                    <span class="whitelist-action-icon">➕</span>
-                                    <span class="whitelist-action-title">Manual Single Add</span>
-                                </div>
-                                <p class="whitelist-action-desc">Quickly whitelist an individual Delta User ID.</p>
-                                <div class="flex-row gap-2">
-                                    <input type="text" id="admin-whitelist-add-input" class="form-control" placeholder="Enter Delta User ID" style="height: 2.25rem; font-size: 0.85rem;">
-                                    <button class="btn btn-primary" id="admin-whitelist-add-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem; white-space: nowrap;">+ Add</button>
-                                </div>
-                            </div>
-
-                            <!-- Bulk CSV Upload Card -->
-                            <div class="whitelist-action-card">
-                                <div class="whitelist-action-header justify-between">
-                                    <div class="flex-row align-center gap-2">
-                                        <span class="whitelist-action-icon">📄</span>
-                                        <span class="whitelist-action-title">Bulk CSV Whitelist Upload</span>
-                                    </div>
-                                    <span class="text-muted" style="font-size: 0.72rem;">Delta CSV Export</span>
-                                </div>
-                                <p class="whitelist-action-desc">Upload a Delta exported CSV (with <code>user_id</code> column) to bulk whitelist users automatically.</p>
-                                
-                                <div class="csv-upload-dropzone" id="admin-whitelist-dropzone">
-                                    <input type="file" id="admin-whitelist-file-input" accept=".csv,text/csv" style="display: none;">
-                                    <div id="admin-whitelist-dropzone-prompt" class="flex-row align-center justify-between gap-3 flex-wrap">
-                                        <div class="flex-row align-center gap-2">
-                                            <button type="button" class="btn btn-secondary" id="admin-whitelist-browse-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem;">
-                                                📁 Choose CSV File
-                                            </button>
-                                            <span class="text-muted" style="font-size: 0.78rem;">or drag & drop file here</span>
-                                        </div>
-                                        <span class="badge" style="background: rgba(255,255,255,0.06); font-size: 0.7rem; color: var(--text-secondary);">.csv only</span>
-                                    </div>
-                                    <div id="admin-whitelist-file-selected" class="flex-row align-center justify-between gap-2 flex-wrap" style="display: none;">
-                                        <div class="flex-row align-center gap-2">
-                                            <span class="csv-file-pill">
-                                                <span>📊</span>
-                                                <span id="admin-whitelist-filename" style="font-weight: 600;">users.csv</span>
-                                                <span id="admin-whitelist-filesize" class="text-muted" style="font-size: 0.75rem;">(1.2 KB)</span>
-                                            </span>
-                                            <span id="admin-whitelist-detected-badge" class="csv-preview-badge">Detecting...</span>
-                                        </div>
-                                        <div class="flex-row align-center gap-2">
-                                            <button type="button" class="btn btn-primary" id="admin-whitelist-upload-btn" style="height: 2.25rem; padding: 0 1.25rem; font-size: 0.8rem; font-weight: 600;">
-                                                🚀 Upload & Whitelist
-                                            </button>
-                                            <button type="button" class="btn btn-ghost text-muted" id="admin-whitelist-file-cancel-btn" style="height: 2.25rem; padding: 0 0.5rem; font-size: 0.8rem;" title="Remove file">
-                                                ✕
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-wrapper" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
-                            <table class="leaderboard-table" style="margin-top: 0;">
-                                <thead>
-                                    <tr>
-                                        <th>Delta User ID</th>
-                                        <th>Status</th>
-                                        <th>Added At</th>
-                                        <th class="text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="admin-whitelist-tbody">
-                                    <tr>
-                                        <td colspan="4" class="text-center py-8 text-muted">Loading whitelist database...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <!-- Whitelist Pagination -->
-                        <div class="flex-row justify-between align-center mt-4 pt-2 border-top" style="border-top-style: dashed; font-size: 0.85rem; color: var(--text-secondary);">
-                            <span id="admin-whitelist-page-info">Showing page 1 of 1</span>
-                            <div class="flex-row gap-2">
-                                <button class="btn btn-secondary" id="admin-whitelist-prev-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Previous</button>
-                                <button class="btn btn-secondary" id="admin-whitelist-next-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Next</button>
-                            </div>
-                        </div>
+                <div class="table-wrapper" style="border: 1px solid var(--border-color); border-radius: 0.5rem; background: rgba(0,0,0,0.2);">
+                    <table class="leaderboard-table" style="margin-top: 0;">
+                        <thead>
+                            <tr>
+                                <th>Delta User ID</th>
+                                <th>Status</th>
+                                <th>Added At</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-whitelist-tbody">
+                            <tr>
+                                <td colspan="4" class="text-center py-8 text-muted">Loading whitelist database...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Whitelist Pagination -->
+                <div class="flex-row justify-between align-center mt-4 pt-2 border-top" style="border-top-style: dashed; font-size: 0.85rem; color: var(--text-secondary);">
+                    <span id="admin-whitelist-page-info">Showing page ${this.adminWhitelist.page} of 1</span>
+                    <div class="flex-row gap-2">
+                        <button class="btn btn-secondary" id="admin-whitelist-prev-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Previous</button>
+                        <button class="btn btn-secondary" id="admin-whitelist-next-btn" style="height: 2rem; padding: 0 0.75rem; font-size: 0.75rem;">Next</button>
                     </div>
                 </div>
             </div>
@@ -256,6 +365,50 @@ export class AdminPage {
     }
 
     bindEvents() {
+        // Sidebar tab navigation
+        const nav = document.getElementById('admin-sidebar-nav');
+        if (nav) {
+            nav.addEventListener('click', (e) => {
+                const btn = e.target.closest('.sidebar-link');
+                if (!btn) return;
+                const tab = btn.dataset.tab;
+                if (!tab || tab === this.activeTab) return;
+
+                nav.querySelectorAll('.sidebar-link').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.activeTab = tab;
+
+                const main = document.getElementById('admin-tab-content');
+                if (main) {
+                    main.innerHTML = this.renderActiveTabContent();
+                    this.bindActiveTabEvents();
+                    this.updateStatsDisplay();
+
+                    if (tab === 'competitions') {
+                        this.loadCompetitions();
+                    } else if (tab === 'users') {
+                        this.loadUsers();
+                    } else if (tab === 'whitelist') {
+                        this.loadWhitelist();
+                    }
+                }
+            });
+        }
+
+        this.bindActiveTabEvents();
+    }
+
+    bindActiveTabEvents() {
+        if (this.activeTab === 'competitions') {
+            this.bindCompetitionsEvents();
+        } else if (this.activeTab === 'users') {
+            this.bindUsersEvents();
+        } else if (this.activeTab === 'whitelist') {
+            this.bindWhitelistEvents();
+        }
+    }
+
+    bindCompetitionsEvents() {
         // Launch comp button
         const launchBtn = document.getElementById('admin-launch-comp-btn');
         if (launchBtn) {
@@ -271,7 +424,7 @@ export class AdminPage {
 
         if (compsSearchBtn) {
             compsSearchBtn.addEventListener('click', () => {
-                this.adminComps.q = compsSearchInput.value.trim();
+                this.adminComps.q = compsSearchInput?.value.trim() || '';
                 this.adminComps.page = 1;
                 this.loadCompetitions();
             });
@@ -287,7 +440,7 @@ export class AdminPage {
         }
         if (compsClearBtn) {
             compsClearBtn.addEventListener('click', () => {
-                compsSearchInput.value = '';
+                if (compsSearchInput) compsSearchInput.value = '';
                 this.adminComps.q = '';
                 this.adminComps.page = 1;
                 this.loadCompetitions();
@@ -310,7 +463,9 @@ export class AdminPage {
                 }
             });
         }
+    }
 
+    bindUsersEvents() {
         // Users search & pagination
         const usersSearchInput = document.getElementById('admin-users-search');
         const usersSearchBtn = document.getElementById('admin-users-search-btn');
@@ -320,7 +475,7 @@ export class AdminPage {
 
         if (usersSearchBtn) {
             usersSearchBtn.addEventListener('click', () => {
-                this.adminUsers.q = usersSearchInput.value.trim();
+                this.adminUsers.q = usersSearchInput?.value.trim() || '';
                 this.adminUsers.page = 1;
                 this.loadUsers();
             });
@@ -336,7 +491,7 @@ export class AdminPage {
         }
         if (usersClearBtn) {
             usersClearBtn.addEventListener('click', () => {
-                usersSearchInput.value = '';
+                if (usersSearchInput) usersSearchInput.value = '';
                 this.adminUsers.q = '';
                 this.adminUsers.page = 1;
                 this.loadUsers();
@@ -359,7 +514,9 @@ export class AdminPage {
                 }
             });
         }
+    }
 
+    bindWhitelistEvents() {
         // Whitelist search, pagination & add
         const whitelistSearchInput = document.getElementById('admin-whitelist-search');
         const whitelistSearchBtn = document.getElementById('admin-whitelist-search-btn');
@@ -371,7 +528,7 @@ export class AdminPage {
 
         if (whitelistSearchBtn) {
             whitelistSearchBtn.addEventListener('click', () => {
-                this.adminWhitelist.q = whitelistSearchInput.value.trim();
+                this.adminWhitelist.q = whitelistSearchInput?.value.trim() || '';
                 this.adminWhitelist.page = 1;
                 this.loadWhitelist();
             });
@@ -387,7 +544,7 @@ export class AdminPage {
         }
         if (whitelistClearBtn) {
             whitelistClearBtn.addEventListener('click', () => {
-                whitelistSearchInput.value = '';
+                if (whitelistSearchInput) whitelistSearchInput.value = '';
                 this.adminWhitelist.q = '';
                 this.adminWhitelist.page = 1;
                 this.loadWhitelist();
@@ -413,7 +570,7 @@ export class AdminPage {
 
         if (whitelistAddBtn) {
             const handleAddSingle = async () => {
-                const val = whitelistAddInput.value.trim();
+                const val = whitelistAddInput ? whitelistAddInput.value.trim() : '';
                 if (!val) {
                     showToast('Please enter a Delta User ID.', 'error');
                     return;
@@ -423,7 +580,7 @@ export class AdminPage {
                     whitelistAddBtn.textContent = 'Adding...';
                     await adminAPI.addWhitelist(val);
                     showToast(`Successfully whitelisted Delta User ID: ${val}`, 'success');
-                    whitelistAddInput.value = '';
+                    if (whitelistAddInput) whitelistAddInput.value = '';
                     this.adminWhitelist.page = 1;
                     await this.loadWhitelist();
                 } catch (err) {
@@ -505,7 +662,7 @@ export class AdminPage {
                     if (whitelistDetectedBadge) whitelistDetectedBadge.textContent = 'CSV ready';
                 }
             };
-            reader.readAsText(file.slice(0, 102400)); // Read first 100KB for preview
+            reader.readAsText(file.slice(0, 102400));
         };
 
         if (whitelistBrowseBtn && whitelistFileInput) {
@@ -572,19 +729,41 @@ export class AdminPage {
     async loadAll() {
         await Promise.all([
             this.loadStats(),
-            this.loadCompetitions(),
-            this.loadUsers(),
-            this.loadWhitelist()
+            this.activeTab === 'competitions' ? this.loadCompetitions() : Promise.resolve(),
+            this.activeTab === 'users' ? this.loadUsers() : Promise.resolve(),
+            this.activeTab === 'whitelist' ? this.loadWhitelist() : Promise.resolve()
         ]);
+    }
+
+    updateStatsDisplay() {
+        if (!this.stats) return;
+
+        const statUsers = document.getElementById('admin-stat-users');
+        if (statUsers) statUsers.textContent = this.stats.total_users;
+
+        const statUsersTab = document.getElementById('admin-stat-users-tab');
+        if (statUsersTab) statUsersTab.textContent = this.stats.total_users;
+
+        const statDeleted = document.getElementById('admin-stat-deleted');
+        if (statDeleted) statDeleted.textContent = this.stats.deleted_users;
+
+        const statDeletedTab = document.getElementById('admin-stat-deleted-tab');
+        if (statDeletedTab) statDeletedTab.textContent = this.stats.deleted_users;
+
+        const statKeys = document.getElementById('admin-stat-keys');
+        if (statKeys) statKeys.textContent = `${this.stats.valid_api_keys} / ${this.stats.total_api_keys}`;
+
+        const statKeysTab = document.getElementById('admin-stat-keys-tab');
+        if (statKeysTab) statKeysTab.textContent = `${this.stats.valid_api_keys} / ${this.stats.total_api_keys}`;
+
+        const statComps = document.getElementById('admin-stat-comps');
+        if (statComps) statComps.textContent = this.stats.total_competitions;
     }
 
     async loadStats() {
         try {
-            const stats = await adminAPI.getStats();
-            document.getElementById('admin-stat-users').textContent = stats.total_users;
-            document.getElementById('admin-stat-deleted').textContent = stats.deleted_users;
-            document.getElementById('admin-stat-keys').textContent = `${stats.valid_api_keys} / ${stats.total_api_keys}`;
-            document.getElementById('admin-stat-comps').textContent = stats.total_competitions;
+            this.stats = await adminAPI.getStats();
+            this.updateStatsDisplay();
         } catch (err) {
             showToast('Failed to load admin stats.', 'error');
         }
@@ -603,9 +782,12 @@ export class AdminPage {
 
             if (comps.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-muted">No competitions found.</td></tr>';
-                document.getElementById('admin-comps-page-info').textContent = 'Showing page 1 of 1';
-                document.getElementById('admin-comps-prev-btn').disabled = true;
-                document.getElementById('admin-comps-next-btn').disabled = true;
+                const pageInfo = document.getElementById('admin-comps-page-info');
+                if (pageInfo) pageInfo.textContent = 'Showing page 1 of 1';
+                const prevBtn = document.getElementById('admin-comps-prev-btn');
+                const nextBtn = document.getElementById('admin-comps-next-btn');
+                if (prevBtn) prevBtn.disabled = true;
+                if (nextBtn) nextBtn.disabled = true;
                 return;
             }
 
@@ -645,9 +827,12 @@ export class AdminPage {
             });
 
             const totalPages = Math.ceil(this.adminComps.total / this.adminComps.limit) || 1;
-            document.getElementById('admin-comps-page-info').textContent = `Showing page ${this.adminComps.page} of ${totalPages}`;
-            document.getElementById('admin-comps-prev-btn').disabled = this.adminComps.page <= 1;
-            document.getElementById('admin-comps-next-btn').disabled = this.adminComps.page >= totalPages;
+            const pageInfo = document.getElementById('admin-comps-page-info');
+            if (pageInfo) pageInfo.textContent = `Showing page ${this.adminComps.page} of ${totalPages}`;
+            const prevBtn = document.getElementById('admin-comps-prev-btn');
+            const nextBtn = document.getElementById('admin-comps-next-btn');
+            if (prevBtn) prevBtn.disabled = this.adminComps.page <= 1;
+            if (nextBtn) nextBtn.disabled = this.adminComps.page >= totalPages;
         } catch (err) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-destructive">Failed to load competition database.</td></tr>';
         }
@@ -700,9 +885,12 @@ export class AdminPage {
 
             if (users.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-muted">No users found.</td></tr>';
-                document.getElementById('admin-users-page-info').textContent = 'Showing page 1 of 1';
-                document.getElementById('admin-users-prev-btn').disabled = true;
-                document.getElementById('admin-users-next-btn').disabled = true;
+                const pageInfo = document.getElementById('admin-users-page-info');
+                if (pageInfo) pageInfo.textContent = 'Showing page 1 of 1';
+                const prevBtn = document.getElementById('admin-users-prev-btn');
+                const nextBtn = document.getElementById('admin-users-next-btn');
+                if (prevBtn) prevBtn.disabled = true;
+                if (nextBtn) nextBtn.disabled = true;
                 return;
             }
 
@@ -776,9 +964,12 @@ export class AdminPage {
             });
 
             const totalPages = Math.ceil(this.adminUsers.total / this.adminUsers.limit) || 1;
-            document.getElementById('admin-users-page-info').textContent = `Showing page ${this.adminUsers.page} of ${totalPages}`;
-            document.getElementById('admin-users-prev-btn').disabled = this.adminUsers.page <= 1;
-            document.getElementById('admin-users-next-btn').disabled = this.adminUsers.page >= totalPages;
+            const pageInfo = document.getElementById('admin-users-page-info');
+            if (pageInfo) pageInfo.textContent = `Showing page ${this.adminUsers.page} of ${totalPages}`;
+            const prevBtn = document.getElementById('admin-users-prev-btn');
+            const nextBtn = document.getElementById('admin-users-next-btn');
+            if (prevBtn) prevBtn.disabled = this.adminUsers.page <= 1;
+            if (nextBtn) nextBtn.disabled = this.adminUsers.page >= totalPages;
         } catch (err) {
             tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-destructive">Failed to load user database.</td></tr>';
         }
@@ -840,9 +1031,12 @@ export class AdminPage {
 
             if (users.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-muted">No whitelisted user IDs found.</td></tr>';
-                document.getElementById('admin-whitelist-page-info').textContent = 'Showing page 1 of 1';
-                document.getElementById('admin-whitelist-prev-btn').disabled = true;
-                document.getElementById('admin-whitelist-next-btn').disabled = true;
+                const pageInfo = document.getElementById('admin-whitelist-page-info');
+                if (pageInfo) pageInfo.textContent = 'Showing page 1 of 1';
+                const prevBtn = document.getElementById('admin-whitelist-prev-btn');
+                const nextBtn = document.getElementById('admin-whitelist-next-btn');
+                if (prevBtn) prevBtn.disabled = true;
+                if (nextBtn) nextBtn.disabled = true;
                 return;
             }
 
@@ -891,9 +1085,12 @@ export class AdminPage {
             });
 
             const totalPages = Math.ceil(this.adminWhitelist.total / this.adminWhitelist.limit) || 1;
-            document.getElementById('admin-whitelist-page-info').textContent = `Showing page ${this.adminWhitelist.page} of ${totalPages} (Total: ${this.adminWhitelist.total})`;
-            document.getElementById('admin-whitelist-prev-btn').disabled = this.adminWhitelist.page <= 1;
-            document.getElementById('admin-whitelist-next-btn').disabled = this.adminWhitelist.page >= totalPages;
+            const pageInfo = document.getElementById('admin-whitelist-page-info');
+            if (pageInfo) pageInfo.textContent = `Showing page ${this.adminWhitelist.page} of ${totalPages} (Total: ${this.adminWhitelist.total})`;
+            const prevBtn = document.getElementById('admin-whitelist-prev-btn');
+            const nextBtn = document.getElementById('admin-whitelist-next-btn');
+            if (prevBtn) prevBtn.disabled = this.adminWhitelist.page <= 1;
+            if (nextBtn) nextBtn.disabled = this.adminWhitelist.page >= totalPages;
         } catch (err) {
             tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-destructive">Failed to load whitelisted users.</td></tr>';
         }

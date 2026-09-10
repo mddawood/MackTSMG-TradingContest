@@ -2018,7 +2018,8 @@ select.form-control {
         padding: 0.25rem 0 !important;
         margin-bottom: 0 !important;
     }
-    #dashboard-sidebar-nav {
+    #dashboard-sidebar-nav,
+    #admin-sidebar-nav {
         display: flex;
         flex-direction: row !important;
         overflow-x: auto;
@@ -2028,7 +2029,8 @@ select.form-control {
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
     }
-    #dashboard-sidebar-nav::-webkit-scrollbar {
+    #dashboard-sidebar-nav::-webkit-scrollbar,
+    #admin-sidebar-nav::-webkit-scrollbar {
         display: none;
     }
     .sidebar-link {
