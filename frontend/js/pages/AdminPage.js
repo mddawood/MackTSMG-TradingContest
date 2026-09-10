@@ -134,8 +134,8 @@ export class AdminPage {
                         <thead>
                             <tr>
                                 <th>Competition</th>
-                                <th>Start Time (UTC)</th>
-                                <th>End Time (UTC)</th>
+                                <th>Start Time (IST)</th>
+                                <th>End Time (IST)</th>
                                 <th>Status</th>
                                 <th>Participants</th>
                                 <th class="text-right">Actions</th>
@@ -798,8 +798,29 @@ export class AdminPage {
                 const statusText = c.is_active ? 'Active' : 'Inactive';
                 const statusHtml = `<span class="badge ${statusBadgeClass}">${statusText}</span>`;
 
-                const formattedStart = new Date(c.start_time).toLocaleString();
-                const formattedEnd = new Date(c.end_time).toLocaleString();
+                const formatIST = (dateStr) => {
+                    if (!dateStr) return '-';
+                    try {
+                        let iso = String(dateStr);
+                        if (!iso.endsWith('Z') && !iso.includes('+') && !/[-+]\d{2}:\d{2}$/.test(iso)) {
+                            iso += 'Z';
+                        }
+                        return new Date(iso).toLocaleString('en-IN', {
+                            timeZone: 'Asia/Kolkata',
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                        }) + ' IST';
+                    } catch (e) {
+                        return dateStr;
+                    }
+                };
+
+                const formattedStart = formatIST(c.start_time);
+                const formattedEnd = formatIST(c.end_time);
 
                 row.innerHTML = `
                     <td>

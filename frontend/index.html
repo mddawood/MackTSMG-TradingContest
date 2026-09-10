@@ -266,13 +266,72 @@
                     <label for="modal-comp-desc">Description</label>
                     <textarea id="modal-comp-desc" class="form-control" placeholder="Championship rules, terms & requirements..." rows="3" required style="resize: none;"></textarea>
                 </div>
+                <!-- Start Date & Time (IST) -->
                 <div class="form-group">
-                    <label for="modal-comp-start">Start Time (UTC)</label>
-                    <input type="datetime-local" id="modal-comp-start" class="form-control" required>
+                    <div class="flex-row justify-between align-center mb-1">
+                        <label style="margin-bottom: 0;">Start Date &amp; Time (IST)</label>
+                        <span class="badge" style="background: rgba(37, 99, 235, 0.15); color: #60a5fa; font-size: 0.68rem; padding: 0.1rem 0.4rem; border: 1px solid rgba(37, 99, 235, 0.3);">IST (UTC+5:30)</span>
+                    </div>
+                    <div class="snow-datetime-picker" id="start-datetime-picker">
+                        <div class="snow-date-container">
+                            <input type="date" id="modal-comp-start-date" class="form-control snow-date-input" required>
+                            <button type="button" class="snow-picker-trigger snow-cal-btn" id="modal-comp-start-cal-btn" title="Select Date from Calendar">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                            </button>
+                        </div>
+                        <div class="snow-time-container">
+                            <input type="text" id="modal-comp-start-time" class="form-control snow-time-input" placeholder="Select Time (IST)" readonly required>
+                            <input type="hidden" id="modal-comp-start-time-24" value="09:15">
+                            <button type="button" class="snow-picker-trigger snow-clock-btn" id="modal-comp-start-clock-btn" title="Select Time from Clock">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            </button>
+                            <!-- Time Options Popover (Salesforce / ServiceNow style) -->
+                            <div class="snow-time-popover hidden" id="modal-comp-start-time-popover">
+                                <div class="snow-time-popover-header">
+                                    <span>SELECT TIME (IST)</span>
+                                    <button type="button" class="snow-time-now-btn" data-target="start">Now (IST)</button>
+                                </div>
+                                <div class="snow-time-slots" id="modal-comp-start-slots"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="snow-datetime-preview text-muted" id="modal-comp-start-preview" style="font-size: 0.75rem; margin-top: 0.35rem;">
+                        📅 No start date &amp; time selected
+                    </div>
                 </div>
+
+                <!-- End Date & Time (IST) -->
                 <div class="form-group">
-                    <label for="modal-comp-end">End Time (UTC)</label>
-                    <input type="datetime-local" id="modal-comp-end" class="form-control" required>
+                    <div class="flex-row justify-between align-center mb-1">
+                        <label style="margin-bottom: 0;">End Date &amp; Time (IST)</label>
+                        <span class="badge" style="background: rgba(37, 99, 235, 0.15); color: #60a5fa; font-size: 0.68rem; padding: 0.1rem 0.4rem; border: 1px solid rgba(37, 99, 235, 0.3);">IST (UTC+5:30)</span>
+                    </div>
+                    <div class="snow-datetime-picker" id="end-datetime-picker">
+                        <div class="snow-date-container">
+                            <input type="date" id="modal-comp-end-date" class="form-control snow-date-input" required>
+                            <button type="button" class="snow-picker-trigger snow-cal-btn" id="modal-comp-end-cal-btn" title="Select Date from Calendar">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                            </button>
+                        </div>
+                        <div class="snow-time-container">
+                            <input type="text" id="modal-comp-end-time" class="form-control snow-time-input" placeholder="Select Time (IST)" readonly required>
+                            <input type="hidden" id="modal-comp-end-time-24" value="23:59">
+                            <button type="button" class="snow-picker-trigger snow-clock-btn" id="modal-comp-end-clock-btn" title="Select Time from Clock">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            </button>
+                            <!-- Time Options Popover (Salesforce / ServiceNow style) -->
+                            <div class="snow-time-popover hidden" id="modal-comp-end-time-popover">
+                                <div class="snow-time-popover-header">
+                                    <span>SELECT TIME (IST)</span>
+                                    <button type="button" class="snow-time-now-btn" data-target="end">Now (IST)</button>
+                                </div>
+                                <div class="snow-time-slots" id="modal-comp-end-slots"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="snow-datetime-preview text-muted" id="modal-comp-end-preview" style="font-size: 0.75rem; margin-top: 0.35rem;">
+                        📅 No end date &amp; time selected
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg w-full mt-2" id="modal-comp-submit-btn">Launch Competition</button>
             </form>

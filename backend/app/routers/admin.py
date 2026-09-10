@@ -194,8 +194,8 @@ def list_competitions_admin(
             "id": comp.id,
             "title": comp.title,
             "description": comp.description,
-            "start_time": comp.start_time,
-            "end_time": comp.end_time,
+            "start_time": (comp.start_time.isoformat() + "Z" if comp.start_time and comp.start_time.tzinfo is None else comp.start_time.isoformat()) if comp.start_time else None,
+            "end_time": (comp.end_time.isoformat() + "Z" if comp.end_time and comp.end_time.tzinfo is None else comp.end_time.isoformat()) if comp.end_time else None,
             "is_active": comp.is_active,
             "registration_count": len(comp.registrations)
         })
