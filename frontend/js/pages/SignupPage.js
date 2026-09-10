@@ -1,55 +1,60 @@
-// Signup Page Component
+// Signup Page Component with modal dismiss controls
 import { authAPI } from '../api.js';
 import { router } from '../router.js';
 import { showToast } from '../components/Toast.js';
+
 export class SignupPage {
     constructor({ onLoginSuccess } = {}) {
         this.container = null;
         this.onLoginSuccess = onLoginSuccess;
+        this.escListener = null;
     }
 
     render() {
         return `
-        <div id="signup-page-view" class="view-section py-16 flex-row justify-center align-center min-h-screen relative">
-            <div class="grid-pattern absolute inset-0 opacity-30"></div>
+        <div id="signup-page-view" class="auth-page-view" style="cursor: pointer;">
+            <div class="grid-pattern absolute inset-0 opacity-30" style="pointer-events: none;"></div>
             
-            <div class="container" style="max-width: 440px; position: relative; z-index: 10;">
-                <div class="card glass p-8" style="border: 1px solid var(--border-color); border-radius: 1rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);">
-                    <div class="mb-6">
-                        <h1 class="hero-title" style="font-size: 1.75rem; margin-bottom: 0.25rem;">Sign Up</h1>
-                        <p class="text-secondary text-sm">Join the 2026 MWM Trading Championship.</p>
+            <div class="auth-card" style="cursor: default;">
+                <!-- Close button for pop-up style dismissal -->
+                <button type="button" class="modal-close-btn" id="signup-close-btn" title="Close" aria-label="Close" style="top: 1.25rem; right: 1.25rem;">
+                    &times;
+                </button>
+
+                <div class="mb-6">
+                    <h1 class="hero-title" style="font-size: 1.75rem; margin-bottom: 0.25rem;">Sign Up</h1>
+                    <p class="text-secondary text-sm">Join the 2026 MWM Trading Championship.</p>
+                </div>
+
+                <form id="standalone-signup-form" class="flex-column gap-4">
+                    <div class="form-group">
+                        <label for="page-signup-name">Full Name</label>
+                        <input type="text" id="page-signup-name" class="form-control" placeholder="John Doe" required>
                     </div>
 
-                    <form id="standalone-signup-form" class="flex-column gap-4">
-                        <div class="form-group">
-                            <label for="page-signup-name">Full Name</label>
-                            <input type="text" id="page-signup-name" class="form-control" placeholder="John Doe" required>
-                        </div>
+                    <div class="form-group">
+                        <label for="page-signup-email">Email Address</label>
+                        <input type="email" id="page-signup-email" class="form-control" placeholder="you@example.com" required>
+                    </div>
 
-                        <div class="form-group">
-                            <label for="page-signup-email">Email Address</label>
-                            <input type="email" id="page-signup-email" class="form-control" placeholder="you@example.com" required>
-                        </div>
+                    <div class="form-group">
+                        <label for="page-signup-phone">WhatsApp Number</label>
+                        <input type="tel" id="page-signup-phone" class="form-control" placeholder="+91 98765 43210" required>
+                    </div>
 
-                        <div class="form-group">
-                            <label for="page-signup-phone">WhatsApp Number</label>
-                            <input type="tel" id="page-signup-phone" class="form-control" placeholder="+91 98765 43210" required>
-                        </div>
+                    <div class="form-group">
+                        <label for="page-signup-password">Password (Min. 6 characters)</label>
+                        <input type="password" id="page-signup-password" class="form-control" placeholder="••••••••" minlength="6" required>
+                    </div>
 
-                        <div class="form-group">
-                            <label for="page-signup-password">Password (Min. 6 characters)</label>
-                            <input type="password" id="page-signup-password" class="form-control" placeholder="••••••••" minlength="6" required>
-                        </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-full mt-2" id="signup-submit-btn">
+                        Create Free Account
+                    </button>
+                </form>
 
-                        <button type="submit" class="btn btn-primary btn-lg w-full mt-2" id="signup-submit-btn">
-                            Create Free Account
-                        </button>
-                    </form>
-
-                    <p class="text-center text-secondary text-xs mt-6">
-                        Already have an account? <a href="/login" class="text-primary font-medium hover-underline" data-link>Log in</a>
-                    </p>
-                </div>
+                <p class="text-center text-secondary text-xs mt-6">
+                    Already have an account? <a href="/login" class="text-primary font-medium hover-underline" data-link>Log in</a>
+                </p>
             </div>
         </div>
         `;
@@ -62,6 +67,42 @@ export class SignupPage {
     }
 
     bindEvents() {
+        const handleClose = () => {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                router.navigate('/');
+            }
+        };
+
+        // Cross button click
+        const closeBtn = document.getElementById('signup-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleClose();
+            });
+        }
+
+        // Click outside the card to dismiss
+        const pageView = document.getElementById('signup-page-view');
+        if (pageView) {
+            pageView.addEventListener('click', (e) => {
+                if (!e.target.closest('.auth-card')) {
+                    handleClose();
+                }
+            });
+        }
+
+        // Escape key to dismiss
+        this.escListener = (e) => {
+            if (e.key === 'Escape') {
+                handleClose();
+            }
+        };
+        document.addEventListener('keydown', this.escListener);
+
         const form = document.getElementById('standalone-signup-form');
         if (form) {
             form.addEventListener('submit', async (e) => {
@@ -95,6 +136,16 @@ export class SignupPage {
                     submitBtn.innerText = 'Create Free Account';
                 }
             });
+        }
+    }
+
+    unmount() {
+        if (this.escListener) {
+            document.removeEventListener('keydown', this.escListener);
+            this.escListener = null;
+        }
+        if (this.container) {
+            this.container.innerHTML = '';
         }
     }
 }
