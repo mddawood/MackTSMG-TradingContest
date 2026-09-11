@@ -15,11 +15,11 @@ def seed():
     db = SessionLocal()
     
     # 1. Ensure Admin users
-    user = db.query(User).filter(User.email == "dbzdawood@gmail.com").first()
+    user = db.query(User).filter(User.email == "admin@example.com").first()
     if not user:
         user = User(
-            email="dbzdawood@gmail.com",
-            full_name="Dawood",
+            email="admin@example.com",
+            full_name="System Admin",
             hashed_password=get_password_hash("Password123"),
             role="admin",
             assigned_tier="Pro",
