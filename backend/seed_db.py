@@ -16,11 +16,11 @@ def seed():
     Base.metadata.create_all(bind=engine)
     
     # 1. Create a sample Admin/Test user if not exists
-    user = db.query(User).filter(User.email == "dbzdawood@gmail.com").first()
+    user = db.query(User).filter(User.email == "admin@example.com").first()
     if not user:
         user = User(
-            email="dbzdawood@gmail.com",
-            full_name="Dawood",
+            email="admin@example.com",
+            full_name="System Admin",
             hashed_password=get_password_hash("Password123"),
             role="admin"
         )
