@@ -47,6 +47,11 @@ export class SignupPage {
                         <input type="password" id="page-signup-password" class="form-control" placeholder="••••••••" minlength="6" required>
                     </div>
 
+                    <div class="form-group">
+                        <label for="page-signup-confirm-password">Confirm Password</label>
+                        <input type="password" id="page-signup-confirm-password" class="form-control" placeholder="••••••••" minlength="6" required>
+                    </div>
+
                     <button type="submit" class="btn btn-primary btn-lg w-full mt-2" id="signup-submit-btn">
                         Create Free Account
                     </button>
@@ -111,8 +116,16 @@ export class SignupPage {
                 const email = document.getElementById('page-signup-email').value.trim();
                 const phone = document.getElementById('page-signup-phone').value.trim();
                 const password = document.getElementById('page-signup-password').value;
-                const submitBtn = document.getElementById('signup-submit-btn');
+                const confirmPassword = document.getElementById('page-signup-confirm-password').value;
 
+                if (password !== confirmPassword) {
+                    showToast('Passwords do not match. Please verify and try again.', 'error');
+                    const confirmInput = document.getElementById('page-signup-confirm-password');
+                    if (confirmInput) confirmInput.focus();
+                    return;
+                }
+
+                const submitBtn = document.getElementById('signup-submit-btn');
                 submitBtn.disabled = true;
                 submitBtn.innerText = 'Creating account...';
 

@@ -29,7 +29,7 @@ export function initNavbar({ onLogout, onOpenAuth }) {
     if (joinBtn) {
         joinBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            router.navigate('/join');
+            router.navigate('/signup');
         });
     }
 
@@ -163,7 +163,7 @@ export function initNavbar({ onLogout, onOpenAuth }) {
         mobileJoinBtn.addEventListener('click', (e) => {
             e.preventDefault();
             closeDrawer();
-            router.navigate('/join');
+            router.navigate('/signup');
         });
     }
 

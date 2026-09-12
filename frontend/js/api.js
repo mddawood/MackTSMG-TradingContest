@@ -93,6 +93,29 @@ export const authAPI = {
 
     async getMe() {
         return apiRequest('/auth/me');
+    },
+
+    async forgotPassword(email) {
+        return apiRequest('/auth/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+    },
+
+    async verifyResetToken(token) {
+        return apiRequest(`/auth/verify-reset-token?token=${encodeURIComponent(token)}`);
+    },
+
+    async resetPassword(token, newPassword) {
+        return apiRequest('/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                token,
+                new_password: newPassword
+            })
+        });
     }
 };
 

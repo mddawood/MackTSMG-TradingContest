@@ -12,6 +12,8 @@ import { LoginPage } from './pages/LoginPage.js';
 import { SignupPage } from './pages/SignupPage.js';
 import { DashboardPage } from './pages/DashboardPage.js';
 import { AdminPage } from './pages/AdminPage.js';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage.js';
+import { ResetPasswordPage } from './pages/ResetPasswordPage.js';
 
 // Global Application State
 export const state = {
@@ -27,6 +29,8 @@ let loginPage = null;
 let signupPage = null;
 let dashboardPage = null;
 let adminPage = null;
+let forgotPasswordPage = null;
+let resetPasswordPage = null;
 
 let activePage = null;
 
@@ -80,6 +84,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     signupPage = new SignupPage({ onLoginSuccess: handleLoginSuccess });
     dashboardPage = new DashboardPage();
     adminPage = new AdminPage();
+    forgotPasswordPage = new ForgotPasswordPage();
+    resetPasswordPage = new ResetPasswordPage();
 
     await loadConfig();
 
@@ -107,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (tab === 'login') {
                 router.navigate('/login');
             } else {
-                router.navigate('/join');
+                router.navigate('/signup');
             }
         }
     });
@@ -144,6 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             mountPage(leaderboardPage);
         })
         .addRoute('/join', () => {
+            joinPage.resetToNewMember();
             mountPage(joinPage);
         })
         .addRoute('/login', () => {
@@ -155,10 +162,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         })
         .addRoute('/signup', () => {
             if (state.token && state.user) {
-                router.navigate('/dashboard');
+                router.navigate(state.user.role === 'admin' ? '/admin' : '/dashboard');
             } else {
-                mountPage(signupPage);
+                joinPage.resetToNewMember();
+                mountPage(joinPage);
             }
+        })
+        .addRoute('/forgot-password', () => {
+            if (state.token && state.user) {
+                router.navigate(state.user.role === 'admin' ? '/admin' : '/dashboard');
+            } else {
+                mountPage(forgotPasswordPage);
+            }
+        })
+        .addRoute('/reset-password', () => {
+            mountPage(resetPasswordPage);
         })
         .addRoute('/dashboard', () => {
             mountPage(dashboardPage, state.user);

@@ -30,3 +30,19 @@ class UserResponse(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str = Field(..., description="The user's registered email address")
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(..., description="The password reset token")
+    new_password: str = Field(..., min_length=6, description="New password (minimum 6 characters)")
+
+
+class VerifyResetTokenResponse(BaseModel):
+    valid: bool
+    email: Optional[str] = None
+    detail: Optional[str] = None
+

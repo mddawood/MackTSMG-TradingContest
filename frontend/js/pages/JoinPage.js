@@ -7,7 +7,7 @@ export class JoinPage {
     constructor({ onLoginSuccess } = {}) {
         this.container = null;
         this.onLoginSuccess = onLoginSuccess;
-        this.mode = 'choice'; // 'choice', 'existing', 'new'
+        this.mode = 'new'; // Directly open the flow for new member
         this.step = 1; // 1 to 4 for existing member wizard
         this.existingData = {
             fullName: '',
@@ -31,6 +31,12 @@ export class JoinPage {
             uidConnected: false,
             apiVerified: false
         };
+    }
+
+    resetToNewMember() {
+        this.mode = 'new';
+        this.newMemberPhase = 1;
+        this.step = 1;
     }
 
     render() {
@@ -58,7 +64,7 @@ export class JoinPage {
         <div class="text-center mb-8">
             <h1 class="hero-title" style="font-size: 2.25rem; margin-bottom: 0.5rem;">Join The Championship</h1>
             <p class="text-secondary" style="font-size: 1rem;">
-                Pehele se Delta Exchange pe account hai ya aap naye ho?
+                Do you already have a Delta Exchange account, or are you a new member?
             </p>
         </div>
 
@@ -70,7 +76,7 @@ export class JoinPage {
                 </div>
                 <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Existing Member</h3>
                 <p class="text-secondary" style="font-size: 0.875rem; line-height: 1.5;">
-                    Pehle se Delta Exchange pe account hai. UID + API verify karke turant championship join karo.
+                    Already have a Delta Exchange account? Verify your UID and API key to join the championship immediately.
                 </p>
                 <div class="mt-4 flex-row align-center gap-2 text-primary" style="font-weight: 600; font-size: 0.875rem;">
                     Continue with Existing Account →
@@ -84,10 +90,10 @@ export class JoinPage {
                 </div>
                 <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">New Member</h3>
                 <p class="text-secondary" style="font-size: 0.875rem; line-height: 1.5;">
-                    Naye ho? Register karo, official code <strong>EUERQB</strong> se Delta account kholo, steps complete karke compete karo.
+                    New here? Register your account, open a Delta account with official referral code <strong>EUERQB</strong>, complete setup steps, and start competing.
                 </p>
                 <div class="mt-4 flex-row align-center gap-2 text-accent" style="font-weight: 600; font-size: 0.875rem;">
-                    Create Account & Get Started →
+                    Create Account &amp; Get Started →
                 </div>
             </div>
         </div>
@@ -101,9 +107,9 @@ export class JoinPage {
     renderExistingWizard() {
         return `
         <div class="mb-6">
-            <button class="btn btn-ghost flex-row align-center gap-2 mb-4" id="wizard-back-to-choice-btn" style="padding-left: 0;">
+            <button class="btn btn-ghost flex-row align-center gap-2 mb-4" id="wizard-back-to-signup-btn" style="padding-left: 0;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                Back to Options
+                Back to Sign Up
             </button>
             <h1 class="hero-title" style="font-size: 1.85rem; margin-bottom: 0.25rem;">Connect Delta Account</h1>
             <p class="text-secondary" style="font-size: 0.875rem;">Complete 4 quick steps to connect your read-only API credentials.</p>
@@ -141,8 +147,8 @@ export class JoinPage {
             return `
             <div class="flex-column gap-4">
                 <div>
-                    <h3 style="font-size: 1.25rem; font-weight: 700;">Step 1: Tumhara Poora Naam</h3>
-                    <p class="text-secondary text-sm">Leaderboard par display hone wala naam enter karo.</p>
+                    <h3 style="font-size: 1.25rem; font-weight: 700;">Step 1: Your Full Name</h3>
+                    <p class="text-secondary text-sm">Enter the full name you want displayed on the leaderboard.</p>
                 </div>
                 <div class="form-group">
                     <label for="wizard-fullname">Full Name</label>
@@ -158,7 +164,7 @@ export class JoinPage {
             <div class="flex-column gap-4">
                 <div>
                     <h3 style="font-size: 1.25rem; font-weight: 700;">Step 2: Exchange Selection</h3>
-                    <p class="text-secondary text-sm">Championship Delta Exchange ke verified API par hosted hai.</p>
+                    <p class="text-secondary text-sm">The championship is hosted on Delta Exchange's verified API.</p>
                 </div>
                 
                 <div class="card p-6" style="border: 2px solid var(--primary); background: rgba(37, 99, 235, 0.08); border-radius: 0.75rem;">
@@ -185,14 +191,14 @@ export class JoinPage {
             <div class="flex-column gap-4">
                 <div>
                     <h3 style="font-size: 1.25rem; font-weight: 700;">Step 3: Exchange UID</h3>
-                    <p class="text-secondary text-sm">Apna Delta Exchange User ID (UID) daalo.</p>
+                    <p class="text-secondary text-sm">Enter your Delta Exchange User ID (UID).</p>
                 </div>
                 
                 <div class="form-group">
                     <label for="wizard-uid">Delta User ID (UID)</label>
                     <input type="text" id="wizard-uid" class="form-control" placeholder="e.g. 10045" value="${this.existingData.uid}" required>
                     <small class="text-muted text-xs mt-1" style="display: block;">
-                        Delta App/Website me Profile icon par click karke apna 5-7 digit UID dekhein.
+                        Click on the Profile icon in the Delta App or Website to find your 5–7 digit UID.
                     </small>
                 </div>
 
@@ -207,17 +213,17 @@ export class JoinPage {
             <div class="flex-column gap-4">
                 <div>
                     <h3 style="font-size: 1.25rem; font-weight: 700;">Step 4: Connect Read-Only API</h3>
-                    <p class="text-secondary text-sm">Apni Delta Exchange read-only API credentials connect karein.</p>
+                    <p class="text-secondary text-sm">Connect your Delta Exchange read-only API credentials.</p>
                 </div>
 
                 <!-- Security Warning Box -->
                 <div class="p-4" style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 0.5rem;">
                     <div class="flex-row align-center gap-2" style="color: #facc15; font-weight: 700; margin-bottom: 0.25rem;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                        Security Rule: Sirf Read-Only Key banayein
+                        Security Rule: Create Read-Only Key Only
                     </div>
                     <p class="text-xs" style="color: #fef08a; line-height: 1.4;">
-                        Delta API key create karte waqt <strong>Trading</strong> aur <strong>Withdrawal</strong> permissions ko <strong>OFF</strong> rakhein. Platform sirf aapke portfolio balances aur trade history read karega.
+                        When creating your Delta API key, keep <strong>Trading</strong> and <strong>Withdrawal</strong> permissions strictly <strong>OFF</strong>. The platform will only read your portfolio balances and trade history.
                     </p>
                 </div>
 
@@ -261,9 +267,9 @@ export class JoinPage {
         if (this.newMemberPhase === 1) {
             return `
             <div class="mb-6">
-                <button class="btn btn-ghost flex-row align-center gap-2 mb-4" id="new-back-to-choice-btn" style="padding-left: 0;">
+                <button class="btn btn-ghost flex-row align-center gap-2 mb-4" id="new-back-to-home-btn" style="padding-left: 0;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                    Back to Options
+                    Back to Home
                 </button>
                 <h1 class="hero-title" style="font-size: 1.85rem; margin-bottom: 0.25rem;">Create Your MWM Account</h1>
                 <p class="text-secondary" style="font-size: 0.875rem;">Phase 1: Register your championship profile.</p>
@@ -291,10 +297,19 @@ export class JoinPage {
                         <input type="password" id="new-password" class="form-control" placeholder="••••••••" minlength="6" required>
                     </div>
 
+                    <div class="form-group">
+                        <label for="new-confirm-password">Confirm Password</label>
+                        <input type="password" id="new-confirm-password" class="form-control" placeholder="••••••••" minlength="6" required>
+                    </div>
+
                     <button type="submit" class="btn btn-primary btn-lg w-full mt-4" id="new-reg-submit-btn">
                         Create Account &amp; Proceed to Exchange →
                     </button>
-                    <p class="text-center text-muted text-xs mt-4">
+                    
+                    <p class="text-center text-secondary text-xs mt-4">
+                        Already have a Delta Exchange account? <a href="#" id="switch-to-existing-btn" class="text-primary hover-underline">Connect existing account</a>
+                    </p>
+                    <p class="text-center text-muted text-xs mt-2">
                         Already have an MWM account? <a href="/login" class="text-primary hover-underline" data-link>Log in here</a>
                     </p>
                 </form>
@@ -396,11 +411,42 @@ export class JoinPage {
             });
         }
 
-        // Back to choice
+        // Back to home from new member flow
+        const backHomeBtn = document.getElementById('new-back-to-home-btn');
+        if (backHomeBtn) {
+            backHomeBtn.addEventListener('click', () => {
+                router.navigate('/');
+            });
+        }
+
+        // Switch to existing Delta account
+        const switchToExisting = document.getElementById('switch-to-existing-btn');
+        if (switchToExisting) {
+            switchToExisting.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.mode = 'existing';
+                this.step = 1;
+                this.container.innerHTML = this.render();
+                this.bindEvents();
+            });
+        }
+
+        // Back to sign up from existing member wizard
+        const backToSignupBtn = document.getElementById('wizard-back-to-signup-btn');
+        if (backToSignupBtn) {
+            backToSignupBtn.addEventListener('click', () => {
+                this.mode = 'new';
+                this.newMemberPhase = 1;
+                this.container.innerHTML = this.render();
+                this.bindEvents();
+            });
+        }
+
+        // Back to choice if present
         const backChoiceBtn = document.getElementById('wizard-back-to-choice-btn') || document.getElementById('new-back-to-choice-btn');
         if (backChoiceBtn) {
             backChoiceBtn.addEventListener('click', () => {
-                this.mode = 'choice';
+                this.mode = 'new';
                 this.container.innerHTML = this.render();
                 this.bindEvents();
             });
@@ -542,6 +588,14 @@ export class JoinPage {
                 const email = document.getElementById('new-email').value.trim();
                 const phone = document.getElementById('new-phone').value.trim();
                 const password = document.getElementById('new-password').value;
+                const confirmPassword = document.getElementById('new-confirm-password').value;
+
+                if (password !== confirmPassword) {
+                    showToast('Passwords do not match. Please verify and try again.', 'error');
+                    const confirmInput = document.getElementById('new-confirm-password');
+                    if (confirmInput) confirmInput.focus();
+                    return;
+                }
 
                 const submitBtn = document.getElementById('new-reg-submit-btn');
                 submitBtn.disabled = true;

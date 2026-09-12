@@ -35,7 +35,7 @@ export class LoginPage {
                     <div class="form-group">
                         <div class="flex-row justify-between align-center mb-1">
                             <label for="page-login-password">Password</label>
-                            <a href="#" id="forgot-password-link" class="text-xs text-primary hover-underline">Forgot password?</a>
+                            <a href="/forgot-password" id="forgot-password-link" class="text-xs text-primary hover-underline" data-link>Forgot password?</a>
                         </div>
                         <input type="password" id="page-login-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
                     </div>
@@ -46,7 +46,7 @@ export class LoginPage {
                 </form>
 
                 <p class="text-center text-secondary text-xs mt-6">
-                    No account? <a href="/join" class="text-primary font-medium hover-underline" data-link>Join the championship</a>
+                    No account? <a href="/signup" class="text-primary font-medium hover-underline" data-link>Sign up</a>
                 </p>
             </div>
         </div>
@@ -125,7 +125,7 @@ export class LoginPage {
         if (forgotLink) {
             forgotLink.addEventListener('click', (e) => {
                 e.preventDefault();
-                showToast('Password reset link sent to your registered email.', 'info');
+                router.navigate('/forgot-password');
             });
         }
     }

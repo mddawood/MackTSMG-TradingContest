@@ -32,8 +32,8 @@ export class LandingPage {
                     </p>
                     
                     <div class="hero-actions flex-row gap-4 mt-8 flex-wrap justify-center">
-                        <a href="/join" class="btn btn-primary btn-lg flex-row align-center gap-2" data-link>
-                            Join Championship
+                        <a href="/signup" class="btn btn-primary btn-lg flex-row align-center gap-2" data-link>
+                            Sign Up
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                         </a>
                         <a href="/leaderboard" class="btn btn-secondary btn-lg" data-link>View Leaderboard</a>

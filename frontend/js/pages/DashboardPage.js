@@ -153,7 +153,7 @@ export class DashboardPage {
         <div class="flex-column gap-6" style="max-width: 600px;">
             <div>
                 <h2 style="font-size: 1.5rem; font-weight: 700;">Trader Profile</h2>
-                <p class="text-secondary text-sm">Aapke championship details aur verified credentials.</p>
+                <p class="text-secondary text-sm">Your championship details and verified credentials.</p>
             </div>
 
             <div class="card glass p-6 flex-column gap-4" style="border: 1px solid var(--border-color); border-radius: 1rem;">
@@ -341,7 +341,7 @@ export class DashboardPage {
             <div class="p-4" style="background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.25); border-radius: 0.75rem;">
                 <h4 style="font-size: 0.9rem; font-weight: 700; color: #60a5fa; margin-bottom: 0.25rem;">ℹ️ Delta IP Whitelist Notice</h4>
                 <p class="text-secondary text-xs" style="line-height: 1.5;">
-                    Delta Exchange me API key generate karte samay IP restriction optional hai. Agar IP restriction enable karein, toh ensure karein ki Delta server access permitted ho.
+                    IP restriction is optional when generating an API key on Delta Exchange. If you enable IP restriction, please ensure Delta server access is permitted.
                 </p>
             </div>
 
@@ -398,7 +398,7 @@ export class DashboardPage {
 
     renderMyRegistrationsList() {
         if (!this.myRegistrations || this.myRegistrations.length === 0) {
-            return `<div class="text-muted text-sm py-4 text-center">You are not registered in an active competition. Use "Join Championship" to enter.</div>`;
+            return `<div class="text-muted text-sm py-4 text-center">You are not registered in an active competition. Sign up for an active competition to enter.</div>`;
         }
 
         return this.myRegistrations.map(reg => `
