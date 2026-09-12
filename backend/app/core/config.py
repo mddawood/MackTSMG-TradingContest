@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic_settings import BaseSettings
 
 
@@ -23,6 +24,11 @@ class Settings(BaseSettings):
 
     # Encryption
     ENCRYPTION_KEY: str
+
+    # Email & Password Reset (Resend)
+    RESEND_API_KEY: Optional[str] = None
+    EMAILS_FROM_EMAIL: str = "onboarding@resend.dev"
+    FRONTEND_URL: str = "http://127.0.0.1:3000"
 
     class Config:
         env_file = ".env"

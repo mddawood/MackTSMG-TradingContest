@@ -14,6 +14,9 @@ class User(Base):
     # NEW – role column for RBAC
     role = Column(String, default="user", nullable=False)
     delta_user_id = Column(String, unique=True, index=True, nullable=True)
+    phone = Column(String, nullable=True)
+    assigned_tier = Column(String, default="Rookie", nullable=False)
+    uid_status = Column(String, default="verified", nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
 
     # Relationships

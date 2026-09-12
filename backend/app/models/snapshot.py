@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, Float, String, ForeignKey, DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -14,6 +14,10 @@ class LeaderboardSnapshot(Base):
     absolute_pnl = Column(Float, default=0.0, nullable=False)
     roi_percentage = Column(Float, default=0.0, nullable=False)
     trading_volume = Column(Float, default=0.0, nullable=False)
+    tier = Column(String, default="Trader", nullable=False)
+    trade_count = Column(Integer, default=0, nullable=False)
+    win_streak = Column(Integer, default=0, nullable=False)
+    rank_change = Column(Integer, default=0, nullable=False)
     last_updated = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships

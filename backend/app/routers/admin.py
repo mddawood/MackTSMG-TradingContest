@@ -1,3 +1,5 @@
+import csv
+import io
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
 from typing import List
@@ -192,8 +194,8 @@ def list_competitions_admin(
             "id": comp.id,
             "title": comp.title,
             "description": comp.description,
-            "start_time": comp.start_time,
-            "end_time": comp.end_time,
+            "start_time": (comp.start_time.isoformat() + "Z" if comp.start_time and comp.start_time.tzinfo is None else comp.start_time.isoformat()) if comp.start_time else None,
+            "end_time": (comp.end_time.isoformat() + "Z" if comp.end_time and comp.end_time.tzinfo is None else comp.end_time.isoformat()) if comp.end_time else None,
             "is_active": comp.is_active,
             "registration_count": len(comp.registrations)
         })
@@ -335,34 +337,112 @@ def upload_referred_users(
     db: Session = Depends(get_db)
 ):
     try:
-        content = file.file.read().decode("utf-8")
-        lines = [line.strip().split(",")[0].strip() for line in content.splitlines() if line.strip()]
-        
-        added_count = 0
-        skipped_count = 0
-        
-        for uid in lines:
-            uid = uid.replace('"', '').replace("'", "").strip()
-            # Skip empty lines, headers, or too short entries
-            if not uid or len(uid) < 3 or any(word in uid.lower() for word in ["id", "user", "delta", "email"]):
-                continue
-                
-            existing = db.query(ReferredUser).filter(ReferredUser.delta_user_id == uid).first()
-            if existing:
-                skipped_count += 1
-                continue
-                
-            new_ref = ReferredUser(delta_user_id=uid)
-            db.add(new_ref)
-            added_count += 1
-            
-        db.commit()
+        raw_bytes = file.file.read()
+        if not raw_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The uploaded file is empty."
+            )
+
+        try:
+            content = raw_bytes.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            content = raw_bytes.decode("latin-1")
+
+        reader = csv.reader(io.StringIO(content))
+        raw_rows = [row for row in reader if row and any(cell.strip() for cell in row)]
+
+        if not raw_rows:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No readable rows found in the CSV file."
+            )
+
+        # Detect header row and column index
+        first_row = [cell.strip().lower() for cell in raw_rows[0]]
+        known_headers = {
+            "user_id", "userid", "user id", "delta_user_id",
+            "delta userid", "delta user id", "id", "uid", "account_id", "delta_id"
+        }
+
+        target_col_idx = 0
+        has_header = False
+
+        for idx, col in enumerate(first_row):
+            normalized_col = col.replace("-", "_").replace(" ", "_")
+            if normalized_col in known_headers or "user_id" in normalized_col or "delta" in normalized_col:
+                target_col_idx = idx
+                has_header = True
+                break
+
+        # If the first row contains common non-numeric header text even if not explicitly matched
+        if not has_header and any(h in first_row[0] for h in ["user", "id", "delta", "email", "name", "account"]):
+            has_header = True
+
+        data_rows = raw_rows[1:] if has_header else raw_rows
+
+        extracted_uids = []
+        for row in data_rows:
+            if target_col_idx < len(row):
+                val = row[target_col_idx].strip().strip('"\'')
+                # Ignore empty strings or accidental repeat headers
+                if not val or val.lower() in known_headers:
+                    continue
+                extracted_uids.append(val)
+
+        if not extracted_uids:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No valid user IDs found in the uploaded CSV file."
+            )
+
+        # Deduplicate within the uploaded file while preserving order
+        unique_uids = []
+        seen_in_batch = set()
+        for uid in extracted_uids:
+            if uid not in seen_in_batch:
+                seen_in_batch.add(uid)
+                unique_uids.append(uid)
+
+        file_internal_duplicates = len(extracted_uids) - len(unique_uids)
+
+        # Batch check against DB
+        existing_in_db = set()
+        chunk_size = 500
+        for i in range(0, len(unique_uids), chunk_size):
+            chunk = unique_uids[i : i + chunk_size]
+            matched = db.query(ReferredUser.delta_user_id).filter(ReferredUser.delta_user_id.in_(chunk)).all()
+            for m in matched:
+                existing_in_db.add(m[0])
+
+        new_users_to_add = []
+        db_duplicates = 0
+
+        for uid in unique_uids:
+            if uid in existing_in_db:
+                db_duplicates += 1
+            else:
+                new_users_to_add.append(ReferredUser(delta_user_id=uid))
+
+        if new_users_to_add:
+            db.add_all(new_users_to_add)
+            db.commit()
+
+        added_count = len(new_users_to_add)
+        skipped_count = file_internal_duplicates + db_duplicates
+
         return {
             "status": "success",
-            "message": f"Successfully imported {added_count} user IDs. Skipped {skipped_count} duplicates."
+            "message": f"Successfully imported {added_count} user IDs. Skipped {skipped_count} duplicates.",
+            "added_count": added_count,
+            "skipped_count": skipped_count,
+            "total_processed": len(extracted_uids)
         }
+    except HTTPException:
+        raise
     except Exception as e:
+        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to parse file: {str(e)}"
+            detail=f"Failed to parse CSV file: {str(e)}"
         )

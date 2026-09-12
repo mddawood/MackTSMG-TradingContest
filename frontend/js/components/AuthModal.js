@@ -1,5 +1,6 @@
 // Auth Modal Component (Login & Sign Up)
 import { authAPI } from '../api.js';
+import { router } from '../router.js';
 import { showToast } from './Toast.js';
 
 let loginSuccessCallback = null;
@@ -13,9 +14,18 @@ export function initAuthModal({ onLoginSuccess }) {
     const tabLoginBtn = document.getElementById('tab-login-btn');
     const tabRegisterBtn = document.getElementById('tab-register-btn');
     const closeBtn = document.getElementById('modal-close-btn');
+    const forgotLink = document.getElementById('modal-forgot-password-link');
 
     if (closeBtn) {
         closeBtn.addEventListener('click', closeAuthModal);
+    }
+
+    if (forgotLink) {
+        forgotLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeAuthModal();
+            router.navigate('/forgot-password');
+        });
     }
 
     if (authModal) {
@@ -102,7 +112,15 @@ async function handleRegister(e) {
     const fullName = document.getElementById('register-name').value;
     const email = document.getElementById('register-email').value;
     const password = document.getElementById('register-password').value;
+    const confirmPassword = document.getElementById('register-confirm-password').value;
     const deltaUserId = document.getElementById('register-delta-id').value;
+
+    if (password !== confirmPassword) {
+        showToast('Passwords do not match. Please verify and try again.', 'error');
+        const confirmInput = document.getElementById('register-confirm-password');
+        if (confirmInput) confirmInput.focus();
+        return;
+    }
 
     try {
         await authAPI.register({

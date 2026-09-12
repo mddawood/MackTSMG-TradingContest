@@ -30,6 +30,10 @@ export async function apiRequest(endpoint, options = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
+    if (options.body instanceof FormData) {
+        delete headers['Content-Type'];
+    }
+
     const config = {
         ...options,
         headers
@@ -89,6 +93,29 @@ export const authAPI = {
 
     async getMe() {
         return apiRequest('/auth/me');
+    },
+
+    async forgotPassword(email) {
+        return apiRequest('/auth/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+    },
+
+    async verifyResetToken(token) {
+        return apiRequest(`/auth/verify-reset-token?token=${encodeURIComponent(token)}`);
+    },
+
+    async resetPassword(token, newPassword) {
+        return apiRequest('/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                token,
+                new_password: newPassword
+            })
+        });
     }
 };
 
@@ -101,8 +128,14 @@ export const competitionsAPI = {
         return apiRequest('/competitions/my-registrations');
     },
 
-    async getLeaderboard(competitionId) {
-        return apiRequest(`/competitions/${competitionId}/leaderboard`);
+    async getLeaderboard(competitionId, { tier = '', period = '' } = {}) {
+        let url = `/competitions/${competitionId}/leaderboard`;
+        const params = new URLSearchParams();
+        if (tier && tier !== 'All') params.append('tier', tier);
+        if (period) params.append('period', period);
+        const qs = params.toString();
+        if (qs) url += `?${qs}`;
+        return apiRequest(url);
     },
 
     async register(competitionId) {
@@ -125,6 +158,18 @@ export const apiKeysAPI = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(keyData)
         });
+    },
+
+    async validateKey(keyData) {
+        return apiRequest('/api-keys/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(keyData)
+        });
+    },
+
+    async getTrades(limit = 50) {
+        return apiRequest(`/api-keys/trades?limit=${limit}`);
     },
 
     async delete(keyId) {
@@ -190,6 +235,15 @@ export const adminAPI = {
     async deleteWhitelist(deltaUserId) {
         return apiRequest(`/admin/referred-users/${encodeURIComponent(deltaUserId)}`, {
             method: 'DELETE'
+        });
+    },
+
+    async uploadWhitelist(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        return apiRequest('/admin/referred-users/upload', {
+            method: 'POST',
+            body: formData
         });
     }
 };
