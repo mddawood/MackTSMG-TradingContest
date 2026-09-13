@@ -40,10 +40,19 @@ class SPAServerHandler(http.server.SimpleHTTPRequestHandler):
                 
         return super().do_GET()
 
+class RobustThreadingHTTPServer(http.server.ThreadingHTTPServer):
+    daemon_threads = True
+
+    def handle_error(self, request, client_address):
+        ex_type, _, _ = sys.exc_info()
+        if ex_type in (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
+            return
+        super().handle_error(request, client_address)
+
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else PORT
     server_address = (BIND, port)
-    httpd = http.server.ThreadingHTTPServer(server_address, SPAServerHandler)
+    httpd = RobustThreadingHTTPServer(server_address, SPAServerHandler)
     print(f"SPA Development Server running at http://{BIND}:{port}/ (try_files fallback enabled)")
     try:
         httpd.serve_forever()

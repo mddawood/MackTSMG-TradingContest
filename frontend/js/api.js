@@ -52,7 +52,30 @@ export async function apiRequest(endpoint, options = {}) {
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `Request failed with status ${response.status}`);
+            let errorMessage = '';
+
+            if (Array.isArray(errorData.detail)) {
+                // Parse FastAPI 422 validation error array into clean, human-readable sentences
+                errorMessage = errorData.detail.map(err => {
+                    let msg = err.msg || 'Validation failed';
+                    // Strip Pydantic v2 "Value error, " prefix if present
+                    msg = msg.replace(/^Value error,\s*/i, '');
+                    const field = (err.loc && err.loc.length > 0) ? err.loc[err.loc.length - 1] : '';
+                    if (field && !msg.toLowerCase().includes(field.toLowerCase())) {
+                        const formattedField = field.replace(/_/g, ' ');
+                        return `${formattedField.charAt(0).toUpperCase() + formattedField.slice(1)}: ${msg}`;
+                    }
+                    return msg;
+                }).join('. ');
+            } else if (typeof errorData.detail === 'string') {
+                errorMessage = errorData.detail;
+            } else if (errorData.message) {
+                errorMessage = errorData.message;
+            } else {
+                errorMessage = `Request failed with status ${response.status}`;
+            }
+
+            throw new Error(errorMessage);
         }
 
         if (response.status === 204 || response.status === 244) {

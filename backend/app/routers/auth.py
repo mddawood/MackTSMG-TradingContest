@@ -1,4 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+import time
+import threading
+from collections import defaultdict
+
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -20,13 +24,54 @@ from app.schemas.user import (
 router = APIRouter()
 
 
+class ForgotPasswordRateLimiter:
+    """
+    Sliding window in-memory rate limiter per client IP and email address.
+    Limits reset requests to max_requests within window_seconds.
+    """
+    def __init__(self, max_requests: int = 3, window_seconds: int = 900):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self._lock = threading.Lock()
+        self._requests = defaultdict(list)
+
+    def is_allowed(self, ip: str, email: str) -> bool:
+        now = time.time()
+        cutoff = now - self.window_seconds
+        with self._lock:
+            # Clean up expired timestamps periodically
+            empty_keys = []
+            for k, timestamps in self._requests.items():
+                self._requests[k] = [t for t in timestamps if t > cutoff]
+                if not self._requests[k]:
+                    empty_keys.append(k)
+            for k in empty_keys:
+                del self._requests[k]
+
+            # Check limits for IP and email
+            ip_key = f"ip:{ip}"
+            email_key = f"email:{email}"
+
+            if len(self._requests[ip_key]) >= self.max_requests or len(self._requests[email_key]) >= self.max_requests:
+                return False
+
+            self._requests[ip_key].append(now)
+            self._requests[email_key].append(now)
+            return True
+
+
+forgot_pwd_limiter = ForgotPasswordRateLimiter(max_requests=3, window_seconds=900)
+
+
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
     """
     Register a new user.
     """
-    # 1. Check if Email already exists
-    db_user = db.query(User).filter(User.email == user_in.email).first()
+    clean_email = user_in.email.strip().lower()
+
+    # 1. Check if Email already exists (case-insensitive)
+    db_user = db.query(User).filter(func.lower(User.email) == clean_email).first()
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -51,8 +96,8 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
 
     hashed_password = security.get_password_hash(user_in.password)
     user = User(
-        email=user_in.email,
-        full_name=user_in.full_name,
+        email=clean_email,
+        full_name=user_in.full_name.strip(),
         hashed_password=hashed_password,
         delta_user_id=user_in.delta_user_id,
         phone=user_in.phone,
@@ -72,8 +117,10 @@ def login(
 ):
     """
     OAuth2 compatible token login, retrieving an access token for subsequent authorized API calls.
+    Performs case-insensitive email lookup with whitespace stripping.
     """
-    user = db.query(User).filter(User.email == form_data.username).first()
+    username_clean = form_data.username.strip() if form_data.username else ""
+    user = db.query(User).filter(func.lower(User.email) == func.lower(username_clean)).first()
     if not user or not security.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -104,12 +151,23 @@ def get_me(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/forgot-password")
-def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
+def forgot_password(req: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)):
     """
     Initiate a password reset flow.
     Returns a generic message regardless of whether the user exists to prevent email enumeration.
+    Protected by in-memory rate limiting (max 3 requests per 15 min per IP / email).
     """
-    user = db.query(User).filter(func.lower(User.email) == func.lower(req.email.strip())).first()
+    forwarded = request.headers.get("x-forwarded-for")
+    client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
+    clean_email = req.email.strip().lower()
+
+    if not forgot_pwd_limiter.is_allowed(client_ip, clean_email):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many password reset requests. Please wait a few minutes before trying again."
+        )
+
+    user = db.query(User).filter(func.lower(User.email) == clean_email).first()
     if user and not user.is_deleted:
         reset_token = security.create_password_reset_token(user.id, user.hashed_password)
         reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
@@ -164,6 +222,13 @@ def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="This reset link has already been used or has expired. Please request a new link."
+        )
+
+    # Anti-reuse check: verify if new password is identical to current password
+    if security.verify_password(req.new_password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password cannot be the same as your previous password. Please choose a different password."
         )
 
     # Hash new password and update user

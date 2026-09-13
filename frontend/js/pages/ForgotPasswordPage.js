@@ -1,7 +1,41 @@
-// Forgot Password Page Component matching app glassmorphism styling
+// Forgot Password Page Component with domain typo detection, rate limit cooldown, and glassmorphism styling
 import { authAPI } from '../api.js';
 import { router } from '../router.js';
 import { showToast } from '../components/Toast.js';
+
+const DOMAIN_TYPOS = {
+    'gmil.com': 'gmail.com',
+    'gmial.com': 'gmail.com',
+    'gmai.com': 'gmail.com',
+    'gamil.com': 'gmail.com',
+    'gmail.co': 'gmail.com',
+    'gmaill.com': 'gmail.com',
+    'yaho.com': 'yahoo.com',
+    'yahooo.com': 'yahoo.com',
+    'yaho.co': 'yahoo.com',
+    'hotmial.com': 'hotmail.com',
+    'hotmai.com': 'hotmail.com',
+    'outlok.com': 'outlook.com',
+    'outloo.com': 'outlook.com',
+    'iclud.com': 'icloud.com',
+    'icoud.com': 'icloud.com'
+};
+
+function checkEmailDomainTypo(email) {
+    if (!email || typeof email !== 'string') return null;
+    const parts = email.trim().split('@');
+    if (parts.length !== 2) return null;
+    const domain = parts[1].toLowerCase().trim();
+    if (DOMAIN_TYPOS[domain]) {
+        return `${parts[0]}@${DOMAIN_TYPOS[domain]}`;
+    }
+    return null;
+}
+
+function isValidEmail(email) {
+    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return re.test(email);
+}
 
 export class ForgotPasswordPage {
     constructor() {
@@ -9,6 +43,8 @@ export class ForgotPasswordPage {
         this.escListener = null;
         this.submittedEmail = '';
         this.isSubmitted = false;
+        this.cooldownSeconds = 60;
+        this.timerInterval = null;
     }
 
     render() {
@@ -31,26 +67,34 @@ export class ForgotPasswordPage {
                             </svg>
                         </div>
                         <h1 class="hero-title" style="font-size: 1.75rem; margin-bottom: 0.5rem;">Check Your Email</h1>
-                        <p class="text-secondary text-sm" style="max-width: 320px; line-height: 1.6;">
+                        <p class="text-secondary text-sm" style="max-width: 340px; line-height: 1.6;">
                             If an account exists for <strong class="text-white">${this.escapeHtml(this.submittedEmail)}</strong>, we have sent a secure password reset link.
                         </p>
                     </div>
 
                     <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: left;">
-                        <p class="text-xs text-secondary mb-1" style="line-height: 1.5;">
+                        <p class="text-xs text-secondary mb-2" style="line-height: 1.5;">
                             ⏱️ The reset link expires in <strong>15 minutes</strong>.
                         </p>
-                        <p class="text-xs text-secondary" style="line-height: 1.5;">
-                            Don't see it? Check your Spam or Promotions folder.
+                        <p class="text-xs text-secondary mb-2" style="line-height: 1.5;">
+                            📬 <strong>Don't see it?</strong> Check your Spam, Junk, or Promotions folder.
+                        </p>
+                        <p class="text-xs text-secondary" style="line-height: 1.5; margin: 0;">
+                            🔒 For account security, if this email is not registered with us, no link will be sent.
                         </p>
                     </div>
 
                     <div class="flex-column gap-3">
+                        <button type="button" class="btn btn-secondary w-full" id="forgot-resend-link-btn" ${this.cooldownSeconds > 0 ? 'disabled' : ''}>
+                            ${this.cooldownSeconds > 0 ? `Resend Link in <span class="resend-cooldown-text">${this.cooldownSeconds}s</span>` : 'Resend Reset Link'}
+                        </button>
+
                         <a href="/login" class="btn btn-primary btn-lg w-full" id="forgot-return-login-btn" data-link>
                             Return to Log In
                         </a>
-                        <button type="button" class="btn btn-ghost w-full text-xs text-secondary" id="forgot-resend-btn">
-                            Try another email address
+                        
+                        <button type="button" class="btn btn-ghost w-full text-xs text-secondary" id="forgot-try-another-btn">
+                            Use a different email address
                         </button>
                     </div>
                 </div>
@@ -77,6 +121,7 @@ export class ForgotPasswordPage {
                     <div class="form-group">
                         <label for="page-forgot-email">Email Address</label>
                         <input type="email" id="page-forgot-email" class="form-control" placeholder="you@example.com" required autocomplete="email" autofocus>
+                        <div id="email-typo-container"></div>
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-lg w-full mt-2" id="forgot-submit-btn">
@@ -99,10 +144,41 @@ export class ForgotPasswordPage {
         );
     }
 
+    startCooldownTimer() {
+        this.clearCooldownTimer();
+        this.cooldownSeconds = 60;
+        this.timerInterval = setInterval(() => {
+            this.cooldownSeconds--;
+            const resendBtn = document.getElementById('forgot-resend-link-btn');
+            if (resendBtn) {
+                if (this.cooldownSeconds > 0) {
+                    resendBtn.disabled = true;
+                    resendBtn.innerHTML = `Resend Link in <span class="resend-cooldown-text">${this.cooldownSeconds}s</span>`;
+                } else {
+                    resendBtn.disabled = false;
+                    resendBtn.innerHTML = 'Resend Reset Link';
+                    this.clearCooldownTimer();
+                }
+            } else {
+                this.clearCooldownTimer();
+            }
+        }, 1000);
+    }
+
+    clearCooldownTimer() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+    }
+
     async mount(container) {
         this.container = container;
         this.container.innerHTML = this.render();
         this.bindEvents();
+        if (this.isSubmitted) {
+            this.startCooldownTimer();
+        }
     }
 
     bindEvents() {
@@ -143,12 +219,35 @@ export class ForgotPasswordPage {
         document.addEventListener('keydown', this.escListener);
 
         // Try another email button
-        const resendBtn = document.getElementById('forgot-resend-btn');
-        if (resendBtn) {
-            resendBtn.addEventListener('click', (e) => {
+        const tryAnotherBtn = document.getElementById('forgot-try-another-btn');
+        if (tryAnotherBtn) {
+            tryAnotherBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                this.clearCooldownTimer();
                 this.isSubmitted = false;
                 this.mount(this.container);
+            });
+        }
+
+        // Resend reset link button
+        const resendLinkBtn = document.getElementById('forgot-resend-link-btn');
+        if (resendLinkBtn) {
+            resendLinkBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                if (this.cooldownSeconds > 0) return;
+
+                resendLinkBtn.disabled = true;
+                resendLinkBtn.innerText = 'Sending...';
+
+                try {
+                    await authAPI.forgotPassword(this.submittedEmail);
+                    showToast('A new reset link has been dispatched.', 'success');
+                    this.startCooldownTimer();
+                } catch (err) {
+                    showToast(`Error: ${err.message}`, 'error');
+                    resendLinkBtn.disabled = false;
+                    resendLinkBtn.innerText = 'Resend Reset Link';
+                }
             });
         }
 
@@ -157,9 +256,52 @@ export class ForgotPasswordPage {
         if (returnLoginBtn) {
             returnLoginBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                this.clearCooldownTimer();
                 this.isSubmitted = false;
                 router.navigate('/login');
             });
+        }
+
+        // Email input typo detection
+        const emailInput = document.getElementById('page-forgot-email');
+        const typoContainer = document.getElementById('email-typo-container');
+
+        if (emailInput && typoContainer) {
+            let currentSuggestion = null;
+
+            const handleTypoCheck = () => {
+                const val = emailInput.value.trim();
+                const suggestion = checkEmailDomainTypo(val);
+                if (suggestion && suggestion !== val) {
+                    if (currentSuggestion === suggestion) return;
+                    currentSuggestion = suggestion;
+                    typoContainer.innerHTML = `
+                        <div class="email-suggestion-hint">
+                            <span>Did you mean <strong>${this.escapeHtml(suggestion)}</strong>?</span>
+                            <button type="button" class="email-suggestion-btn" id="apply-email-typo-btn" data-suggestion="${this.escapeHtml(suggestion)}">Fix Email</button>
+                        </div>
+                    `;
+                } else {
+                    currentSuggestion = null;
+                    typoContainer.innerHTML = '';
+                }
+            };
+
+            typoContainer.addEventListener('mousedown', (e) => {
+                const btn = e.target.closest('#apply-email-typo-btn');
+                if (btn) {
+                    e.preventDefault();
+                    const sug = btn.getAttribute('data-suggestion');
+                    if (sug) {
+                        emailInput.value = sug;
+                        currentSuggestion = null;
+                        typoContainer.innerHTML = '';
+                        emailInput.focus();
+                    }
+                }
+            });
+
+            emailInput.addEventListener('input', handleTypoCheck);
         }
 
         // Submit form
@@ -167,11 +309,20 @@ export class ForgotPasswordPage {
         if (form) {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const emailInput = document.getElementById('page-forgot-email');
                 const email = emailInput ? emailInput.value.trim() : '';
                 const submitBtn = document.getElementById('forgot-submit-btn');
 
-                if (!email) return;
+                if (!email) {
+                    showToast('Please enter your email address.', 'error');
+                    if (emailInput) emailInput.focus();
+                    return;
+                }
+
+                if (!isValidEmail(email)) {
+                    showToast('Please enter a valid email address (e.g. name@example.com).', 'error');
+                    if (emailInput) emailInput.focus();
+                    return;
+                }
 
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = `
@@ -200,6 +351,7 @@ export class ForgotPasswordPage {
     }
 
     unmount() {
+        this.clearCooldownTimer();
         if (this.escListener) {
             document.removeEventListener('keydown', this.escListener);
             this.escListener = null;
