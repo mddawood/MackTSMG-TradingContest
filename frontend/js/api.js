@@ -245,12 +245,20 @@ export const adminAPI = {
         return apiRequest(`/admin/competitions/${competitionId}/delete`, { method: 'DELETE' });
     },
 
-    async getWhitelist({ q = '', page = 1, limit = 10 } = {}) {
-        return apiRequest(`/admin/referred-users?q=${encodeURIComponent(q)}&page=${page}&limit=${limit}`);
+    async getWhitelist({ q = '', exchange = '', page = 1, limit = 10 } = {}) {
+        let url = `/admin/referred-users?q=${encodeURIComponent(q)}&page=${page}&limit=${limit}`;
+        if (exchange && exchange !== 'All') {
+            url += `&exchange=${encodeURIComponent(exchange)}`;
+        }
+        return apiRequest(url);
     },
 
-    async addWhitelist(deltaUserId) {
-        return apiRequest(`/admin/referred-users?delta_user_id=${encodeURIComponent(deltaUserId)}`, {
+    async addWhitelist(deltaUserId, exchange = null) {
+        let url = `/admin/referred-users?delta_user_id=${encodeURIComponent(deltaUserId)}`;
+        if (exchange) {
+            url += `&exchange=${encodeURIComponent(exchange)}`;
+        }
+        return apiRequest(url, {
             method: 'POST'
         });
     },

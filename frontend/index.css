@@ -1691,6 +1691,24 @@ select.form-control {
     border: 1px solid rgba(239, 68, 68, 0.4);
     color: #f87171;
 }
+.badge-delta {
+    background-color: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    color: #a5b4fc;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 600;
+}
+.badge-shark {
+    background-color: rgba(6, 182, 212, 0.15);
+    border: 1px solid rgba(6, 182, 212, 0.4);
+    color: #22d3ee;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 600;
+}
 .text-destructive {
     color: var(--destructive) !important;
 }
@@ -2220,6 +2238,36 @@ select.form-control {
     padding: 0.2rem 0.55rem;
     font-size: 0.75rem;
     font-weight: 500;
+}
+
+.exchange-live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.15rem 0.55rem;
+    border-radius: 9999px;
+    transition: all 0.2s ease-in-out;
+    width: fit-content;
+}
+
+.exchange-live-pill.delta {
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    color: #a5b4fc;
+}
+
+.exchange-live-pill.shark {
+    background: rgba(6, 182, 212, 0.15);
+    border: 1px solid rgba(6, 182, 212, 0.4);
+    color: #22d3ee;
+}
+
+.exchange-live-pill.neutral {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
 }
 /* ServiceNow & Salesforce style DateTime Picker */
 .snow-datetime-picker {

@@ -8,5 +8,6 @@ class ReferredUser(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     delta_user_id = Column(String, unique=True, index=True, nullable=False)
+    exchange = Column(String, default="Delta", nullable=False)
     is_registered = Column(Boolean, default=False, nullable=False)
     added_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

@@ -12,7 +12,7 @@ export class AdminPage {
 
         this.adminUsers = { q: '', page: 1, limit: 10, total: 0 };
         this.adminComps = { q: '', page: 1, limit: 10, total: 0 };
-        this.adminWhitelist = { q: '', page: 1, limit: 10, total: 0 };
+        this.adminWhitelist = { q: '', exchange: 'All', page: 1, limit: 10, total: 0 };
     }
 
     render() {
@@ -249,7 +249,7 @@ export class AdminPage {
                         <h2 style="font-size: 1.5rem; font-weight: 700;">Referred Users Whitelist</h2>
                         <span class="badge badge-active" style="font-size: 0.68rem; padding: 0.2rem 0.5rem;">ACCESS CONTROL</span>
                     </div>
-                    <p class="text-secondary text-sm mt-1">Authorize referred Delta Exchange accounts manually or via bulk Delta CSV export.</p>
+                    <p class="text-secondary text-sm mt-1">Authorize referred accounts from Delta Exchange (8 digits) and Shark Exchange (6 digits) manually or via bulk CSV export.</p>
                 </div>
             </div>
 
@@ -257,13 +257,16 @@ export class AdminPage {
             <div class="whitelist-controls-grid">
                 <!-- Single User Add Card -->
                 <div class="whitelist-action-card">
-                    <div class="whitelist-action-header">
-                        <span class="whitelist-action-icon">➕</span>
-                        <span class="whitelist-action-title">Manual Single Add</span>
+                    <div class="whitelist-action-header justify-between">
+                        <div class="flex-row align-center gap-2">
+                            <span class="whitelist-action-icon">➕</span>
+                            <span class="whitelist-action-title">Manual Single Add</span>
+                        </div>
+                        <span id="admin-whitelist-detected-exchange" class="exchange-live-pill neutral">Auto-detecting...</span>
                     </div>
-                    <p class="whitelist-action-desc">Quickly whitelist an individual Delta User ID.</p>
+                    <p class="whitelist-action-desc">Enter 8 digits for <strong>Delta Exchange</strong> or 6 digits for <strong>Shark Exchange</strong>.</p>
                     <div class="flex-row gap-2">
-                        <input type="text" id="admin-whitelist-add-input" class="form-control" placeholder="Enter Delta User ID" style="height: 2.25rem; font-size: 0.85rem;">
+                        <input type="text" id="admin-whitelist-add-input" class="form-control" placeholder="Enter User ID (8-digit Delta / 6-digit Shark)" style="height: 2.25rem; font-size: 0.85rem;">
                         <button class="btn btn-primary" id="admin-whitelist-add-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem; white-space: nowrap;">+ Add</button>
                     </div>
                 </div>
@@ -275,9 +278,9 @@ export class AdminPage {
                             <span class="whitelist-action-icon">📄</span>
                             <span class="whitelist-action-title">Bulk CSV Whitelist Upload</span>
                         </div>
-                        <span class="text-muted" style="font-size: 0.72rem;">Delta CSV Export</span>
+                        <span class="text-muted" style="font-size: 0.72rem;">Delta & Shark CSV</span>
                     </div>
-                    <p class="whitelist-action-desc">Upload a Delta exported CSV (with <code>user_id</code> column) to bulk whitelist users automatically.</p>
+                    <p class="whitelist-action-desc">Upload a CSV (with <code>user_id</code> and optional <code>exchange</code> column) to bulk whitelist users automatically.</p>
                     
                     <div class="csv-upload-dropzone" id="admin-whitelist-dropzone">
                         <input type="file" id="admin-whitelist-file-input" accept=".csv,text/csv" style="display: none;">
@@ -316,10 +319,15 @@ export class AdminPage {
             <div class="card glass p-6" style="border: 1px solid var(--border-color); border-radius: 1rem;">
                 <div class="flex-row justify-between align-center mb-4 flex-wrap gap-4">
                     <h3 class="card-title flex-row align-center gap-2" style="margin-bottom: 0; font-size: 1.15rem; font-weight: 700;">
-                        👤 Whitelisted Delta User IDs
+                        👤 Whitelisted Accounts (Delta & Shark)
                     </h3>
-                    <div class="flex-row gap-2" style="width: 100%; max-width: 400px;">
-                        <input type="text" id="admin-whitelist-search" class="form-control" placeholder="Search by Delta User ID..." value="${this.adminWhitelist.q || ''}" style="height: 2.25rem; font-size: 0.85rem;">
+                    <div class="flex-row gap-2 flex-wrap" style="width: 100%; max-width: 520px; justify-content: flex-end;">
+                        <select id="admin-whitelist-exchange-filter" class="form-control" style="height: 2.25rem; font-size: 0.85rem; width: auto; min-width: 140px; background: rgba(0,0,0,0.3);">
+                            <option value="All" ${this.adminWhitelist.exchange === 'All' ? 'selected' : ''}>All Exchanges</option>
+                            <option value="Delta" ${this.adminWhitelist.exchange === 'Delta' ? 'selected' : ''}>🔺 Delta (8-digit)</option>
+                            <option value="Shark" ${this.adminWhitelist.exchange === 'Shark' ? 'selected' : ''}>🦈 Shark (6-digit)</option>
+                        </select>
+                        <input type="text" id="admin-whitelist-search" class="form-control" placeholder="Search by User ID..." value="${this.adminWhitelist.q || ''}" style="height: 2.25rem; font-size: 0.85rem; flex: 1; min-width: 150px;">
                         <button class="btn btn-secondary" id="admin-whitelist-search-btn" style="height: 2.25rem; padding: 0 1rem; font-size: 0.8rem;">Search</button>
                         <button class="btn btn-ghost" id="admin-whitelist-clear-btn" style="height: 2.25rem; padding: 0 0.5rem; font-size: 0.8rem;" title="Clear search">Clear</button>
                     </div>
@@ -329,7 +337,8 @@ export class AdminPage {
                     <table class="leaderboard-table" style="margin-top: 0;">
                         <thead>
                             <tr>
-                                <th>Delta User ID</th>
+                                <th>User ID</th>
+                                <th>Exchange</th>
                                 <th>Status</th>
                                 <th>Added At</th>
                                 <th class="text-right">Actions</th>
@@ -337,7 +346,7 @@ export class AdminPage {
                         </thead>
                         <tbody id="admin-whitelist-tbody">
                             <tr>
-                                <td colspan="4" class="text-center py-8 text-muted">Loading whitelist database...</td>
+                                <td colspan="5" class="text-center py-8 text-muted">Loading whitelist database...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -517,14 +526,24 @@ export class AdminPage {
     }
 
     bindWhitelistEvents() {
-        // Whitelist search, pagination & add
+        // Whitelist search, filter, pagination & add
         const whitelistSearchInput = document.getElementById('admin-whitelist-search');
         const whitelistSearchBtn = document.getElementById('admin-whitelist-search-btn');
         const whitelistClearBtn = document.getElementById('admin-whitelist-clear-btn');
+        const whitelistExchangeFilter = document.getElementById('admin-whitelist-exchange-filter');
         const whitelistPrevBtn = document.getElementById('admin-whitelist-prev-btn');
         const whitelistNextBtn = document.getElementById('admin-whitelist-next-btn');
         const whitelistAddInput = document.getElementById('admin-whitelist-add-input');
         const whitelistAddBtn = document.getElementById('admin-whitelist-add-btn');
+        const whitelistDetectedExchange = document.getElementById('admin-whitelist-detected-exchange');
+
+        if (whitelistExchangeFilter) {
+            whitelistExchangeFilter.addEventListener('change', (e) => {
+                this.adminWhitelist.exchange = e.target.value;
+                this.adminWhitelist.page = 1;
+                this.loadWhitelist();
+            });
+        }
 
         if (whitelistSearchBtn) {
             whitelistSearchBtn.addEventListener('click', () => {
@@ -545,7 +564,9 @@ export class AdminPage {
         if (whitelistClearBtn) {
             whitelistClearBtn.addEventListener('click', () => {
                 if (whitelistSearchInput) whitelistSearchInput.value = '';
+                if (whitelistExchangeFilter) whitelistExchangeFilter.value = 'All';
                 this.adminWhitelist.q = '';
+                this.adminWhitelist.exchange = 'All';
                 this.adminWhitelist.page = 1;
                 this.loadWhitelist();
             });
@@ -568,19 +589,46 @@ export class AdminPage {
             });
         }
 
+        // Live Exchange Detection on Single Add input
+        const updateLiveExchangeDetection = () => {
+            if (!whitelistAddInput || !whitelistDetectedExchange) return;
+            const val = whitelistAddInput.value.trim();
+            if (!val) {
+                whitelistDetectedExchange.className = 'exchange-live-pill neutral';
+                whitelistDetectedExchange.textContent = 'Auto-detecting...';
+            } else if (val.length === 6) {
+                whitelistDetectedExchange.className = 'exchange-live-pill shark';
+                whitelistDetectedExchange.innerHTML = '🦈 Shark Exchange (6-digit)';
+            } else if (val.length === 8) {
+                whitelistDetectedExchange.className = 'exchange-live-pill delta';
+                whitelistDetectedExchange.innerHTML = '🔺 Delta Exchange (8-digit)';
+            } else {
+                whitelistDetectedExchange.className = 'exchange-live-pill neutral';
+                whitelistDetectedExchange.innerHTML = `Auto (${val.length} digits)`;
+            }
+        };
+
+        if (whitelistAddInput) {
+            whitelistAddInput.addEventListener('input', updateLiveExchangeDetection);
+        }
+
         if (whitelistAddBtn) {
             const handleAddSingle = async () => {
                 const val = whitelistAddInput ? whitelistAddInput.value.trim() : '';
                 if (!val) {
-                    showToast('Please enter a Delta User ID.', 'error');
+                    showToast('Please enter a User ID.', 'error');
                     return;
                 }
                 try {
                     whitelistAddBtn.disabled = true;
                     whitelistAddBtn.textContent = 'Adding...';
-                    await adminAPI.addWhitelist(val);
-                    showToast(`Successfully whitelisted Delta User ID: ${val}`, 'success');
-                    if (whitelistAddInput) whitelistAddInput.value = '';
+                    const res = await adminAPI.addWhitelist(val);
+                    const exName = res.exchange || (val.length === 6 ? 'Shark' : 'Delta');
+                    showToast(`Successfully whitelisted ${exName} User ID: ${val}`, 'success');
+                    if (whitelistAddInput) {
+                        whitelistAddInput.value = '';
+                        updateLiveExchangeDetection();
+                    }
                     this.adminWhitelist.page = 1;
                     await this.loadWhitelist();
                 } catch (err) {
@@ -1043,7 +1091,7 @@ export class AdminPage {
         const tbody = document.getElementById('admin-whitelist-tbody');
         if (!tbody) return;
 
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-muted">Loading whitelist database...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-muted">Loading whitelist database...</td></tr>';
 
         try {
             const data = await adminAPI.getWhitelist(this.adminWhitelist);
@@ -1051,7 +1099,7 @@ export class AdminPage {
             const users = data.referred_users;
 
             if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-muted">No whitelisted user IDs found.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-muted">No whitelisted user IDs found.</td></tr>';
                 const pageInfo = document.getElementById('admin-whitelist-page-info');
                 if (pageInfo) pageInfo.textContent = 'Showing page 1 of 1';
                 const prevBtn = document.getElementById('admin-whitelist-prev-btn');
@@ -1067,17 +1115,30 @@ export class AdminPage {
                 const statusBadgeClass = u.is_registered ? 'badge-active' : 'badge-deleted';
                 const statusText = u.is_registered ? 'Registered' : 'Unclaimed';
 
+                // User ID cell
                 const idCell = document.createElement('td');
                 const strong = document.createElement('strong');
                 strong.textContent = u.delta_user_id;
                 idCell.appendChild(strong);
 
+                // Exchange cell
+                const exName = u.exchange || ((u.delta_user_id && u.delta_user_id.length === 6) ? 'Shark' : 'Delta');
+                const isShark = exName.toLowerCase() === 'shark';
+                const exBadgeClass = isShark ? 'badge-shark' : 'badge-delta';
+                const exIcon = isShark ? '🦈' : '🔺';
+
+                const exchangeCell = document.createElement('td');
+                exchangeCell.innerHTML = `<span class="badge ${exBadgeClass}">${exIcon} ${exName}</span>`;
+
+                // Status cell
                 const statusCell = document.createElement('td');
                 statusCell.innerHTML = `<span class="badge ${statusBadgeClass}">${statusText}</span>`;
 
+                // Added date cell
                 const dateCell = document.createElement('td');
                 dateCell.textContent = new Date(u.added_at).toLocaleString();
 
+                // Actions cell
                 const actionCell = document.createElement('td');
                 actionCell.className = 'text-right';
                 if (!u.is_registered) {
@@ -1098,6 +1159,7 @@ export class AdminPage {
                 }
 
                 row.appendChild(idCell);
+                row.appendChild(exchangeCell);
                 row.appendChild(statusCell);
                 row.appendChild(dateCell);
                 row.appendChild(actionCell);
@@ -1113,16 +1175,16 @@ export class AdminPage {
             if (prevBtn) prevBtn.disabled = this.adminWhitelist.page <= 1;
             if (nextBtn) nextBtn.disabled = this.adminWhitelist.page >= totalPages;
         } catch (err) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-destructive">Failed to load whitelisted users.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-destructive">Failed to load whitelisted users.</td></tr>';
         }
     }
 
     async deleteWhitelistUser(deltaUserId) {
-        if (!confirm(`Are you sure you want to remove Delta User ID ${deltaUserId} from the whitelist?`)) return;
+        if (!confirm(`Are you sure you want to remove User ID ${deltaUserId} from the whitelist?`)) return;
 
         try {
             await adminAPI.deleteWhitelist(deltaUserId);
-            showToast(`Successfully removed Delta User ID ${deltaUserId} from whitelist.`, 'success');
+            showToast(`Successfully removed User ID ${deltaUserId} from whitelist.`, 'success');
             await this.loadWhitelist();
         } catch (err) {
             showToast(err.message, 'error');

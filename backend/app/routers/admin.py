@@ -2,7 +2,7 @@ import csv
 import io
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.database import get_db
 from app.routers.deps import get_current_admin
@@ -246,9 +246,25 @@ def delete_competition(
 # Referred Users Whitelist Endpoints
 # --------------------
 
+def detect_exchange(uid: str) -> str:
+    """
+    Categorizes UID based on length:
+    6 digits -> Shark
+    8 digits -> Delta
+    Fallback -> Delta
+    """
+    clean = uid.strip() if uid else ""
+    if len(clean) == 6:
+        return "Shark"
+    elif len(clean) == 8:
+        return "Delta"
+    return "Delta"
+
+
 @router.get("/referred-users")
 def list_referred_users(
-    q: str = None,
+    q: Optional[str] = None,
+    exchange: Optional[str] = None,
     page: int = 1,
     limit: int = 10,
     current_admin: User = Depends(get_current_admin),
@@ -257,6 +273,8 @@ def list_referred_users(
     query = db.query(ReferredUser)
     if q:
         query = query.filter(ReferredUser.delta_user_id.ilike(f"%{q}%"))
+    if exchange and exchange.strip().lower() not in ["all", ""]:
+        query = query.filter(ReferredUser.exchange.ilike(exchange.strip()))
     
     total = query.count()
     offset = (page - 1) * limit
@@ -267,6 +285,7 @@ def list_referred_users(
         result.append({
             "id": u.id,
             "delta_user_id": u.delta_user_id,
+            "exchange": u.exchange or detect_exchange(u.delta_user_id),
             "is_registered": u.is_registered,
             "added_at": u.added_at
         })
@@ -282,6 +301,7 @@ def list_referred_users(
 @router.post("/referred-users")
 def add_referred_user(
     delta_user_id: str,
+    exchange: Optional[str] = None,
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
@@ -289,21 +309,30 @@ def add_referred_user(
     if not delta_user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Delta User ID cannot be empty."
+            detail="User ID cannot be empty."
         )
         
     existing = db.query(ReferredUser).filter(ReferredUser.delta_user_id == delta_user_id).first()
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This Delta User ID is already in the whitelist."
+            detail=f"User ID {delta_user_id} is already in the whitelist."
         )
+
+    if exchange and exchange.strip().lower() not in ["auto", ""]:
+        target_exchange = "Shark" if exchange.strip().lower() == "shark" else "Delta"
+    else:
+        target_exchange = detect_exchange(delta_user_id)
         
-    new_ref = ReferredUser(delta_user_id=delta_user_id)
+    new_ref = ReferredUser(delta_user_id=delta_user_id, exchange=target_exchange)
     db.add(new_ref)
     db.commit()
     db.refresh(new_ref)
-    return {"status": "success", "message": f"Successfully added {delta_user_id} to whitelist."}
+    return {
+        "status": "success",
+        "message": f"Successfully added {delta_user_id} ({target_exchange}) to whitelist.",
+        "exchange": target_exchange
+    }
 
 
 @router.delete("/referred-users/{delta_user_id}")
@@ -316,7 +345,7 @@ def delete_referred_user(
     if not ref:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Delta User ID not found in whitelist."
+            detail="User ID not found in whitelist."
         )
         
     if ref.is_registered:
@@ -364,8 +393,12 @@ def upload_referred_users(
             "user_id", "userid", "user id", "delta_user_id",
             "delta userid", "delta user id", "id", "uid", "account_id", "delta_id"
         }
+        known_exchange_headers = {
+            "exchange", "platform", "broker", "source"
+        }
 
         target_col_idx = 0
+        exchange_col_idx = None
         has_header = False
 
         for idx, col in enumerate(first_row):
@@ -373,42 +406,56 @@ def upload_referred_users(
             if normalized_col in known_headers or "user_id" in normalized_col or "delta" in normalized_col:
                 target_col_idx = idx
                 has_header = True
-                break
+            elif normalized_col in known_exchange_headers or "exchange" in normalized_col:
+                exchange_col_idx = idx
+                has_header = True
 
         # If the first row contains common non-numeric header text even if not explicitly matched
-        if not has_header and any(h in first_row[0] for h in ["user", "id", "delta", "email", "name", "account"]):
+        if not has_header and any(h in first_row[0] for h in ["user", "id", "delta", "email", "name", "account", "exchange"]):
             has_header = True
 
         data_rows = raw_rows[1:] if has_header else raw_rows
 
-        extracted_uids = []
+        extracted_items = []
         for row in data_rows:
             if target_col_idx < len(row):
                 val = row[target_col_idx].strip().strip('"\'')
                 # Ignore empty strings or accidental repeat headers
                 if not val or val.lower() in known_headers:
                     continue
-                extracted_uids.append(val)
 
-        if not extracted_uids:
+                row_exchange = None
+                if exchange_col_idx is not None and exchange_col_idx < len(row):
+                    ex_val = row[exchange_col_idx].strip().strip('"\'')
+                    if ex_val.lower() == "shark":
+                        row_exchange = "Shark"
+                    elif ex_val.lower() == "delta":
+                        row_exchange = "Delta"
+                if not row_exchange:
+                    row_exchange = detect_exchange(val)
+
+                extracted_items.append((val, row_exchange))
+
+        if not extracted_items:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No valid user IDs found in the uploaded CSV file."
             )
 
         # Deduplicate within the uploaded file while preserving order
-        unique_uids = []
+        unique_items = []
         seen_in_batch = set()
-        for uid in extracted_uids:
+        for uid, ex in extracted_items:
             if uid not in seen_in_batch:
                 seen_in_batch.add(uid)
-                unique_uids.append(uid)
+                unique_items.append((uid, ex))
 
-        file_internal_duplicates = len(extracted_uids) - len(unique_uids)
+        file_internal_duplicates = len(extracted_items) - len(unique_items)
 
         # Batch check against DB
         existing_in_db = set()
         chunk_size = 500
+        unique_uids = [item[0] for item in unique_items]
         for i in range(0, len(unique_uids), chunk_size):
             chunk = unique_uids[i : i + chunk_size]
             matched = db.query(ReferredUser.delta_user_id).filter(ReferredUser.delta_user_id.in_(chunk)).all()
@@ -418,25 +465,29 @@ def upload_referred_users(
         new_users_to_add = []
         db_duplicates = 0
 
-        for uid in unique_uids:
+        for uid, ex in unique_items:
             if uid in existing_in_db:
                 db_duplicates += 1
             else:
-                new_users_to_add.append(ReferredUser(delta_user_id=uid))
+                new_users_to_add.append(ReferredUser(delta_user_id=uid, exchange=ex))
 
         if new_users_to_add:
             db.add_all(new_users_to_add)
             db.commit()
 
         added_count = len(new_users_to_add)
+        delta_count = sum(1 for u in new_users_to_add if u.exchange == "Delta")
+        shark_count = sum(1 for u in new_users_to_add if u.exchange == "Shark")
         skipped_count = file_internal_duplicates + db_duplicates
 
         return {
             "status": "success",
-            "message": f"Successfully imported {added_count} user IDs. Skipped {skipped_count} duplicates.",
+            "message": f"Successfully imported {added_count} user IDs ({delta_count} Delta, {shark_count} Shark). Skipped {skipped_count} duplicates.",
             "added_count": added_count,
+            "delta_count": delta_count,
+            "shark_count": shark_count,
             "skipped_count": skipped_count,
-            "total_processed": len(extracted_uids)
+            "total_processed": len(extracted_items)
         }
     except HTTPException:
         raise

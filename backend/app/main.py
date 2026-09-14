@@ -63,6 +63,19 @@ def run_auto_migrations():
             conn.execute(text("ALTER TABLE leaderboard_snapshots ADD COLUMN rank_change INTEGER DEFAULT 0"))
             conn.commit()
 
+        # Check referred_users table columns
+        cursor = conn.execute(text("PRAGMA table_info(referred_users)"))
+        ref_cols = [row[1] for row in cursor.fetchall()]
+
+        if "exchange" not in ref_cols:
+            print("Production Migration: Adding exchange column to referred_users table...")
+            conn.execute(text("ALTER TABLE referred_users ADD COLUMN exchange VARCHAR DEFAULT 'Delta'"))
+            # Backfill existing rows: if length(delta_user_id) == 6, set exchange = 'Shark', otherwise ensure default 'Delta'
+            conn.execute(text("UPDATE referred_users SET exchange = 'Shark' WHERE length(delta_user_id) == 6"))
+            conn.execute(text("UPDATE referred_users SET exchange = 'Delta' WHERE exchange IS NULL OR exchange = ''"))
+            conn.commit()
+            print("Production Migration: Completed successfully for referred_users.")
+
 run_auto_migrations()
 
 app = FastAPI(
