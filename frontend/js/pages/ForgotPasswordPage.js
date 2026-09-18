@@ -204,6 +204,12 @@ export class ForgotPasswordPage {
         const pageView = document.getElementById('forgot-page-view');
         if (pageView) {
             pageView.addEventListener('click', (e) => {
+                if (!e.target || !e.target.isConnected) {
+                    return;
+                }
+                if (e.composedPath && e.composedPath().some(el => el && el.classList && el.classList.contains('auth-card'))) {
+                    return;
+                }
                 if (!e.target.closest('.auth-card')) {
                     handleClose();
                 }

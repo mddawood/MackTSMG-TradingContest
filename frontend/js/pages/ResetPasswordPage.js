@@ -235,6 +235,12 @@ export class ResetPasswordPage {
         const pageView = document.getElementById('reset-page-view');
         if (pageView) {
             pageView.addEventListener('click', (e) => {
+                if (!e.target || !e.target.isConnected) {
+                    return;
+                }
+                if (e.composedPath && e.composedPath().some(el => el && el.classList && el.classList.contains('auth-card'))) {
+                    return;
+                }
                 if (!e.target.closest('.auth-card')) {
                     handleClose();
                 }
@@ -261,6 +267,7 @@ export class ResetPasswordPage {
             if (!btn || !input) return;
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 const isPassword = input.type === 'password';
                 input.type = isPassword ? 'text' : 'password';
                 btn.innerHTML = isPassword ? EYE_OFF_SVG : EYE_OPEN_SVG;

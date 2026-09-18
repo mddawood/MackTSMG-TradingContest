@@ -61,6 +61,7 @@ export function initAuthModal({ onLoginSuccess }) {
 
         btn.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             const isPassword = input.type === 'password';
             input.type = isPassword ? 'text' : 'password';
             btn.innerHTML = isPassword ? eyeOff : eyeOpen;

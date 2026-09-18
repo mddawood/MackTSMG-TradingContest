@@ -104,6 +104,12 @@ export class SignupPage {
         const pageView = document.getElementById('signup-page-view');
         if (pageView) {
             pageView.addEventListener('click', (e) => {
+                if (!e.target || !e.target.isConnected) {
+                    return;
+                }
+                if (e.composedPath && e.composedPath().some(el => el && el.classList && el.classList.contains('auth-card'))) {
+                    return;
+                }
                 if (!e.target.closest('.auth-card')) {
                     handleClose();
                 }
@@ -129,6 +135,7 @@ export class SignupPage {
 
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 const isPassword = input.type === 'password';
                 input.type = isPassword ? 'text' : 'password';
                 btn.innerHTML = isPassword ? eyeOff : eyeOpen;

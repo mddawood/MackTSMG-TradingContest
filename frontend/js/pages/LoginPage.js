@@ -87,6 +87,12 @@ export class LoginPage {
         const pageView = document.getElementById('login-page-view');
         if (pageView) {
             pageView.addEventListener('click', (e) => {
+                if (!e.target || !e.target.isConnected) {
+                    return;
+                }
+                if (e.composedPath && e.composedPath().some(el => el && el.classList && el.classList.contains('auth-card'))) {
+                    return;
+                }
                 if (!e.target.closest('.auth-card')) {
                     handleClose();
                 }
@@ -110,6 +116,7 @@ export class LoginPage {
 
             toggleBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 const isPassword = passwordInput.type === 'password';
                 passwordInput.type = isPassword ? 'text' : 'password';
                 toggleBtn.innerHTML = isPassword ? eyeOff : eyeOpen;

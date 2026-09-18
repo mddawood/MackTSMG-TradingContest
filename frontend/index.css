@@ -2461,6 +2461,10 @@ select.form-control {
     line-height: 1;
 }
 
+.password-toggle-btn svg {
+    pointer-events: none;
+}
+
 .password-toggle-btn:hover {
     color: #fff;
     background: rgba(255, 255, 255, 0.08);
