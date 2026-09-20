@@ -139,6 +139,28 @@ export const authAPI = {
                 new_password: newPassword
             })
         });
+    },
+
+    async verifyEmail(token) {
+        return apiRequest(`/auth/verify-email?token=${encodeURIComponent(token)}`, {
+            method: 'POST'
+        });
+    },
+
+    async resendVerification(email) {
+        return apiRequest('/auth/resend-verification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+    },
+
+    async updateProfile(data) {
+        return apiRequest('/auth/profile', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
     }
 };
 

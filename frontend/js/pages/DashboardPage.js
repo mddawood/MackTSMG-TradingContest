@@ -1,6 +1,8 @@
-// User Dashboard Component with Sidebar Navigation matching Google Doc Section 4
+// User Dashboard Component with Sidebar Navigation & Profile Completion Hub
 import { apiKeysAPI, competitionsAPI, authAPI } from '../api.js';
 import { showToast } from '../components/Toast.js';
+import { calculateProfileCompletion, renderAvatarWithProgress } from '../utils.js';
+import { updateNavbar } from '../components/Navbar.js';
 
 export class DashboardPage {
     constructor() {
@@ -12,6 +14,40 @@ export class DashboardPage {
         this.myRegistrations = [];
         this.trades = [];
         this.loadingTrades = false;
+
+        // Profile Completion Wizard State
+        this.wizardStep = 1; // 1: Name/Contact, 2: Exchange, 3: UID, 4: API Key
+        this.isEditingProfile = false;
+        this.wizardData = {
+            fullName: '',
+            phone: '',
+            exchange: 'Delta Exchange',
+            uid: '',
+            apiKey: '',
+            apiSecret: '',
+            environment: 'mainnet_india'
+        };
+
+        this.tabSwitchListener = (e) => {
+            if (e && e.detail && e.detail.tab) {
+                this.switchToTab(e.detail.tab);
+            }
+        };
+    }
+
+    switchToTab(tabName) {
+        this.activeTab = tabName;
+        const nav = document.getElementById('dashboard-sidebar-nav');
+        if (nav) {
+            nav.querySelectorAll('.sidebar-link').forEach(b => {
+                b.classList.toggle('active', b.dataset.tab === tabName);
+            });
+        }
+        const main = document.getElementById('dashboard-tab-content');
+        if (main) {
+            main.innerHTML = this.renderActiveTabContent();
+            this.bindTabEvents();
+        }
     }
 
     render() {
@@ -24,11 +60,11 @@ export class DashboardPage {
             <div class="dashboard-layout">
                 <!-- Sidebar -->
                 <aside class="dashboard-sidebar">
-                    <div class="p-3 mb-2 flex-row align-center gap-3">
-                        <div class="avatar-circle" style="width: 2.25rem; height: 2.25rem;">
-                            ${userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                    <div class="p-3 mb-2 flex-row align-center gap-3" id="sidebar-user-header">
+                        <div id="sidebar-avatar-wrap">
+                            ${renderAvatarWithProgress(this.user, 42, true)}
                         </div>
-                        <div class="flex-column" style="overflow: hidden;">
+                        <div class="flex-column" style="overflow: hidden; min-width: 0;">
                             <span style="font-weight: 700; font-size: 0.9rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${userName}</span>
                             <span class="tier-badge tier-${tierLower}" style="width: fit-content; font-size: 0.65rem; padding: 0.1rem 0.4rem; margin-top: 0.15rem;">${userTier} Tier</span>
                         </div>
@@ -149,37 +185,310 @@ export class DashboardPage {
     }
 
     renderProfileTab() {
+        const pct = calculateProfileCompletion(this.user);
+        const hasEmail = Boolean(this.user?.is_verified);
+        const hasInfo = Boolean(this.user?.full_name && this.user?.phone);
+        const hasUID = Boolean(this.user?.delta_user_id);
+        const hasAPI = Boolean(this.user?.has_api_key || (this.apiKeys && this.apiKeys.some(k => k.is_valid)));
+
         return `
-        <div class="flex-column gap-6" style="max-width: 600px;">
-            <div>
-                <h2 style="font-size: 1.5rem; font-weight: 700;">Trader Profile</h2>
-                <p class="text-secondary text-sm">Your championship details and verified credentials.</p>
+        <div class="flex-column gap-6" style="max-width: 720px;">
+            <!-- Profile Completion Header Banner -->
+            <div class="card glass p-6" style="border: 1px solid var(--border-color); border-radius: 1rem;">
+                <div class="flex-row align-center justify-between flex-wrap gap-4 mb-4">
+                    <div class="flex-row align-center gap-4">
+                        ${renderAvatarWithProgress(this.user, 64, true)}
+                        <div>
+                            <div class="flex-row align-center gap-2">
+                                <h2 style="font-size: 1.45rem; font-weight: 700;">Trader Profile &amp; Setup</h2>
+                                ${pct === 100 ? '<span class="badge badge-active" style="font-size: 0.75rem;">100% Complete</span>' : ''}
+                            </div>
+                            <p class="text-secondary text-sm mt-1">
+                                Complete all 4 steps to link your exchange credentials and qualify for cash prize leaderboards.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex-column align-end">
+                        <div class="font-mono text-xl font-bold ${pct === 100 ? 'text-accent' : 'text-primary'}">${pct}%</div>
+                        <span class="text-muted text-xs">Profile Completion</span>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-bar-wrap mb-4" style="height: 8px; background: rgba(255,255,255,0.08); border-radius: 9999px; overflow: hidden;">
+                    <div style="width: ${pct}%; height: 100%; background: ${pct === 100 ? '#10b981' : 'linear-gradient(90deg, #3b82f6, #8b5cf6)'}; border-radius: 9999px; transition: width 0.6s ease;"></div>
+                </div>
+
+                <!-- 4 Milestones Checklist -->
+                <div class="grid-4 gap-2 text-xs" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
+                    <div class="flex-row align-center gap-1.5 ${hasEmail ? 'text-accent font-semibold' : 'text-muted'}">
+                        <span>${hasEmail ? '✓' : '○'}</span> Email Verified (25%)
+                    </div>
+                    <div class="flex-row align-center gap-1.5 ${hasInfo ? 'text-accent font-semibold' : 'text-muted'}">
+                        <span>${hasInfo ? '✓' : '○'}</span> Personal Info (25%)
+                    </div>
+                    <div class="flex-row align-center gap-1.5 ${hasUID ? 'text-accent font-semibold' : 'text-muted'}">
+                        <span>${hasUID ? '✓' : '○'}</span> Exchange &amp; UID (25%)
+                    </div>
+                    <div class="flex-row align-center gap-1.5 ${hasAPI ? 'text-accent font-semibold' : 'text-muted'}">
+                        <span>${hasAPI ? '✓' : '○'}</span> Read-Only API (25%)
+                    </div>
+                </div>
             </div>
 
-            <div class="card glass p-6 flex-column gap-4" style="border: 1px solid var(--border-color); border-radius: 1rem;">
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" class="form-control" value="${this.user?.full_name || ''}" disabled>
+            ${pct === 100 && !this.isEditingProfile ? this.renderCompletedProfileView() : this.renderProfileWizard()}
+        </div>
+        `;
+    }
+
+    renderCompletedProfileView() {
+        const exchangeName = this.user?.exchange || 'Delta Exchange';
+        return `
+        <div class="card glass p-6 flex-column gap-5" style="border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 1rem;">
+            <div class="flex-row justify-between align-center border-bottom pb-4" style="border-bottom: 1px solid var(--border-color);">
+                <div>
+                    <h3 style="font-size: 1.15rem; font-weight: 700; color: #10b981;">✓ Profile Fully Verified</h3>
+                    <p class="text-secondary text-xs mt-0.5">Your exchange account and read-only API credentials are connected and active.</p>
                 </div>
-                <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" class="form-control" value="${this.user?.email || ''}" disabled>
+                <button type="button" class="btn btn-secondary btn-sm" id="profile-edit-setup-btn">
+                    Edit / Update Setup
+                </button>
+            </div>
+
+            <div class="grid-2 gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+                <div>
+                    <span class="text-xs text-muted block mb-1">Full Name</span>
+                    <div class="font-bold text-sm">${this.user?.full_name || '—'}</div>
                 </div>
-                <div class="form-group">
-                    <label>WhatsApp / Phone Number</label>
-                    <input type="text" class="form-control" value="${this.user?.phone || 'Not specified'}" disabled>
+                <div>
+                    <span class="text-xs text-muted block mb-1">Email Address</span>
+                    <div class="text-sm flex-row align-center gap-2">
+                        <span>${this.user?.email || '—'}</span>
+                        <span class="badge badge-active" style="font-size: 0.65rem;">Verified</span>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Delta Exchange UID</label>
-                    <input type="text" class="form-control font-mono" value="${this.user?.delta_user_id || 'Not connected'}" disabled>
+                <div>
+                    <span class="text-xs text-muted block mb-1">WhatsApp / Phone</span>
+                    <div class="font-bold text-sm">${this.user?.phone || '—'}</div>
                 </div>
-                <div class="form-group">
-                    <label>Assigned Tier</label>
-                    <div><span class="tier-badge tier-${(this.user?.assigned_tier || 'trader').toLowerCase()}">${this.user?.assigned_tier || 'Trader'}</span></div>
+                <div>
+                    <span class="text-xs text-muted block mb-1">Connected Exchange</span>
+                    <div class="font-bold text-sm text-primary">${exchangeName}</div>
+                </div>
+                <div>
+                    <span class="text-xs text-muted block mb-1">Exchange User ID (UID)</span>
+                    <div class="font-mono text-sm font-bold flex-row align-center gap-2">
+                        <span>${this.user?.delta_user_id || '—'}</span>
+                        <span class="badge badge-active" style="font-size: 0.65rem;">Active</span>
+                    </div>
+                </div>
+                <div>
+                    <span class="text-xs text-muted block mb-1">Assigned Tier</span>
+                    <div><span class="tier-badge tier-${(this.user?.assigned_tier || 'trader').toLowerCase()}">${this.user?.assigned_tier || 'Trader'} Tier</span></div>
                 </div>
             </div>
         </div>
         `;
+    }
+
+    renderProfileWizard() {
+        // Initialize wizard data with current user state if not yet filled
+        if (!this.wizardData.fullName && this.user?.full_name) {
+            this.wizardData.fullName = this.user.full_name;
+        }
+        if (!this.wizardData.phone && this.user?.phone) {
+            this.wizardData.phone = this.user.phone;
+        }
+        if (!this.wizardData.uid && this.user?.delta_user_id) {
+            this.wizardData.uid = this.user.delta_user_id;
+        }
+        if (this.user?.exchange) {
+            this.wizardData.exchange = this.user.exchange;
+        }
+
+        return `
+        <div class="card glass p-6" style="border: 1px solid var(--border-color); border-radius: 1rem;">
+            <!-- Stepper Progress Header -->
+            <div class="stepper-header mb-6">
+                <div class="stepper-step ${this.wizardStep === 1 ? 'active' : (this.wizardStep > 1 ? 'completed' : '')}">
+                    <div class="stepper-circle">${this.wizardStep > 1 ? '✓' : '1'}</div>
+                    <span class="stepper-step-label">Name</span>
+                </div>
+                <div class="stepper-step ${this.wizardStep === 2 ? 'active' : (this.wizardStep > 2 ? 'completed' : '')}">
+                    <div class="stepper-circle">${this.wizardStep > 2 ? '✓' : '2'}</div>
+                    <span class="stepper-step-label">Exchange</span>
+                </div>
+                <div class="stepper-step ${this.wizardStep === 3 ? 'active' : (this.wizardStep > 3 ? 'completed' : '')}">
+                    <div class="stepper-circle">${this.wizardStep > 3 ? '✓' : '3'}</div>
+                    <span class="stepper-step-label">UID</span>
+                </div>
+                <div class="stepper-step ${this.wizardStep === 4 ? 'active' : ''}">
+                    <div class="stepper-circle">4</div>
+                    <span class="stepper-step-label">API Key</span>
+                </div>
+            </div>
+
+            <!-- Current Wizard Step Content -->
+            <div id="profile-wizard-step-body">
+                ${this.renderCurrentWizardStep()}
+            </div>
+        </div>
+        `;
+    }
+
+    renderCurrentWizardStep() {
+        if (this.wizardStep === 1) {
+            return `
+            <div class="flex-column gap-4">
+                <div>
+                    <h3 style="font-size: 1.25rem; font-weight: 700;">Step 1: Your Profile Details</h3>
+                    <p class="text-secondary text-sm">Enter the name and contact number you want displayed on the leaderboard and for competition updates.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="wizard-fullname">Full Name</label>
+                    <input type="text" id="wizard-fullname" class="form-control" placeholder="John Doe" value="${this.wizardData.fullName || ''}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="wizard-phone">WhatsApp / Phone Number</label>
+                    <input type="tel" id="wizard-phone" class="form-control" placeholder="+91 98765 43210" value="${this.wizardData.phone || ''}" required>
+                </div>
+
+                <div class="flex-row justify-end mt-4">
+                    <button type="button" class="btn btn-primary" id="wizard-step1-next">
+                        Continue to Exchange Selection →
+                    </button>
+                </div>
+            </div>
+            `;
+        } else if (this.wizardStep === 2) {
+            return `
+            <div class="flex-column gap-4">
+                <div>
+                    <h3 style="font-size: 1.25rem; font-weight: 700;">Step 2: Choose Your Exchange</h3>
+                    <p class="text-secondary text-sm">Select the exchange you trade with.</p>
+                </div>
+
+                <!-- Exchange Options Grid -->
+                <div class="grid-2 gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+                    <div class="choice-card ${this.wizardData.exchange === 'Delta Exchange' ? 'selected highlight' : ''}" id="select-delta-exchange" style="cursor: pointer; padding: 1.25rem; border: 1.5px solid ${this.wizardData.exchange === 'Delta Exchange' ? 'var(--primary)' : 'var(--border-color)'}; border-radius: 0.75rem;">
+                        <div class="flex-row align-center justify-between mb-2">
+                            <span style="font-weight: 700; font-size: 1.05rem;">Delta Exchange</span>
+                            <span class="badge badge-admin" style="font-size: 0.65rem;">Official Partner</span>
+                        </div>
+                        <p class="text-secondary text-xs" style="line-height: 1.4;">
+                            Connect your Delta India or Delta Global account. Official championship partner.
+                        </p>
+                    </div>
+
+                    <div class="choice-card ${this.wizardData.exchange === 'Shark Exchange' ? 'selected highlight' : ''}" id="select-shark-exchange" style="cursor: pointer; padding: 1.25rem; border: 1.5px solid ${this.wizardData.exchange === 'Shark Exchange' ? 'var(--primary)' : 'var(--border-color)'}; border-radius: 0.75rem;">
+                        <div class="flex-row align-center justify-between mb-2">
+                            <span style="font-weight: 700; font-size: 1.05rem;">Shark Exchange</span>
+                            <span class="badge badge-user" style="font-size: 0.65rem;">Partner</span>
+                        </div>
+                        <p class="text-secondary text-xs" style="line-height: 1.4;">
+                            Connect your Shark Exchange 6-digit UID and API credentials.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Referral banner if user needs to create an account -->
+                <div class="p-4 flex-row justify-between align-center flex-wrap gap-3" style="background: rgba(37, 99, 235, 0.08); border: 1px dashed rgba(59, 130, 246, 0.3); border-radius: 0.75rem;">
+                    <div>
+                        <div class="text-xs font-bold text-primary">Need a Delta Account?</div>
+                        <div class="text-xs text-secondary">Open an account using official championship referral code: <strong class="font-mono text-primary">EUERQB</strong></div>
+                    </div>
+                    <a href="https://www.delta.exchange/app/signup/?code=EUERQB" target="_blank" class="btn btn-secondary btn-sm" id="open-delta-btn">
+                        Open Delta Account ↗
+                    </a>
+                </div>
+
+                <div class="flex-row justify-between mt-4">
+                    <button type="button" class="btn btn-secondary" id="wizard-back-btn">← Back</button>
+                    <button type="button" class="btn btn-primary" id="wizard-step2-next">
+                        Continue to UID Connection →
+                    </button>
+                </div>
+            </div>
+            `;
+        } else if (this.wizardStep === 3) {
+            const isShark = this.wizardData.exchange === 'Shark Exchange';
+            return `
+            <div class="flex-column gap-4">
+                <div>
+                    <h3 style="font-size: 1.25rem; font-weight: 700;">Step 3: Connect Exchange UID</h3>
+                    <p class="text-secondary text-sm">Enter your ${this.wizardData.exchange} User ID to link your profile.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="wizard-uid">${this.wizardData.exchange} User ID (UID)</label>
+                    <input type="text" id="wizard-uid" class="form-control font-mono" placeholder="${isShark ? 'e.g. 654321 (6 digits)' : 'e.g. 10001234 (7–8 digits)'}" value="${this.wizardData.uid || ''}" required>
+                    <small class="text-muted text-xs mt-1" style="display: block;">
+                        Click on the Profile icon in the ${this.wizardData.exchange} app or website to find your UID.
+                    </small>
+                </div>
+
+                <div class="flex-row justify-between mt-4">
+                    <button type="button" class="btn btn-secondary" id="wizard-back-btn">← Back</button>
+                    <button type="button" class="btn btn-primary" id="wizard-step3-next">
+                        Continue to API Connection →
+                    </button>
+                </div>
+            </div>
+            `;
+        } else if (this.wizardStep === 4) {
+            return `
+            <div class="flex-column gap-4">
+                <div>
+                    <h3 style="font-size: 1.25rem; font-weight: 700;">Step 4: Connect Read-Only API</h3>
+                    <p class="text-secondary text-sm">Connect your read-only API credentials to sync your live trading volume and PnL.</p>
+                </div>
+
+                <!-- Security Rule Banner -->
+                <div class="p-4" style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 0.5rem;">
+                    <div class="flex-row align-center gap-2 font-bold mb-1" style="color: #facc15;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        Security Rule: Create Read-Only Key Only
+                    </div>
+                    <p class="text-xs" style="color: #fef08a; line-height: 1.4;">
+                        When creating your Delta API key, keep <strong>Trading</strong> and <strong>Withdrawal</strong> permissions strictly <strong>OFF</strong>. The platform only needs read permissions to record balances and trade history.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="wizard-env">API Environment</label>
+                    <select id="wizard-env" class="form-control">
+                        <option value="mainnet_india" ${this.wizardData.environment === 'mainnet_india' ? 'selected' : ''}>Delta India Mainnet (api.india.delta.exchange)</option>
+                        <option value="testnet_india" ${this.wizardData.environment === 'testnet_india' ? 'selected' : ''}>Delta India Testnet</option>
+                        <option value="mainnet" ${this.wizardData.environment === 'mainnet' ? 'selected' : ''}>Delta Global Mainnet</option>
+                        <option value="testnet" ${this.wizardData.environment === 'testnet' ? 'selected' : ''}>Delta Global Testnet</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="wizard-apikey">API Key</label>
+                    <input type="text" id="wizard-apikey" class="form-control font-mono" placeholder="Paste your API Key" value="${this.wizardData.apiKey || ''}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="wizard-apisecret">API Secret</label>
+                    <input type="password" id="wizard-apisecret" class="form-control font-mono" placeholder="Paste your API Secret" value="${this.wizardData.apiSecret || ''}" required>
+                </div>
+
+                <div class="text-xs text-secondary mb-2">
+                    Need help? <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="text-primary hover-underline">Watch: How to generate Delta read-only API Key ↗</a>
+                </div>
+
+                <div class="flex-row justify-between mt-4">
+                    <button type="button" class="btn btn-secondary" id="wizard-back-btn">← Back</button>
+                    <button type="button" class="btn btn-primary flex-row align-center gap-2" id="wizard-submit-btn">
+                        <span>Verify &amp; Complete Profile</span>
+                    </button>
+                </div>
+            </div>
+            `;
+        }
     }
 
     renderCompetitionTab() {
@@ -436,6 +745,7 @@ export class DashboardPage {
         this.user = user;
         this.container.innerHTML = this.render();
         this.bindEvents();
+        window.addEventListener('switch-dashboard-tab', this.tabSwitchListener);
         await this.loadData();
     }
 
@@ -505,6 +815,8 @@ export class DashboardPage {
                     await apiKeysAPI.create({ api_key: key, api_secret: secret, environment: env });
                     showToast('Delta API Key verified & saved!', 'success');
                     await this.loadKeys();
+                    this.user = await authAPI.getMe();
+                    updateNavbar(this.user);
                     apiForm.reset();
                 } catch (err) {
                     showToast(`API Key error: ${err.message}`, 'error');
@@ -521,6 +833,8 @@ export class DashboardPage {
                     await apiKeysAPI.delete(keyId);
                     showToast('API Key removed.', 'success');
                     await this.loadKeys();
+                    this.user = await authAPI.getMe();
+                    updateNavbar(this.user);
                 } catch (err) {
                     showToast(`Failed to delete key: ${err.message}`, 'error');
                 }
@@ -533,6 +847,235 @@ export class DashboardPage {
             certBtn.addEventListener('click', () => {
                 showToast('Certificate PDF generated and downloaded.', 'success');
             });
+        }
+
+        // Profile Tab Events
+        this.bindProfileTabEvents();
+    }
+
+    bindProfileTabEvents() {
+        // Edit Setup button from completed view
+        const editSetupBtn = document.getElementById('profile-edit-setup-btn');
+        if (editSetupBtn) {
+            editSetupBtn.addEventListener('click', () => {
+                this.isEditingProfile = true;
+                this.wizardStep = 1;
+                const main = document.getElementById('dashboard-tab-content');
+                if (main) {
+                    main.innerHTML = this.renderProfileTab();
+                    this.bindTabEvents();
+                }
+            });
+        }
+
+        // Wizard Step 1 Next
+        const step1Next = document.getElementById('wizard-step1-next');
+        if (step1Next) {
+            step1Next.addEventListener('click', async () => {
+                const nameInput = document.getElementById('wizard-fullname');
+                const phoneInput = document.getElementById('wizard-phone');
+                if (!nameInput || !nameInput.value.trim()) {
+                    showToast('Please enter your full name.', 'error');
+                    return;
+                }
+                if (!phoneInput || !phoneInput.value.trim()) {
+                    showToast('Please enter your WhatsApp or phone number.', 'error');
+                    return;
+                }
+
+                this.wizardData.fullName = nameInput.value.trim();
+                this.wizardData.phone = phoneInput.value.trim();
+
+                step1Next.disabled = true;
+                step1Next.innerText = 'Saving...';
+
+                try {
+                    this.user = await authAPI.updateProfile({
+                        full_name: this.wizardData.fullName,
+                        phone: this.wizardData.phone
+                    });
+                    updateNavbar(this.user);
+                    this.updateSidebarAvatar();
+                    this.wizardStep = 2;
+                    const main = document.getElementById('dashboard-tab-content');
+                    if (main) {
+                        main.innerHTML = this.renderProfileTab();
+                        this.bindTabEvents();
+                    }
+                } catch (err) {
+                    showToast(`Failed to save details: ${err.message}`, 'error');
+                    step1Next.disabled = false;
+                    step1Next.innerText = 'Continue to Exchange Selection →';
+                }
+            });
+        }
+
+        // Wizard Step 2: Select Exchange cards
+        const deltaCard = document.getElementById('select-delta-exchange');
+        if (deltaCard) {
+            deltaCard.addEventListener('click', () => {
+                this.wizardData.exchange = 'Delta Exchange';
+                this.wizardStep = 2;
+                const main = document.getElementById('dashboard-tab-content');
+                if (main) {
+                    main.innerHTML = this.renderProfileTab();
+                    this.bindTabEvents();
+                }
+            });
+        }
+
+        const sharkCard = document.getElementById('select-shark-exchange');
+        if (sharkCard) {
+            sharkCard.addEventListener('click', () => {
+                this.wizardData.exchange = 'Shark Exchange';
+                this.wizardStep = 2;
+                const main = document.getElementById('dashboard-tab-content');
+                if (main) {
+                    main.innerHTML = this.renderProfileTab();
+                    this.bindTabEvents();
+                }
+            });
+        }
+
+        const step2Next = document.getElementById('wizard-step2-next');
+        if (step2Next) {
+            step2Next.addEventListener('click', async () => {
+                try {
+                    this.user = await authAPI.updateProfile({
+                        exchange: this.wizardData.exchange
+                    });
+                    this.wizardStep = 3;
+                    const main = document.getElementById('dashboard-tab-content');
+                    if (main) {
+                        main.innerHTML = this.renderProfileTab();
+                        this.bindTabEvents();
+                    }
+                } catch (err) {
+                    showToast(`Failed: ${err.message}`, 'error');
+                }
+            });
+        }
+
+        // Wizard Step 3: UID Next
+        const step3Next = document.getElementById('wizard-step3-next');
+        if (step3Next) {
+            step3Next.addEventListener('click', async () => {
+                const uidInput = document.getElementById('wizard-uid');
+                if (!uidInput || !uidInput.value.trim()) {
+                    showToast(`Please enter your ${this.wizardData.exchange} UID.`, 'error');
+                    return;
+                }
+
+                const cleanUID = uidInput.value.trim();
+                this.wizardData.uid = cleanUID;
+
+                step3Next.disabled = true;
+                step3Next.innerText = 'Linking UID...';
+
+                try {
+                    this.user = await authAPI.updateProfile({
+                        delta_user_id: cleanUID,
+                        exchange: this.wizardData.exchange
+                    });
+                    updateNavbar(this.user);
+                    this.updateSidebarAvatar();
+                    showToast('Exchange UID linked and verified!', 'success');
+                    this.wizardStep = 4;
+                    const main = document.getElementById('dashboard-tab-content');
+                    if (main) {
+                        main.innerHTML = this.renderProfileTab();
+                        this.bindTabEvents();
+                    }
+                } catch (err) {
+                    showToast(`Error linking UID: ${err.message}`, 'error');
+                    step3Next.disabled = false;
+                    step3Next.innerText = 'Continue to API Connection →';
+                }
+            });
+        }
+
+        // Wizard Step 4: Verify & Complete Profile
+        const submitBtn = document.getElementById('wizard-submit-btn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', async () => {
+                const apiKeyInput = document.getElementById('wizard-apikey');
+                const apiSecretInput = document.getElementById('wizard-apisecret');
+                const envSelect = document.getElementById('wizard-env');
+
+                if (!apiKeyInput || !apiKeyInput.value.trim() || !apiSecretInput || !apiSecretInput.value.trim()) {
+                    showToast('Please enter both API Key and API Secret.', 'error');
+                    return;
+                }
+
+                const apiKey = apiKeyInput.value.trim();
+                const apiSecret = apiSecretInput.value.trim();
+                const env = envSelect ? envSelect.value : 'mainnet_india';
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = 'Verifying with Delta...';
+
+                try {
+                    // 1. Save and validate API credentials with Delta
+                    await apiKeysAPI.create({
+                        api_key: apiKey,
+                        api_secret: apiSecret,
+                        environment: env
+                    });
+
+                    // 2. Auto-register for active championship if not already registered
+                    try {
+                        const comps = await competitionsAPI.getAll();
+                        const activeComp = comps.find(c => c.is_active) || comps[0];
+                        if (activeComp) {
+                            await competitionsAPI.register(activeComp.id);
+                        }
+                    } catch (e) {
+                        // Already registered is fine
+                    }
+
+                    // 3. Refresh user state & reload dashboard data
+                    this.user = await authAPI.getMe();
+                    await this.loadKeys();
+                    await this.loadRegistrations();
+                    updateNavbar(this.user);
+                    this.updateSidebarAvatar();
+                    this.isEditingProfile = false;
+
+                    showToast('Profile 100% Complete! Delta credentials connected.', 'success');
+
+                    const main = document.getElementById('dashboard-tab-content');
+                    if (main) {
+                        main.innerHTML = this.renderProfileTab();
+                        this.bindTabEvents();
+                    }
+                } catch (err) {
+                    showToast(`Delta Verification Error: ${err.message}`, 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Verify &amp; Complete Profile';
+                }
+            });
+        }
+
+        // Wizard Back Button
+        const backBtn = document.getElementById('wizard-back-btn');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                if (this.wizardStep > 1) {
+                    this.wizardStep -= 1;
+                    const main = document.getElementById('dashboard-tab-content');
+                    if (main) {
+                        main.innerHTML = this.renderProfileTab();
+                        this.bindTabEvents();
+                    }
+                }
+            });
+        }
+    }
+
+    updateSidebarAvatar() {
+        const wrap = document.getElementById('sidebar-avatar-wrap');
+        if (wrap) {
+            wrap.innerHTML = renderAvatarWithProgress(this.user, 42, true);
         }
     }
 
@@ -571,6 +1114,13 @@ export class DashboardPage {
         } finally {
             this.loadingTrades = false;
             if (tbody) tbody.innerHTML = this.renderTradesRows();
+        }
+    }
+
+    unmount() {
+        window.removeEventListener('switch-dashboard-tab', this.tabSwitchListener);
+        if (this.container) {
+            this.container.innerHTML = '';
         }
     }
 }

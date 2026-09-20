@@ -1,4 +1,4 @@
-// Signup Page Component with modal dismiss controls
+// Signup Page Component with verification confirmation view and Resend flow
 import { authAPI } from '../api.js';
 import { router } from '../router.js';
 import { showToast } from '../components/Toast.js';
@@ -8,6 +8,10 @@ export class SignupPage {
         this.container = null;
         this.onLoginSuccess = onLoginSuccess;
         this.escListener = null;
+        this.isSubmitted = false;
+        this.registeredEmail = '';
+        this.cooldownSeconds = 0;
+        this.timerInterval = null;
     }
 
     render() {
@@ -15,62 +19,111 @@ export class SignupPage {
         <div id="signup-page-view" class="auth-page-view" style="cursor: pointer;">
             <div class="grid-pattern absolute inset-0 opacity-30" style="pointer-events: none;"></div>
             
-            <div class="auth-card" style="cursor: default;">
+            <div class="auth-card" style="cursor: default; max-width: 480px; width: 100%;">
                 <!-- Close button for pop-up style dismissal -->
                 <button type="button" class="modal-close-btn" id="signup-close-btn" title="Close" aria-label="Close" style="top: 1.25rem; right: 1.25rem;">
                     &times;
                 </button>
 
-                <div class="mb-6">
-                    <h1 class="hero-title" style="font-size: 1.75rem; margin-bottom: 0.25rem;">Sign Up</h1>
-                    <p class="text-secondary text-sm">Join the 2026 MWM Trading Championship.</p>
-                </div>
-
-                <form id="standalone-signup-form" class="flex-column gap-4">
-                    <div class="form-group">
-                        <label for="page-signup-name">Full Name</label>
-                        <input type="text" id="page-signup-name" class="form-control" placeholder="John Doe" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="page-signup-email">Email Address</label>
-                        <input type="email" id="page-signup-email" class="form-control" placeholder="you@example.com" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="page-signup-phone">WhatsApp Number</label>
-                        <input type="tel" id="page-signup-phone" class="form-control" placeholder="+91 98765 43210" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="page-signup-password">Password (Min. 8 characters)</label>
-                        <div class="password-input-wrap">
-                            <input type="password" id="page-signup-password" class="form-control" placeholder="Min. 8 characters" minlength="8" required>
-                            <button type="button" class="password-toggle-btn" id="toggle-page-signup-pwd-btn" aria-label="Toggle password visibility" title="Show password">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="page-signup-confirm-password">Confirm Password</label>
-                        <div class="password-input-wrap">
-                            <input type="password" id="page-signup-confirm-password" class="form-control" placeholder="Re-enter password" minlength="8" required>
-                            <button type="button" class="password-toggle-btn" id="toggle-page-signup-confirm-pwd-btn" aria-label="Toggle password visibility" title="Show password">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-lg w-full mt-2" id="signup-submit-btn">
-                        Create Free Account
-                    </button>
-                </form>
-
-                <p class="text-center text-secondary text-xs mt-6">
-                    Already have an account? <a href="/login" class="text-primary font-medium hover-underline" data-link>Log in</a>
-                </p>
+                ${this.isSubmitted ? this.renderSuccessView() : this.renderFormView()}
             </div>
+        </div>
+        `;
+    }
+
+    renderFormView() {
+        return `
+        <div class="mb-6">
+            <h1 class="hero-title" style="font-size: 1.75rem; margin-bottom: 0.25rem;">Sign Up</h1>
+            <p class="text-secondary text-sm">Join the 2026 MWM Trading Championship.</p>
+        </div>
+
+        <form id="standalone-signup-form" class="flex-column gap-4">
+            <div class="form-group">
+                <label for="page-signup-name">Full Name</label>
+                <input type="text" id="page-signup-name" class="form-control" placeholder="John Doe" required>
+            </div>
+
+            <div class="form-group">
+                <label for="page-signup-email">Email Address</label>
+                <input type="email" id="page-signup-email" class="form-control" placeholder="you@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="page-signup-phone">WhatsApp Number</label>
+                <input type="tel" id="page-signup-phone" class="form-control" placeholder="+91 98765 43210" required>
+            </div>
+
+            <div class="form-group">
+                <label for="page-signup-password">Password (Min. 8 characters)</label>
+                <div class="password-input-wrap">
+                    <input type="password" id="page-signup-password" class="form-control" placeholder="Min. 8 characters" minlength="8" required>
+                    <button type="button" class="password-toggle-btn" id="toggle-page-signup-pwd-btn" aria-label="Toggle password visibility" title="Show password">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="page-signup-confirm-password">Confirm Password</label>
+                <div class="password-input-wrap">
+                    <input type="password" id="page-signup-confirm-password" class="form-control" placeholder="Re-enter password" minlength="8" required>
+                    <button type="button" class="password-toggle-btn" id="toggle-page-signup-confirm-pwd-btn" aria-label="Toggle password visibility" title="Show password">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-full mt-2" id="signup-submit-btn">
+                Create Free Account
+            </button>
+        </form>
+
+        <p class="text-center text-secondary text-xs mt-6">
+            Already have an account? <a href="/login" class="text-primary font-medium hover-underline" data-link>Log in</a>
+        </p>
+        `;
+    }
+
+    renderSuccessView() {
+        return `
+        <div class="text-center py-4 flex-column align-center">
+            <!-- Sleek Animated Envelope Icon -->
+            <div class="email-verify-icon-wrap mb-4">
+                <div class="verify-icon-halo"></div>
+                <div class="verify-icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <h2 class="hero-title" style="font-size: 1.65rem; margin-bottom: 0.5rem;">Thanks for signing up!</h2>
+            <p class="text-secondary text-sm" style="max-width: 380px; margin-bottom: 1.5rem; line-height: 1.6;">
+                Please check your mailbox and verify your email to activate your account.
+            </p>
+
+            <div class="p-4 mb-6 text-left w-full" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 0.75rem;">
+                <div class="text-xs text-muted mb-1">VERIFICATION EMAIL SENT TO:</div>
+                <div class="font-mono text-primary font-bold text-sm" style="word-break: break-all;">${this.registeredEmail}</div>
+                <div class="text-xs text-secondary mt-2" style="line-height: 1.4;">
+                    Click the verification button in the email. Once verified, log in to connect your Delta / Shark exchange UID and API credentials in your Dashboard.
+                </div>
+            </div>
+
+            <div class="flex-column gap-3 w-full">
+                <button type="button" class="btn btn-primary btn-lg w-full" id="signup-go-login-btn">
+                    Go to Log In
+                </button>
+                <button type="button" class="btn btn-secondary w-full" id="signup-resend-btn" ${this.cooldownSeconds > 0 ? 'disabled' : ''}>
+                    ${this.cooldownSeconds > 0 ? `Resend email in ${this.cooldownSeconds}s` : 'Resend Verification Email'}
+                </button>
+            </div>
+
+            <p class="text-xs text-muted mt-6">
+                Didn't receive an email? Check your Spam or Promotions folder.
+            </p>
         </div>
         `;
     }
@@ -104,9 +157,7 @@ export class SignupPage {
         const pageView = document.getElementById('signup-page-view');
         if (pageView) {
             pageView.addEventListener('click', (e) => {
-                if (!e.target || !e.target.isConnected) {
-                    return;
-                }
+                if (!e.target || !e.target.isConnected) return;
                 if (e.composedPath && e.composedPath().some(el => el && el.classList && el.classList.contains('auth-card'))) {
                     return;
                 }
@@ -117,12 +168,42 @@ export class SignupPage {
         }
 
         // Escape key to dismiss
-        this.escListener = (e) => {
-            if (e.key === 'Escape') {
-                handleClose();
+        if (!this.escListener) {
+            this.escListener = (e) => {
+                if (e.key === 'Escape') handleClose();
+            };
+            document.addEventListener('keydown', this.escListener);
+        }
+
+        if (this.isSubmitted) {
+            // Success view events
+            const goLoginBtn = document.getElementById('signup-go-login-btn');
+            if (goLoginBtn) {
+                goLoginBtn.addEventListener('click', () => {
+                    router.navigate('/login');
+                });
             }
-        };
-        document.addEventListener('keydown', this.escListener);
+
+            const resendBtn = document.getElementById('signup-resend-btn');
+            if (resendBtn) {
+                resendBtn.addEventListener('click', async () => {
+                    if (this.cooldownSeconds > 0) return;
+                    resendBtn.disabled = true;
+                    resendBtn.innerText = 'Sending...';
+
+                    try {
+                        await authAPI.resendVerification(this.registeredEmail);
+                        showToast('Verification email resent! Please check your inbox.', 'success');
+                        this.startCooldown(60);
+                    } catch (err) {
+                        showToast(`Failed to resend: ${err.message}`, 'error');
+                        resendBtn.disabled = false;
+                        resendBtn.innerText = 'Resend Verification Email';
+                    }
+                });
+            }
+            return;
+        }
 
         // Password visibility toggles
         const setupToggle = (btnId, inputId) => {
@@ -130,7 +211,7 @@ export class SignupPage {
             const input = document.getElementById(inputId);
             if (!btn || !input) return;
 
-            const eyeOpen = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+            const eyeOpen = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
             const eyeOff = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
 
             btn.addEventListener('click', (e) => {
@@ -189,12 +270,12 @@ export class SignupPage {
                         password: password
                     });
 
-                    const res = await authAPI.login(email, password);
-                    if (typeof this.onLoginSuccess === 'function') {
-                        await this.onLoginSuccess(res.access_token);
-                    }
-                    showToast('Account created! Proceeding to connect Delta exchange.', 'success');
-                    router.navigate('/join');
+                    this.isSubmitted = true;
+                    this.registeredEmail = email;
+                    showToast('Thanks for signing up! Please check your mailbox.', 'success');
+                    this.startCooldown(60);
+                    this.container.innerHTML = this.render();
+                    this.bindEvents();
                 } catch (err) {
                     showToast(`Signup failed: ${err.message}`, 'error');
                     submitBtn.disabled = false;
@@ -204,10 +285,37 @@ export class SignupPage {
         }
     }
 
+    startCooldown(seconds) {
+        this.cooldownSeconds = seconds;
+        if (this.timerInterval) clearInterval(this.timerInterval);
+
+        this.timerInterval = setInterval(() => {
+            this.cooldownSeconds -= 1;
+            const resendBtn = document.getElementById('signup-resend-btn');
+            if (this.cooldownSeconds <= 0) {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+                if (resendBtn) {
+                    resendBtn.disabled = false;
+                    resendBtn.innerText = 'Resend Verification Email';
+                }
+            } else {
+                if (resendBtn) {
+                    resendBtn.disabled = true;
+                    resendBtn.innerText = `Resend email in ${this.cooldownSeconds}s`;
+                }
+            }
+        }, 1000);
+    }
+
     unmount() {
         if (this.escListener) {
             document.removeEventListener('keydown', this.escListener);
             this.escListener = null;
+        }
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
         }
         if (this.container) {
             this.container.innerHTML = '';

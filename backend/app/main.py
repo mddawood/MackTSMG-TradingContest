@@ -39,6 +39,19 @@ def run_auto_migrations():
             conn.execute(text("ALTER TABLE users ADD COLUMN uid_status VARCHAR DEFAULT 'verified'"))
             conn.commit()
 
+        if "exchange" not in columns:
+            print("Production Migration: Adding exchange column to users table...")
+            conn.execute(text("ALTER TABLE users ADD COLUMN exchange VARCHAR DEFAULT 'Delta'"))
+            conn.commit()
+
+        if "is_verified" not in columns:
+            print("Production Migration: Adding is_verified column to users table...")
+            conn.execute(text("ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT 0"))
+            # Backfill existing users as verified so existing accounts/admins remain active
+            conn.execute(text("UPDATE users SET is_verified = 1"))
+            conn.commit()
+            print("Production Migration: is_verified column added and existing users backfilled.")
+
         # Check leaderboard_snapshots table columns
         cursor = conn.execute(text("PRAGMA table_info(leaderboard_snapshots)"))
         snap_cols = [row[1] for row in cursor.fetchall()]

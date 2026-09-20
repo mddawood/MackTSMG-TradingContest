@@ -40,12 +40,26 @@ class UserResponse(UserBase):
     role: str
     delta_user_id: Optional[str] = None
     phone: Optional[str] = None
+    exchange: Optional[str] = "Delta"
     assigned_tier: Optional[str] = "Rookie"
     uid_status: Optional[str] = "verified"
+    is_verified: bool = False
+    has_api_key: bool = False
     is_deleted: bool
 
     class Config:
         from_attributes = True
+
+
+class UserProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    exchange: Optional[str] = None
+    delta_user_id: Optional[str] = None
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr = Field(..., description="The user's registered email address")
 
 
 class ForgotPasswordRequest(BaseModel):
@@ -66,5 +80,6 @@ class VerifyResetTokenResponse(BaseModel):
     valid: bool
     email: Optional[str] = None
     detail: Optional[str] = None
+
 
 

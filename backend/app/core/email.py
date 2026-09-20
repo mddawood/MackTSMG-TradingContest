@@ -134,3 +134,130 @@ def send_password_reset_email(to_email: str, reset_url: str) -> bool:
         logger.error(f"Error calling Resend API for {to_email}: {exc}", exc_info=True)
         # Even if network fails, link was logged to console
         return True
+
+
+def generate_email_verification_html(to_email: str, verify_url: str) -> str:
+    """Generate a sleek, responsive HTML email for account email verification."""
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Your Email Address</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #e2e8f0;">
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #0b0f19; padding: 40px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 520px; background-color: #131b2e; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);">
+          
+          <!-- Brand Header -->
+          <tr>
+            <td style="padding: 36px 36px 20px 36px; text-align: center; border-bottom: 1px solid #1e293b;">
+              <div style="display: inline-block; padding: 8px 16px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(16, 185, 129, 0.15)); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 9999px; margin-bottom: 12px;">
+                <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #10b981;">MWM Trading Championship</span>
+              </div>
+              <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: -0.02em;">Welcome to the Championship!</h1>
+            </td>
+          </tr>
+
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 32px 36px;">
+              <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #94a3b8;">
+                Hello,
+              </p>
+              <p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #cbd5e1;">
+                Thank you for signing up for the <strong>2026 MWM Trading Championship</strong> (<strong style="color: #f1f5f9;">{to_email}</strong>). Please verify your email address to activate your account and start setting up your trader profile.
+              </p>
+
+              <!-- Action Button -->
+              <table role="presentation" border="0" cellspacing="0" cellpadding="0" style="margin: 28px 0;">
+                <tr>
+                  <td align="center" style="border-radius: 8px; background: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #10b981 100%);">
+                    <a href="{verify_url}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 8px; letter-spacing: 0.02em;">
+                      Verify My Email Address
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Notice Box -->
+              <div style="background-color: rgba(30, 41, 59, 0.7); border: 1px solid #334155; border-radius: 8px; padding: 14px 16px; margin: 24px 0;">
+                <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #94a3b8;">
+                  ⏱️ <strong>Note:</strong> This verification link is valid for <strong>24 hours</strong>. Once verified, you will be able to log in and connect your Delta / Shark exchange UID and API credentials in your Dashboard.
+                </p>
+              </div>
+
+              <!-- Fallback Link -->
+              <p style="margin: 24px 0 0 0; font-size: 12px; line-height: 1.5; color: #64748b; word-break: break-all;">
+                If the button doesn't work, copy and paste this link into your browser:<br>
+                <a href="{verify_url}" style="color: #60a5fa; text-decoration: underline;">{verify_url}</a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 20px 36px; background-color: #0d1322; border-top: 1px solid #1e293b; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #475569;">
+                © 2026 MWM Trading Championship. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
+
+def send_verification_email(to_email: str, verify_url: str) -> bool:
+    """
+    Send an email verification link using Resend API.
+    Always prints the verification URL to the terminal/console for instant local testing.
+    """
+    print("\n" + "=" * 76)
+    print(f"[AUTH] EMAIL VERIFICATION LINK GENERATED FOR: {to_email}")
+    print(f"       Verify URL: {verify_url}")
+    print("=" * 76 + "\n")
+
+    if not settings.RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY is not configured. Email will only appear in console.")
+        return True
+
+    payload = {
+        "from": settings.EMAILS_FROM_EMAIL,
+        "to": [to_email],
+        "subject": "Verify Your Email - MWM Trading Championship",
+        "html": generate_email_verification_html(to_email, verify_url),
+        "text": f"Welcome to MWM Trading Championship! Please verify your email:\n\n{verify_url}\n\nThis link will expire in 24 hours."
+    }
+
+    try:
+        response = requests.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json=payload,
+            timeout=10
+        )
+
+        if response.status_code in (200, 201):
+            logger.info(f"Verification email sent successfully to {to_email} via Resend.")
+            return True
+        else:
+            logger.warning(
+                f"Resend API returned status {response.status_code}: {response.text}. "
+                f"(If in sandbox mode, use the console link above for local testing.)"
+            )
+            return True
+
+    except Exception as exc:
+        logger.error(f"Error calling Resend API for {to_email}: {exc}", exc_info=True)
+        return True
+

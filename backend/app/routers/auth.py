@@ -10,12 +10,14 @@ from sqlalchemy import func
 from app.database import get_db
 from app.core import security
 from app.core.config import settings
-from app.core.email import send_password_reset_email
+from app.core.email import send_password_reset_email, send_verification_email
 from app.models.user import User
 from app.models.referred_user import ReferredUser
 from app.schemas.user import (
     UserCreate,
     UserResponse,
+    UserProfileUpdate,
+    ResendVerificationRequest,
     ForgotPasswordRequest,
     ResetPasswordRequest,
     VerifyResetTokenResponse,
@@ -102,11 +104,19 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         delta_user_id=user_in.delta_user_id,
         phone=user_in.phone,
         uid_status=uid_status,
+        exchange="Delta",
+        is_verified=False,
         assigned_tier="Rookie"
     )
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    # Generate email verification token and send verification email via Resend
+    verify_token = security.create_email_verification_token(user.id, user.email)
+    verify_url = f"{settings.FRONTEND_URL}/verify-email?token={verify_token}"
+    send_verification_email(user.email, verify_url)
+
     return user
 
 
@@ -130,6 +140,11 @@ def login(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="This account has been deactivated/deleted. Please contact support."
+        )
+    if not user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="EMAIL_NOT_VERIFIED"
         )
 
     access_token = security.create_access_token(subject=user.id, role=user.role)
@@ -238,5 +253,104 @@ def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
     return {
         "message": "Your password has been successfully reset. You can now log in."
     }
+
+
+@router.post("/verify-email")
+def verify_email(token: str = Query(...), db: Session = Depends(get_db)):
+    """
+    Verify a user's email address using their token.
+    """
+    token_data = security.decode_email_verification_token(token)
+    if not token_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Verification link is invalid or has expired. Please request a new link."
+        )
+
+    user = db.query(User).filter(User.id == token_data["user_id"], User.is_deleted == False).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User account not found."
+        )
+
+    if user.is_verified:
+        return {
+            "status": "already_verified",
+            "message": "Your email address is already verified. You can log in.",
+            "email": user.email
+        }
+
+    user.is_verified = True
+    db.commit()
+    return {
+        "status": "verified",
+        "message": "Email successfully verified! You can now log in to your account.",
+        "email": user.email
+    }
+
+
+@router.post("/resend-verification")
+def resend_verification(req: ResendVerificationRequest, db: Session = Depends(get_db)):
+    """
+    Resend email verification link.
+    """
+    clean_email = req.email.strip().lower()
+    user = db.query(User).filter(func.lower(User.email) == clean_email, User.is_deleted == False).first()
+    if user and not user.is_verified:
+        verify_token = security.create_email_verification_token(user.id, user.email)
+        verify_url = f"{settings.FRONTEND_URL}/verify-email?token={verify_token}"
+        send_verification_email(user.email, verify_url)
+
+    return {
+        "message": "If an unverified account exists with that email address, a verification link has been sent."
+    }
+
+
+@router.put("/profile", response_model=UserResponse)
+def update_profile(
+    profile_in: UserProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update profile details (name, phone, exchange, and/or UID) for the currently logged-in user.
+    """
+    if profile_in.full_name is not None and profile_in.full_name.strip():
+        current_user.full_name = profile_in.full_name.strip()
+
+    if profile_in.phone is not None:
+        current_user.phone = profile_in.phone.strip()
+
+    if profile_in.exchange is not None and profile_in.exchange.strip():
+        current_user.exchange = profile_in.exchange.strip()
+
+    if profile_in.delta_user_id is not None:
+        clean_uid = profile_in.delta_user_id.strip()
+        if clean_uid:
+            # Check uniqueness against other users
+            existing_uid = db.query(User).filter(
+                User.delta_user_id == clean_uid,
+                User.id != current_user.id
+            ).first()
+            if existing_uid:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="This Exchange User ID is already linked to another account."
+                )
+
+            current_user.delta_user_id = clean_uid
+            # Check if present in whitelist
+            ref = db.query(ReferredUser).filter(ReferredUser.delta_user_id == clean_uid).first()
+            if ref:
+                ref.is_registered = True
+            current_user.uid_status = "verified"
+        else:
+            current_user.delta_user_id = None
+
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
 
 

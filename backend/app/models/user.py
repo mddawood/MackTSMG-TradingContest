@@ -17,8 +17,15 @@ class User(Base):
     phone = Column(String, nullable=True)
     assigned_tier = Column(String, default="Rookie", nullable=False)
     uid_status = Column(String, default="verified", nullable=False)
+    exchange = Column(String, default="Delta", nullable=True)
+    is_verified = Column(Boolean, default=False, nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
 
     # Relationships
     api_keys = relationship("APIKey", back_populates="user", cascade="all, delete-orphan")
     registrations = relationship("CompetitionRegistration", back_populates="user", cascade="all, delete-orphan")
+
+    @property
+    def has_api_key(self) -> bool:
+        return any(k.is_valid for k in self.api_keys) if self.api_keys else False
+

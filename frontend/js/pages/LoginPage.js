@@ -43,7 +43,7 @@ export class LoginPage {
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                             </button>
                         </div>
-                    </div>
+                    <div id="login-alert-container"></div>
 
                     <button type="submit" class="btn btn-primary btn-lg w-full mt-2" id="login-submit-btn">
                         Log in
@@ -142,7 +142,43 @@ export class LoginPage {
                     }
                     showToast('Logged in successfully!', 'success');
                 } catch (err) {
-                    showToast(`Login failed: ${err.message}`, 'error');
+                    const alertContainer = document.getElementById('login-alert-container');
+                    if (err.message && err.message.includes('EMAIL_NOT_VERIFIED')) {
+                        if (alertContainer) {
+                            alertContainer.innerHTML = `
+                            <div class="p-3 my-2 text-left" style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 0.5rem;">
+                                <div class="text-xs font-bold mb-1" style="color: #facc15;">⚠️ Email Not Verified</div>
+                                <p class="text-xs mb-2" style="color: #fef08a; line-height: 1.4;">
+                                    Please verify your email before logging in. Check your mailbox for the verification link.
+                                </p>
+                                <button type="button" class="btn btn-secondary btn-sm w-full" id="login-resend-verify-btn">
+                                    Resend Verification Link
+                                </button>
+                            </div>
+                            `;
+
+                            const resendBtn = document.getElementById('login-resend-verify-btn');
+                            if (resendBtn) {
+                                resendBtn.addEventListener('click', async () => {
+                                    resendBtn.disabled = true;
+                                    resendBtn.innerText = 'Sending...';
+                                    try {
+                                        await authAPI.resendVerification(email);
+                                        showToast('Verification email resent! Please check your inbox.', 'success');
+                                        resendBtn.innerText = 'Link Sent ✓';
+                                    } catch (e) {
+                                        showToast(`Failed to resend: ${e.message}`, 'error');
+                                        resendBtn.disabled = false;
+                                        resendBtn.innerText = 'Resend Verification Link';
+                                    }
+                                });
+                            }
+                        }
+                        showToast('Please verify your email address to log in.', 'error');
+                    } else {
+                        if (alertContainer) alertContainer.innerHTML = '';
+                        showToast(`Login failed: ${err.message}`, 'error');
+                    }
                     submitBtn.disabled = false;
                     submitBtn.innerText = 'Log in';
                 }

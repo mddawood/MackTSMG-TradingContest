@@ -1,5 +1,6 @@
 // Navbar Component (Desktop & Mobile Drawer)
 import { router } from '../router.js';
+import { calculateProfileCompletion, renderAvatarWithProgress } from '../utils.js';
 
 let logoutHandler = null;
 let authModalHandler = null;
@@ -30,6 +31,16 @@ export function initNavbar({ onLogout, onOpenAuth }) {
         joinBtn.addEventListener('click', (e) => {
             e.preventDefault();
             router.navigate('/signup');
+        });
+    }
+
+    const userPill = document.getElementById('nav-user-pill');
+    if (userPill) {
+        userPill.addEventListener('click', (e) => {
+            e.preventDefault();
+            router.navigate('/dashboard');
+            // If dashboard page has switchToTab, switch to profile
+            window.dispatchEvent(new CustomEvent('switch-dashboard-tab', { detail: { tab: 'profile' } }));
         });
     }
 
@@ -268,6 +279,24 @@ export function updateNavbar(user) {
         if (authBtns) authBtns.classList.add('hidden');
         if (userControls) userControls.classList.remove('hidden');
         if (greetingSpan) greetingSpan.textContent = user.full_name || 'Trader';
+
+        // Render Avatars with Progress Ring
+        const navAvatarWrap = document.getElementById('nav-avatar-wrap');
+        if (navAvatarWrap) {
+            navAvatarWrap.innerHTML = renderAvatarWithProgress(user, 34, true);
+        }
+
+        const gearAvatarWrap = document.getElementById('gear-avatar-wrap');
+        if (gearAvatarWrap) {
+            gearAvatarWrap.innerHTML = renderAvatarWithProgress(user, 36, false);
+        }
+
+        const gearPctText = document.getElementById('gear-pct-text');
+        if (gearPctText) {
+            const pct = calculateProfileCompletion(user);
+            gearPctText.textContent = `${pct}% Profile Complete`;
+            gearPctText.style.color = pct === 100 ? '#10b981' : (pct >= 50 ? '#60a5fa' : 'var(--text-secondary)');
+        }
 
         // Gear Dropdown Profile
         if (gearUserName) gearUserName.textContent = user.full_name || 'Trader';

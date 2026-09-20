@@ -14,6 +14,7 @@ import { DashboardPage } from './pages/DashboardPage.js';
 import { AdminPage } from './pages/AdminPage.js';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage.js';
 import { ResetPasswordPage } from './pages/ResetPasswordPage.js';
+import { VerifyEmailPage } from './pages/VerifyEmailPage.js';
 
 // Global Application State
 export const state = {
@@ -31,6 +32,7 @@ let dashboardPage = null;
 let adminPage = null;
 let forgotPasswordPage = null;
 let resetPasswordPage = null;
+let verifyEmailPage = null;
 
 let activePage = null;
 
@@ -86,6 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     adminPage = new AdminPage();
     forgotPasswordPage = new ForgotPasswordPage();
     resetPasswordPage = new ResetPasswordPage();
+    verifyEmailPage = new VerifyEmailPage();
 
     await loadConfig();
 
@@ -150,8 +153,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             mountPage(leaderboardPage);
         })
         .addRoute('/join', () => {
-            joinPage.resetToNewMember();
-            mountPage(joinPage);
+            if (state.token && state.user) {
+                router.navigate(state.user.role === 'admin' ? '/admin' : '/dashboard');
+            } else {
+                router.navigate('/signup');
+            }
         })
         .addRoute('/login', () => {
             if (state.token && state.user) {
@@ -164,9 +170,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (state.token && state.user) {
                 router.navigate(state.user.role === 'admin' ? '/admin' : '/dashboard');
             } else {
-                joinPage.resetToNewMember();
-                mountPage(joinPage);
+                mountPage(signupPage);
             }
+        })
+        .addRoute('/verify-email', () => {
+            mountPage(verifyEmailPage);
         })
         .addRoute('/forgot-password', () => {
             if (state.token && state.user) {

@@ -24,7 +24,8 @@ def seed():
             role="admin",
             assigned_tier="Pro",
             uid_status="verified",
-            delta_user_id="99999"
+            delta_user_id="99999",
+            is_verified=True
         )
         db.add(user)
         db.commit()
@@ -32,6 +33,7 @@ def seed():
         print(f"Created main test user: {user.email} (Admin)")
     else:
         user.role = "admin"
+        user.is_verified = True
         db.commit()
 
     admin_user = db.query(User).filter(User.email == "admin@marketswithmack.com").first()
@@ -43,7 +45,8 @@ def seed():
             role="admin",
             assigned_tier="Whale",
             uid_status="verified",
-            delta_user_id="88888"
+            delta_user_id="88888",
+            is_verified=True
         )
         db.add(admin_user)
         db.commit()
@@ -51,6 +54,7 @@ def seed():
         print(f"Created prototype admin user: {admin_user.email}")
     else:
         admin_user.role = "admin"
+        admin_user.is_verified = True
         db.commit()
 
     # 2. Create Active Competition
