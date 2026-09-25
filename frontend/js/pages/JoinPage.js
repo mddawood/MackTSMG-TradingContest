@@ -173,7 +173,7 @@ export class JoinPage {
                             <span class="avatar-circle" style="background: #2563eb; color: #fff;">Δ</span>
                             <div>
                                 <h4 style="font-weight: 700;">Delta Exchange</h4>
-                                <p class="text-secondary text-xs">Official Partner · India & Global API Supported</p>
+                                <p class="text-secondary text-xs">India API Supported</p>
                             </div>
                         </div>
                         <span class="badge badge-active">Active</span>
@@ -233,8 +233,6 @@ export class JoinPage {
                     <select id="wizard-env" class="form-control">
                         <option value="mainnet_india" selected>Delta India Mainnet (api.india.delta.exchange)</option>
                         <option value="testnet_india">Delta India Testnet</option>
-                        <option value="mainnet">Delta Global Mainnet</option>
-                        <option value="testnet">Delta Global Testnet</option>
                     </select>
                 </div>
 

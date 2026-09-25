@@ -101,24 +101,7 @@ export class DashboardPage {
                         </button>
                     </nav>
 
-                    <!-- Pinned Sidebar Bottom Widget -->
-                    <div class="sidebar-bottom-widget mt-auto p-3" style="margin-top: auto; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.25); border-radius: 0.75rem;">
-                        <div class="flex-row align-center justify-between mb-1.5">
-                            <span class="font-mono text-xs text-muted" style="font-size: 0.68rem; letter-spacing: 0.04em;">SYSTEM STATUS</span>
-                            <span class="badge badge-active flex-row align-center gap-1" style="font-size: 0.65rem; padding: 0.1rem 0.35rem;">
-                                <span class="pulse-dot-green"></span> 99.98%
-                            </span>
-                        </div>
-                        <div class="text-xs text-secondary mb-1">
-                            Delta API Engine: <strong class="text-primary font-mono">Live</strong>
-                        </div>
-                        <div class="text-xs text-muted mb-2 font-mono" style="font-size: 0.68rem;">
-                            Season 1 · 2026 Championship
-                        </div>
-                        <a href="https://t.me" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm w-full text-center" style="font-size: 0.725rem; border: 1px solid var(--border-color); padding: 0.35rem 0.5rem; border-radius: 0.375rem;">
-                            💬 Official Contest Support
-                        </a>
-                    </div>
+
                 </aside>
 
                 <!-- Main Content Area -->
@@ -359,11 +342,11 @@ export class DashboardPage {
                 <div class="flex-column gap-2 text-xs text-secondary" style="line-height: 1.55;">
                     <div class="flex-row align-start gap-2">
                         <span class="text-primary font-bold">•</span>
-                        <div><strong class="text-primary">Delta Exchange (Official Partner):</strong> Recommended for all Indian &amp; Global derivatives traders. Features automated real-time trade syncing via official Delta APIs.</div>
+                        <div><strong class="text-primary">Delta Exchange:</strong> Recommended for Indian derivatives traders. Features automated real-time trade syncing via official Delta India APIs.</div>
                     </div>
                     <div class="flex-row align-start gap-2">
                         <span class="text-primary font-bold">•</span>
-                        <div><strong class="text-primary">Shark Exchange:</strong> Supported partner exchange for crypto futures. Trades are synced via UID and API whitelisting.</div>
+                        <div><strong class="text-primary">Shark Exchange:</strong> Supported exchange for crypto futures. Trades are synced via 6-digit UID and API whitelisting.</div>
                     </div>
                 </div>
             </div>
@@ -719,37 +702,104 @@ export class DashboardPage {
                 </div>
 
                 <!-- Exchange Options Grid -->
-                <div class="grid-2 gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
-                    <div class="choice-card ${this.wizardData.exchange === 'Delta Exchange' ? 'selected highlight' : ''}" id="select-delta-exchange" style="cursor: pointer; padding: 1.25rem; border: 1.5px solid ${this.wizardData.exchange === 'Delta Exchange' ? 'var(--primary)' : 'var(--border-color)'}; border-radius: 0.75rem;">
-                        <div class="flex-row align-center justify-between mb-2">
-                            <span style="font-weight: 700; font-size: 1.05rem;">Delta Exchange</span>
-                            <span class="badge badge-admin" style="font-size: 0.65rem;">Official Partner</span>
+                <div class="grid-2 gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                    <div class="choice-card ${this.wizardData.exchange === 'Delta Exchange' ? 'selected' : ''}" id="select-delta-exchange" style="cursor: pointer; padding: 1.35rem; border: 1.5px solid ${this.wizardData.exchange === 'Delta Exchange' ? 'var(--primary)' : 'var(--border-color)'}; background: ${this.wizardData.exchange === 'Delta Exchange' ? 'rgba(37, 99, 235, 0.05)' : 'rgba(18, 20, 29, 0.75)'}; border-radius: 0.75rem; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.2s ease; ${this.wizardData.exchange === 'Delta Exchange' ? 'box-shadow: 0 0 0 1px var(--primary), 0 8px 24px rgba(37, 99, 235, 0.12);' : ''}">
+                        <div>
+                            <div class="flex-row align-center justify-between mb-2.5">
+                                <div class="flex-row align-center gap-2.5">
+                                    <div class="avatar-circle flex-row align-center justify-center" style="width: 2.25rem; height: 2.25rem; border-radius: 0.5rem; background: rgba(37, 99, 235, 0.15); color: #60a5fa; font-weight: 700; font-size: 1rem; border: 1px solid rgba(59, 130, 246, 0.3);">Δ</div>
+                                    <div>
+                                        <h4 style="font-weight: 700; font-size: 1.05rem; margin: 0; color: var(--text-primary);">Delta Exchange</h4>
+                                        <span class="text-xs text-muted" style="font-size: 0.72rem;">Delta India Derivatives</span>
+                                    </div>
+                                </div>
+                                ${this.wizardData.exchange === 'Delta Exchange' ? `
+                                <span class="badge badge-active flex-row align-center gap-1" style="font-size: 0.68rem; padding: 0.2rem 0.55rem;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Selected
+                                </span>` : `
+                                <span class="badge flex-row align-center gap-1" style="font-size: 0.68rem; padding: 0.2rem 0.55rem; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-color); color: var(--text-muted);">
+                                    Select
+                                </span>`}
+                            </div>
+
+                            <p class="text-secondary text-xs mb-3" style="line-height: 1.5; font-size: 0.8125rem;">
+                                Connect your Delta India account. Features automated trade syncing via verified Delta India API.
+                            </p>
+
+                            <!-- Feature Tags -->
+                            <div class="flex-row flex-wrap gap-1.5 mb-3">
+                                <span class="badge" style="font-size: 0.68rem; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-color); color: var(--text-secondary); padding: 0.2rem 0.5rem; border-radius: 4px;">⚡ Automated Sync</span>
+                                <span class="badge" style="font-size: 0.68rem; background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(59, 130, 246, 0.25); color: #60a5fa; padding: 0.2rem 0.5rem; border-radius: 4px;">🇮🇳 Delta India API</span>
+                            </div>
                         </div>
-                        <p class="text-secondary text-xs" style="line-height: 1.4;">
-                            Connect your Delta India or Delta Global account. Official championship partner.
-                        </p>
+
+                        <!-- Embedded Account Opening Callout -->
+                        <div class="exchange-account-action mt-3 pt-3" style="border-top: 1px solid var(--border-color); margin-top: auto;">
+                            <div class="flex-row align-center justify-between mb-2">
+                                <span class="text-xs font-semibold text-primary" style="font-size: 0.775rem;">Need an account?</span>
+                                <span class="text-xs font-mono text-muted" style="font-size: 0.72rem;">Referral: <strong class="text-primary">EUERQB</strong></span>
+                            </div>
+                            <a href="https://www.delta.exchange/app/signup/?code=EUERQB" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="btn btn-secondary btn-sm flex-row align-center justify-between w-full" style="font-size: 0.775rem; padding: 0.5rem 0.85rem; border-color: rgba(59, 130, 246, 0.35); text-decoration: none; border-radius: 0.5rem; background: rgba(37, 99, 235, 0.08); color: var(--text-primary); transition: all 0.2s ease;">
+                                <span style="font-weight: 600;">Open Delta India Account</span>
+                                <span class="flex-row align-center gap-1 text-primary text-xs" style="font-weight: 600;">
+                                    Sign Up <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                </span>
+                            </a>
+                            <div class="flex-row align-center gap-1.5 text-xs text-muted mt-2" style="font-size: 0.72rem; line-height: 1.35;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--primary);"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                                <span>Copy your <strong>UID</strong> after account opening to link in Step 3.</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="choice-card ${this.wizardData.exchange === 'Shark Exchange' ? 'selected highlight' : ''}" id="select-shark-exchange" style="cursor: pointer; padding: 1.25rem; border: 1.5px solid ${this.wizardData.exchange === 'Shark Exchange' ? 'var(--primary)' : 'var(--border-color)'}; border-radius: 0.75rem;">
-                        <div class="flex-row align-center justify-between mb-2">
-                            <span style="font-weight: 700; font-size: 1.05rem;">Shark Exchange</span>
-                            <span class="badge badge-user" style="font-size: 0.65rem;">Partner</span>
-                        </div>
-                        <p class="text-secondary text-xs" style="line-height: 1.4;">
-                            Connect your Shark Exchange 6-digit UID and API credentials.
-                        </p>
-                    </div>
-                </div>
+                    <div class="choice-card ${this.wizardData.exchange === 'Shark Exchange' ? 'selected' : ''}" id="select-shark-exchange" style="cursor: pointer; padding: 1.35rem; border: 1.5px solid ${this.wizardData.exchange === 'Shark Exchange' ? 'var(--primary)' : 'var(--border-color)'}; background: ${this.wizardData.exchange === 'Shark Exchange' ? 'rgba(37, 99, 235, 0.05)' : 'rgba(18, 20, 29, 0.75)'}; border-radius: 0.75rem; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.2s ease; ${this.wizardData.exchange === 'Shark Exchange' ? 'box-shadow: 0 0 0 1px var(--primary), 0 8px 24px rgba(37, 99, 235, 0.12);' : ''}">
+                        <div>
+                            <div class="flex-row align-center justify-between mb-2.5">
+                                <div class="flex-row align-center gap-2.5">
+                                    <div class="avatar-circle flex-row align-center justify-center" style="width: 2.25rem; height: 2.25rem; border-radius: 0.5rem; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-size: 1rem; border: 1px solid rgba(16, 185, 129, 0.3);">🦈</div>
+                                    <div>
+                                        <h4 style="font-weight: 700; font-size: 1.05rem; margin: 0; color: var(--text-primary);">Shark Exchange</h4>
+                                        <span class="text-xs text-muted" style="font-size: 0.72rem;">Crypto Futures Platform</span>
+                                    </div>
+                                </div>
+                                ${this.wizardData.exchange === 'Shark Exchange' ? `
+                                <span class="badge badge-active flex-row align-center gap-1" style="font-size: 0.68rem; padding: 0.2rem 0.55rem;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Selected
+                                </span>` : `
+                                <span class="badge flex-row align-center gap-1" style="font-size: 0.68rem; padding: 0.2rem 0.55rem; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-color); color: var(--text-muted);">
+                                    Select
+                                </span>`}
+                            </div>
 
-                <!-- Referral banner if user needs to create an account -->
-                <div class="p-4 flex-row justify-between align-center flex-wrap gap-3" style="background: rgba(37, 99, 235, 0.08); border: 1px dashed rgba(59, 130, 246, 0.3); border-radius: 0.75rem;">
-                    <div>
-                        <div class="text-xs font-bold text-primary">Need a Delta Account?</div>
-                        <div class="text-xs text-secondary">Open an account using official championship referral code: <strong class="font-mono text-primary">EUERQB</strong></div>
+                            <p class="text-secondary text-xs mb-3" style="line-height: 1.5; font-size: 0.8125rem;">
+                                Connect your Shark Exchange account. Trades are synced via your 6-digit UID and API verification.
+                            </p>
+
+                            <!-- Feature Tags -->
+                            <div class="flex-row flex-wrap gap-1.5 mb-3">
+                                <span class="badge" style="font-size: 0.68rem; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-color); color: var(--text-secondary); padding: 0.2rem 0.5rem; border-radius: 4px;">⚡ 6-Digit UID Sync</span>
+                                <span class="badge" style="font-size: 0.68rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #10b981; padding: 0.2rem 0.5rem; border-radius: 4px;">🛡️ API Verified</span>
+                            </div>
+                        </div>
+
+                        <!-- Embedded Account Opening Callout -->
+                        <div class="exchange-account-action mt-3 pt-3" style="border-top: 1px solid var(--border-color); margin-top: auto;">
+                            <div class="flex-row align-center justify-between mb-2">
+                                <span class="text-xs font-semibold text-accent" style="font-size: 0.775rem;">Need an account?</span>
+                                <span class="text-xs font-mono text-muted" style="font-size: 0.72rem;">Referral: <strong class="text-accent">MACK</strong></span>
+                            </div>
+                            <a href="https://sharkexchange.in/auth/signup?code=MACK" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="btn btn-secondary btn-sm flex-row align-center justify-between w-full" style="font-size: 0.775rem; padding: 0.5rem 0.85rem; border-color: rgba(16, 185, 129, 0.35); text-decoration: none; border-radius: 0.5rem; background: rgba(16, 185, 129, 0.08); color: var(--text-primary); transition: all 0.2s ease;">
+                                <span style="font-weight: 600;">Open Shark Account</span>
+                                <span class="flex-row align-center gap-1 text-accent text-xs" style="font-weight: 600;">
+                                    Sign Up <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                </span>
+                            </a>
+                            <div class="flex-row align-center gap-1.5 text-xs text-muted mt-2" style="font-size: 0.72rem; line-height: 1.35;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--accent);"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                                <span>Copy your <strong>UID</strong> after account opening to link in Step 3.</span>
+                            </div>
+                        </div>
                     </div>
-                    <a href="https://www.delta.exchange/app/signup/?code=EUERQB" target="_blank" class="btn btn-secondary btn-sm" id="open-delta-btn">
-                        Open Delta Account ↗
-                    </a>
                 </div>
 
                 <div class="flex-row justify-between mt-4">
@@ -809,8 +859,6 @@ export class DashboardPage {
                     <select id="wizard-env" class="form-control">
                         <option value="mainnet_india" ${this.wizardData.environment === 'mainnet_india' ? 'selected' : ''}>Delta India Mainnet (api.india.delta.exchange)</option>
                         <option value="testnet_india" ${this.wizardData.environment === 'testnet_india' ? 'selected' : ''}>Delta India Testnet</option>
-                        <option value="mainnet" ${this.wizardData.environment === 'mainnet' ? 'selected' : ''}>Delta Global Mainnet</option>
-                        <option value="testnet" ${this.wizardData.environment === 'testnet' ? 'selected' : ''}>Delta Global Testnet</option>
                     </select>
                 </div>
 
@@ -1021,8 +1069,6 @@ export class DashboardPage {
                         <select id="dash-env" class="form-control">
                             <option value="mainnet_india">Delta India Mainnet</option>
                             <option value="testnet_india">Delta India Testnet</option>
-                            <option value="mainnet">Delta Global Mainnet</option>
-                            <option value="testnet">Delta Global Testnet</option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary" id="dash-save-key-btn">Save &amp; Verify Key</button>
