@@ -100,6 +100,25 @@ export class DashboardPage {
                             Settings &amp; API
                         </button>
                     </nav>
+
+                    <!-- Pinned Sidebar Bottom Widget -->
+                    <div class="sidebar-bottom-widget mt-auto p-3" style="margin-top: auto; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.25); border-radius: 0.75rem;">
+                        <div class="flex-row align-center justify-between mb-1.5">
+                            <span class="font-mono text-xs text-muted" style="font-size: 0.68rem; letter-spacing: 0.04em;">SYSTEM STATUS</span>
+                            <span class="badge badge-active flex-row align-center gap-1" style="font-size: 0.65rem; padding: 0.1rem 0.35rem;">
+                                <span class="pulse-dot-green"></span> 99.98%
+                            </span>
+                        </div>
+                        <div class="text-xs text-secondary mb-1">
+                            Delta API Engine: <strong class="text-primary font-mono">Live</strong>
+                        </div>
+                        <div class="text-xs text-muted mb-2 font-mono" style="font-size: 0.68rem;">
+                            Season 1 · 2026 Championship
+                        </div>
+                        <a href="https://t.me" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm w-full text-center" style="font-size: 0.725rem; border: 1px solid var(--border-color); padding: 0.35rem 0.5rem; border-radius: 0.375rem;">
+                            💬 Official Contest Support
+                        </a>
+                    </div>
                 </aside>
 
                 <!-- Main Content Area -->
@@ -192,51 +211,376 @@ export class DashboardPage {
         const hasAPI = Boolean(this.user?.has_api_key || (this.apiKeys && this.apiKeys.some(k => k.is_valid)));
 
         return `
-        <div class="flex-column gap-6" style="max-width: 720px;">
-            <!-- Profile Completion Header Banner -->
-            <div class="card glass p-6" style="border: 1px solid var(--border-color); border-radius: 1rem;">
-                <div class="flex-row align-center justify-between flex-wrap gap-4 mb-4">
-                    <div class="flex-row align-center gap-4">
-                        ${renderAvatarWithProgress(this.user, 64, true)}
-                        <div>
-                            <div class="flex-row align-center gap-2">
-                                <h2 style="font-size: 1.45rem; font-weight: 700;">Trader Profile &amp; Setup</h2>
-                                ${pct === 100 ? '<span class="badge badge-active" style="font-size: 0.75rem;">100% Complete</span>' : ''}
+        <div class="flex-column gap-6 w-full">
+            <!-- Salesforce-style Workspace Breadcrumb & Action Toolbar -->
+            <div class="workspace-header-bar flex-row align-center justify-between flex-wrap gap-4 pb-4 border-bottom" style="border-bottom: 1px solid var(--border-color);">
+                <div class="flex-column gap-1">
+                    <div class="breadcrumbs flex-row align-center gap-2 text-xs font-mono text-muted">
+                        <span style="color: var(--text-muted); cursor: pointer;" id="topbar-crumb-dash">DASHBOARD</span>
+                        <span>/</span>
+                        <span class="text-primary font-bold">TRADER SETUP</span>
+                    </div>
+                    <div class="flex-row align-center gap-3">
+                        <h1 style="font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em;">Trader Profile &amp; Setup</h1>
+                        <span class="badge ${pct === 100 ? 'badge-active' : 'badge-admin'}" style="font-size: 0.7rem;">
+                            ${pct === 100 ? '✓ Fully Verified' : `● Action Required (${pct}%)`}
+                        </span>
+                    </div>
+                </div>
+                <div class="flex-row align-center gap-2.5">
+                    <button type="button" class="btn btn-secondary btn-sm flex-row align-center gap-1.5" id="profile-top-refresh-btn" title="Refresh Profile State">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                        Sync Status
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm flex-row align-center gap-1.5" id="profile-top-comp-btn">
+                        View Competitions →
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2-Column Responsive Layout Grid (stretches 100% width) -->
+            <div class="profile-layout-grid">
+                <!-- Left Column: Primary Wizard / Verification Cards -->
+                <div class="profile-main-col flex-column gap-6">
+                    <!-- Profile Completion Header Banner -->
+                    <div class="card glass p-6" style="border: 1px solid var(--border-color); border-radius: 1rem;">
+                        <div class="flex-row align-center justify-between flex-wrap gap-4 mb-4">
+                            <div class="flex-row align-center gap-4">
+                                ${renderAvatarWithProgress(this.user, 64, true)}
+                                <div>
+                                    <div class="flex-row align-center gap-2">
+                                        <h2 style="font-size: 1.35rem; font-weight: 700;">Profile Completion Overview</h2>
+                                        ${pct === 100 ? '<span class="badge badge-active" style="font-size: 0.75rem;">100% Complete</span>' : ''}
+                                    </div>
+                                    <p class="text-secondary text-sm mt-1">
+                                        Complete all 4 verification steps to link your exchange credentials and qualify for official cash prize leaderboards.
+                                    </p>
+                                </div>
                             </div>
-                            <p class="text-secondary text-sm mt-1">
-                                Complete all 4 steps to link your exchange credentials and qualify for cash prize leaderboards.
-                            </p>
+                            <div class="flex-column align-end">
+                                <div class="font-mono text-xl font-bold ${pct === 100 ? 'text-accent' : 'text-primary'}">${pct}%</div>
+                                <span class="text-muted text-xs">Profile Completion</span>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="progress-bar-wrap mb-4" style="height: 8px; background: rgba(255,255,255,0.08); border-radius: 9999px; overflow: hidden;">
+                            <div style="width: ${pct}%; height: 100%; background: ${pct === 100 ? '#10b981' : 'linear-gradient(90deg, #3b82f6, #8b5cf6)'}; border-radius: 9999px; transition: width 0.6s ease;"></div>
+                        </div>
+
+                        <!-- 4 Milestones Checklist -->
+                        <div class="grid-4 gap-2 text-xs" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
+                            <div class="flex-row align-center gap-1.5 ${hasEmail ? 'text-accent font-semibold' : 'text-muted'}">
+                                <span>${hasEmail ? '✓' : '○'}</span> Email Verified (25%)
+                            </div>
+                            <div class="flex-row align-center gap-1.5 ${hasInfo ? 'text-accent font-semibold' : 'text-muted'}">
+                                <span>${hasInfo ? '✓' : '○'}</span> Personal Info (25%)
+                            </div>
+                            <div class="flex-row align-center gap-1.5 ${hasUID ? 'text-accent font-semibold' : 'text-muted'}">
+                                <span>${hasUID ? '✓' : '○'}</span> Exchange &amp; UID (25%)
+                            </div>
+                            <div class="flex-row align-center gap-1.5 ${hasAPI ? 'text-accent font-semibold' : 'text-muted'}">
+                                <span>${hasAPI ? '✓' : '○'}</span> Read-Only API (25%)
+                            </div>
                         </div>
                     </div>
-                    <div class="flex-column align-end">
-                        <div class="font-mono text-xl font-bold ${pct === 100 ? 'text-accent' : 'text-primary'}">${pct}%</div>
-                        <span class="text-muted text-xs">Profile Completion</span>
+
+                    ${pct === 100 && !this.isEditingProfile ? this.renderCompletedProfileView() : this.renderProfileWizard()}
+                </div>
+
+                <!-- Right Column: Live Contest Readiness & Help Rail -->
+                <aside class="profile-side-col flex-column gap-6">
+                    ${this.renderProfileHelpRail(pct, hasEmail, hasInfo, hasUID, hasAPI)}
+                </aside>
+            </div>
+        </div>
+        `;
+    }
+
+    renderProfileHelpRail(pct, hasEmail, hasInfo, hasUID, hasAPI) {
+        const isComplete = pct === 100;
+        const exchangeName = this.user?.exchange || this.wizardData.exchange || 'Delta Exchange';
+        const isDelta = exchangeName.toLowerCase().includes('delta');
+
+        // Dynamic step guidance widget styled with modern glass aesthetic
+        let stepGuidanceHtml = '';
+        if (isComplete && !this.isEditingProfile) {
+            stepGuidanceHtml = `
+            <div class="step-guide-panel p-4" style="background: rgba(16, 185, 129, 0.04); border: 1px solid rgba(16, 185, 129, 0.22); border-radius: 0.75rem;">
+                <div class="flex-row align-center justify-between mb-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-accent" style="letter-spacing: 0.05em;">Live Connection</span>
+                    <span class="badge badge-active flex-row align-center gap-1.5" style="font-size: 0.68rem;">
+                        <span class="pulse-dot-green"></span> Sync Active
+                    </span>
+                </div>
+                <p class="text-secondary text-xs" style="line-height: 1.55;">
+                    Your <strong>${exchangeName}</strong> UID and read-only API are connected. Active positions and ROI synchronize every 15 minutes.
+                </p>
+                <div class="flex-row gap-2 mt-3">
+                    <button type="button" class="btn btn-secondary btn-sm flex-1 text-center" id="rail-view-competitions-btn">
+                        Competitions
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm flex-1 text-center" id="rail-view-leaderboard-btn">
+                        Leaderboard
+                    </button>
+                </div>
+            </div>
+            `;
+        } else if (this.wizardStep === 1) {
+            stepGuidanceHtml = `
+            <div class="step-guide-panel p-4" style="background: rgba(37, 99, 235, 0.04); border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 0.75rem;">
+                <div class="flex-row align-center gap-2 mb-2.5">
+                    <div class="icon-wrapper" style="width: 26px; height: 26px; border-radius: 0.375rem; background: rgba(37, 99, 235, 0.15); color: #3b82f6; display: flex; align-items: center; justify-content: center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <h4 style="font-size: 0.875rem; font-weight: 700; color: var(--text-primary);">Why Identity Details?</h4>
+                </div>
+                <div class="flex-column gap-2 text-xs text-secondary" style="line-height: 1.55;">
+                    <div class="flex-row align-start gap-2">
+                        <span class="text-primary font-bold">•</span>
+                        <div><strong class="text-primary">Leaderboard Display:</strong> Your full name appears on official championship rankings and your verified completion certificate.</div>
+                    </div>
+                    <div class="flex-row align-start gap-2">
+                        <span class="text-primary font-bold">•</span>
+                        <div><strong class="text-primary">Prize Disbursements:</strong> Phone &amp; WhatsApp are used strictly for rapid prize distribution announcements and urgent tournament alerts.</div>
+                    </div>
+                </div>
+            </div>
+            `;
+        } else if (this.wizardStep === 2) {
+            stepGuidanceHtml = `
+            <div class="step-guide-panel p-4" style="background: rgba(37, 99, 235, 0.04); border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 0.75rem;">
+                <div class="flex-row align-center gap-2 mb-2.5">
+                    <div class="icon-wrapper" style="width: 26px; height: 26px; border-radius: 0.375rem; background: rgba(37, 99, 235, 0.15); color: #3b82f6; display: flex; align-items: center; justify-content: center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>
+                    </div>
+                    <h4 style="font-size: 0.875rem; font-weight: 700; color: var(--text-primary);">Exchange Selection Guide</h4>
+                </div>
+                <div class="flex-column gap-2 text-xs text-secondary" style="line-height: 1.55;">
+                    <div class="flex-row align-start gap-2">
+                        <span class="text-primary font-bold">•</span>
+                        <div><strong class="text-primary">Delta Exchange (Official Partner):</strong> Recommended for all Indian &amp; Global derivatives traders. Features automated real-time trade syncing via official Delta APIs.</div>
+                    </div>
+                    <div class="flex-row align-start gap-2">
+                        <span class="text-primary font-bold">•</span>
+                        <div><strong class="text-primary">Shark Exchange:</strong> Supported partner exchange for crypto futures. Trades are synced via UID and API whitelisting.</div>
+                    </div>
+                </div>
+            </div>
+            `;
+        } else if (this.wizardStep === 3) {
+            stepGuidanceHtml = `
+            <div class="step-guide-panel p-4" style="background: rgba(37, 99, 235, 0.04); border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 0.75rem;">
+                <div class="flex-row align-center gap-2 mb-2.5">
+                    <div class="icon-wrapper" style="width: 26px; height: 26px; border-radius: 0.375rem; background: rgba(37, 99, 235, 0.15); color: #3b82f6; display: flex; align-items: center; justify-content: center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    </div>
+                    <h4 style="font-size: 0.875rem; font-weight: 700; color: var(--text-primary);">Finding Your ${isDelta ? 'Delta' : 'Shark'} UID</h4>
+                </div>
+                <div class="flex-column gap-2 text-xs text-secondary" style="line-height: 1.55;">
+                    <div class="flex-row align-center gap-2">
+                        <span class="font-mono text-primary font-bold" style="background: rgba(37, 99, 235, 0.15); width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">1</span>
+                        <span>Log in to your <strong>${isDelta ? 'Delta' : 'Shark'} Exchange</strong> account.</span>
+                    </div>
+                    <div class="flex-row align-center gap-2">
+                        <span class="font-mono text-primary font-bold" style="background: rgba(37, 99, 235, 0.15); width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">2</span>
+                        <span>Click your <strong>Profile avatar</strong> in the top right corner.</span>
+                    </div>
+                    <div class="flex-row align-center gap-2">
+                        <span class="font-mono text-primary font-bold" style="background: rgba(37, 99, 235, 0.15); width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">3</span>
+                        <span>Copy your <strong>User ID (UID)</strong> (typically 6-8 digits).</span>
+                    </div>
+                </div>
+                <div class="p-2.5 mt-2" style="background: rgba(245, 158, 11, 0.08); border-left: 3px solid #f59e0b; border-radius: 0.5rem; font-size: 0.775rem; color: var(--text-secondary); line-height: 1.45;">
+                    <strong style="color: #f59e0b;">Official Requirement:</strong> Your UID must be registered under the official championship referral link to qualify for cash prizes.
+                </div>
+            </div>
+            `;
+        } else if (this.wizardStep === 4) {
+            stepGuidanceHtml = `
+            <div class="step-guide-panel p-4" style="background: rgba(37, 99, 235, 0.04); border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 0.75rem;">
+                <div class="flex-row align-center gap-2 mb-2.5">
+                    <div class="icon-wrapper" style="width: 26px; height: 26px; border-radius: 0.375rem; background: rgba(37, 99, 235, 0.15); color: #3b82f6; display: flex; align-items: center; justify-content: center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
+                    <h4 style="font-size: 0.875rem; font-weight: 700; color: var(--text-primary);">API Key Creation Guide</h4>
+                </div>
+                <div class="flex-column gap-2 text-xs text-secondary" style="line-height: 1.55;">
+                    <div class="flex-row align-center gap-2">
+                        <span class="font-mono text-primary font-bold" style="background: rgba(37, 99, 235, 0.15); width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">1</span>
+                        <span>Go to <strong>Settings → API Keys</strong> on ${isDelta ? 'Delta' : 'Shark'}.</span>
+                    </div>
+                    <div class="flex-row align-center gap-2">
+                        <span class="font-mono text-primary font-bold" style="background: rgba(37, 99, 235, 0.15); width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">2</span>
+                        <span>Click <strong>"Create New API Key"</strong>.</span>
+                    </div>
+                    <div class="flex-row align-center gap-2">
+                        <span class="font-mono text-accent font-bold" style="background: rgba(16, 185, 129, 0.15); width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">✓</span>
+                        <span>Enable <strong class="text-accent">Read-Only</strong> permissions ONLY.</span>
+                    </div>
+                    <div class="flex-row align-center gap-2">
+                        <span class="font-mono text-destructive font-bold" style="background: rgba(239, 68, 68, 0.15); width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">✗</span>
+                        <span><strong class="text-destructive">DO NOT enable</strong> "Withdrawal" or "Trade" access.</span>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        return `
+        <!-- Card 1: Prize Pool Eligibility & Unlocked Perks -->
+        <div class="card glass p-6 flex-column gap-5" style="border: 1px solid var(--border-color); border-radius: 1rem;">
+            <div class="flex-row align-center justify-between">
+                <div>
+                    <span class="section-tag text-primary" style="font-weight: 700; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.06em; margin-bottom: 0.2rem; display: block;">Eligibility Status</span>
+                    <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em;">Contest Qualification</h3>
+                </div>
+                ${isComplete
+                    ? '<span class="badge badge-active flex-row align-center gap-1.5" style="font-size: 0.75rem; padding: 0.25rem 0.65rem;"><span class="pulse-dot-green"></span> Qualified</span>'
+                    : `<span class="badge" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 0.72rem; font-weight: 600; padding: 0.25rem 0.6rem;">Step ${this.wizardStep} of 4 · ${pct}%</span>`
+                }
+            </div>
+            <p class="text-secondary text-xs" style="line-height: 1.5; margin-top: -0.5rem;">
+                Complete profile verification to unlock live scoring, certified badges, and official cash rewards.
+            </p>
+
+            <div class="flex-column gap-3">
+                <div class="qualification-perk-item">
+                    <div class="flex-row align-center gap-3">
+                        <div class="perk-icon-wrap ${hasAPI ? 'perk-unlocked' : 'perk-locked'}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                        </div>
+                        <div class="flex-column gap-0.5">
+                            <span class="text-sm font-bold ${hasAPI ? 'text-primary' : 'text-secondary'}">Cash Prize Distribution</span>
+                            <span class="text-secondary text-xs" style="line-height: 1.4;">Qualify for ₹5,00,000+ official tournament prize pools.</span>
+                        </div>
+                    </div>
+                    <div>
+                        ${hasAPI
+                            ? '<span class="badge badge-active" style="font-size: 0.65rem; padding: 0.15rem 0.5rem;">Unlocked</span>'
+                            : '<span class="badge" style="font-size: 0.65rem; background: rgba(255,255,255,0.04); color: var(--text-muted); border: 1px solid var(--border-color); padding: 0.15rem 0.5rem;">Stage 4</span>'
+                        }
                     </div>
                 </div>
 
-                <!-- Progress Bar -->
-                <div class="progress-bar-wrap mb-4" style="height: 8px; background: rgba(255,255,255,0.08); border-radius: 9999px; overflow: hidden;">
-                    <div style="width: ${pct}%; height: 100%; background: ${pct === 100 ? '#10b981' : 'linear-gradient(90deg, #3b82f6, #8b5cf6)'}; border-radius: 9999px; transition: width 0.6s ease;"></div>
+                <div class="qualification-perk-item">
+                    <div class="flex-row align-center gap-3">
+                        <div class="perk-icon-wrap ${hasAPI ? 'perk-unlocked' : 'perk-locked'}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        </div>
+                        <div class="flex-column gap-0.5">
+                            <span class="text-sm font-bold ${hasAPI ? 'text-primary' : 'text-secondary'}">Live Automated PnL Sync</span>
+                            <span class="text-secondary text-xs" style="line-height: 1.4;">Zero manual uploads; positions pull direct via exchange API.</span>
+                        </div>
+                    </div>
+                    <div>
+                        ${hasAPI
+                            ? '<span class="badge badge-active" style="font-size: 0.65rem; padding: 0.15rem 0.5rem;">Active</span>'
+                            : '<span class="badge" style="font-size: 0.65rem; background: rgba(255,255,255,0.04); color: var(--text-muted); border: 1px solid var(--border-color); padding: 0.15rem 0.5rem;">Stage 4</span>'
+                        }
+                    </div>
                 </div>
 
-                <!-- 4 Milestones Checklist -->
-                <div class="grid-4 gap-2 text-xs" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
-                    <div class="flex-row align-center gap-1.5 ${hasEmail ? 'text-accent font-semibold' : 'text-muted'}">
-                        <span>${hasEmail ? '✓' : '○'}</span> Email Verified (25%)
+                <div class="qualification-perk-item">
+                    <div class="flex-row align-center gap-3">
+                        <div class="perk-icon-wrap ${hasUID ? 'perk-unlocked' : 'perk-locked'}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                        </div>
+                        <div class="flex-column gap-0.5">
+                            <span class="text-sm font-bold ${hasUID ? 'text-primary' : 'text-secondary'}">Verified Trader Badge</span>
+                            <span class="text-secondary text-xs" style="line-height: 1.4;">Official checkmark displayed alongside your handle on leaderboards.</span>
+                        </div>
                     </div>
-                    <div class="flex-row align-center gap-1.5 ${hasInfo ? 'text-accent font-semibold' : 'text-muted'}">
-                        <span>${hasInfo ? '✓' : '○'}</span> Personal Info (25%)
+                    <div>
+                        ${hasUID
+                            ? '<span class="badge badge-active" style="font-size: 0.65rem; padding: 0.15rem 0.5rem;">Verified</span>'
+                            : '<span class="badge" style="font-size: 0.65rem; background: rgba(255,255,255,0.04); color: var(--text-muted); border: 1px solid var(--border-color); padding: 0.15rem 0.5rem;">Stage 3</span>'
+                        }
                     </div>
-                    <div class="flex-row align-center gap-1.5 ${hasUID ? 'text-accent font-semibold' : 'text-muted'}">
-                        <span>${hasUID ? '✓' : '○'}</span> Exchange &amp; UID (25%)
+                </div>
+
+                <div class="qualification-perk-item">
+                    <div class="flex-row align-center gap-3">
+                        <div class="perk-icon-wrap ${hasEmail && hasInfo ? 'perk-unlocked' : 'perk-locked'}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+                        </div>
+                        <div class="flex-column gap-0.5">
+                            <span class="text-sm font-bold ${(hasEmail && hasInfo) ? 'text-primary' : 'text-secondary'}">Official Championship Certificate</span>
+                            <span class="text-secondary text-xs" style="line-height: 1.4;">Verifiable digital credential issued upon concluding tournament rounds.</span>
+                        </div>
                     </div>
-                    <div class="flex-row align-center gap-1.5 ${hasAPI ? 'text-accent font-semibold' : 'text-muted'}">
-                        <span>${hasAPI ? '✓' : '○'}</span> Read-Only API (25%)
+                    <div>
+                        ${(hasEmail && hasInfo)
+                            ? '<span class="badge badge-active" style="font-size: 0.65rem; padding: 0.15rem 0.5rem;">Ready</span>'
+                            : '<span class="badge" style="font-size: 0.65rem; background: rgba(255,255,255,0.04); color: var(--text-muted); border: 1px solid var(--border-color); padding: 0.15rem 0.5rem;">Stage 2</span>'
+                        }
                     </div>
                 </div>
             </div>
 
-            ${pct === 100 && !this.isEditingProfile ? this.renderCompletedProfileView() : this.renderProfileWizard()}
+            <!-- Integrated Step Guidance Drawer -->
+            ${stepGuidanceHtml}
+        </div>
+
+        <!-- Card 2: Bank-Grade Security Assurance & Dedicated Support -->
+        <div class="card glass p-6 flex-column gap-4" style="border: 1px solid var(--border-color); border-radius: 1rem; background: linear-gradient(180deg, rgba(16,185,129,0.03) 0%, rgba(15,23,42,0.45) 100%);">
+            <div class="flex-row align-center justify-between">
+                <div>
+                    <span class="section-tag" style="font-weight: 700; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.06em; color: #10b981; margin-bottom: 0.2rem; display: block;">Security Assurance</span>
+                    <div class="flex-row align-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em;">Bank-Grade Security</h4>
+                    </div>
+                </div>
+                <span class="badge badge-active" style="font-size: 0.68rem; padding: 0.2rem 0.55rem;">Read-Only Protocol</span>
+            </div>
+            <p class="text-secondary text-xs" style="line-height: 1.5; margin-top: -0.25rem;">
+                Your funds remain 100% untouched and safe under your direct control at all times.
+            </p>
+
+            <div class="flex-column gap-2.5">
+                <div class="flex-row align-start gap-2.5 p-2.5" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 0.625rem;">
+                    <div style="color: #10b981; margin-top: 1px; flex-shrink: 0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </div>
+                    <div class="text-xs" style="line-height: 1.5;">
+                        <strong class="text-primary block mb-0.5">AES-256 GCM Encryption</strong>
+                        <span class="text-secondary">API keys are stored using military-grade AES-256 GCM encryption. Credentials decrypt only in isolated worker environments.</span>
+                    </div>
+                </div>
+
+                <div class="flex-row align-start gap-2.5 p-2.5" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 0.625rem;">
+                    <div style="color: #10b981; margin-top: 1px; flex-shrink: 0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </div>
+                    <div class="text-xs" style="line-height: 1.5;">
+                        <strong class="text-primary block mb-0.5">Strict Read-Only Enforcement</strong>
+                        <span class="text-secondary">Transfer and trading privileges are strictly forbidden. The system cannot execute trades or move your balance.</span>
+                    </div>
+                </div>
+
+                <div class="flex-row align-start gap-2.5 p-2.5" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 0.625rem;">
+                    <div style="color: #10b981; margin-top: 1px; flex-shrink: 0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </div>
+                    <div class="text-xs" style="line-height: 1.5;">
+                        <strong class="text-primary block mb-0.5">Instant Key Revocation</strong>
+                        <span class="text-secondary">Revoke or delete your keys anytime directly from Delta Exchange or your MWM settings panel with zero traces.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Support Action Bar -->
+            <div class="flex-row align-center justify-between gap-3 pt-3 border-top mt-1" style="border-color: rgba(255, 255, 255, 0.08);">
+                <div class="flex-column">
+                    <span class="text-xs font-bold text-primary">Need setup help?</span>
+                    <span class="text-muted text-xs">Reach out to contest organizers.</span>
+                </div>
+                <a href="https://t.me" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm flex-row align-center gap-1.5" style="white-space: nowrap; font-size: 0.775rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                    Telegram Support
+                </a>
+            </div>
         </div>
         `;
     }
@@ -345,14 +689,18 @@ export class DashboardPage {
                     <p class="text-secondary text-sm">Enter the name and contact number you want displayed on the leaderboard and for competition updates.</p>
                 </div>
 
-                <div class="form-group">
-                    <label for="wizard-fullname">Full Name</label>
-                    <input type="text" id="wizard-fullname" class="form-control" placeholder="John Doe" value="${this.wizardData.fullName || ''}" required>
-                </div>
+                <div class="grid-2 gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+                    <div class="form-group">
+                        <label for="wizard-fullname">Full Name</label>
+                        <input type="text" id="wizard-fullname" class="form-control" placeholder="John Doe" value="${this.wizardData.fullName || ''}" required>
+                        <span class="text-muted text-xs mt-1 block" style="font-size: 0.725rem;">Displayed on your certificate and public leaderboards.</span>
+                    </div>
 
-                <div class="form-group">
-                    <label for="wizard-phone">WhatsApp / Phone Number</label>
-                    <input type="tel" id="wizard-phone" class="form-control" placeholder="+91 98765 43210" value="${this.wizardData.phone || ''}" required>
+                    <div class="form-group">
+                        <label for="wizard-phone">WhatsApp / Phone Number</label>
+                        <input type="tel" id="wizard-phone" class="form-control" placeholder="+91 98765 43210" value="${this.wizardData.phone || ''}" required>
+                        <span class="text-muted text-xs mt-1 block" style="font-size: 0.725rem;">Used strictly for urgent prize disbursement notifications.</span>
+                    </div>
                 </div>
 
                 <div class="flex-row justify-end mt-4">
@@ -466,14 +814,16 @@ export class DashboardPage {
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="wizard-apikey">API Key</label>
-                    <input type="text" id="wizard-apikey" class="form-control font-mono" placeholder="Paste your API Key" value="${this.wizardData.apiKey || ''}" required>
-                </div>
+                <div class="grid-2 gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+                    <div class="form-group">
+                        <label for="wizard-apikey">API Key</label>
+                        <input type="text" id="wizard-apikey" class="form-control font-mono" placeholder="Paste your API Key" value="${this.wizardData.apiKey || ''}" required>
+                    </div>
 
-                <div class="form-group">
-                    <label for="wizard-apisecret">API Secret</label>
-                    <input type="password" id="wizard-apisecret" class="form-control font-mono" placeholder="Paste your API Secret" value="${this.wizardData.apiSecret || ''}" required>
+                    <div class="form-group">
+                        <label for="wizard-apisecret">API Secret</label>
+                        <input type="password" id="wizard-apisecret" class="form-control font-mono" placeholder="Paste your API Secret" value="${this.wizardData.apiSecret || ''}" required>
+                    </div>
                 </div>
 
                 <div class="text-xs text-secondary mb-2">
@@ -1069,6 +1419,54 @@ export class DashboardPage {
                     }
                 }
             });
+        }
+
+        // Assistant Rail Quick Actions
+        const railCompBtn = document.getElementById('rail-view-competitions-btn');
+        if (railCompBtn) {
+            railCompBtn.addEventListener('click', () => this.switchToTab('competition'));
+        }
+        const railLdrBtn = document.getElementById('rail-view-leaderboard-btn');
+        if (railLdrBtn) {
+            railLdrBtn.addEventListener('click', () => this.switchToTab('leaderboard'));
+        }
+
+        // Workspace Topbar Actions
+        const topRefreshBtn = document.getElementById('profile-top-refresh-btn');
+        if (topRefreshBtn) {
+            topRefreshBtn.addEventListener('click', async () => {
+                topRefreshBtn.disabled = true;
+                topRefreshBtn.innerText = 'Syncing...';
+                try {
+                    this.user = await authAPI.getMe();
+                    updateNavbar(this.user);
+                    this.updateSidebarAvatar();
+                    showToast('Profile sync completed.', 'success');
+                    const main = document.getElementById('dashboard-tab-content');
+                    if (main) {
+                        main.innerHTML = this.renderProfileTab();
+                        this.bindTabEvents();
+                    }
+                } catch (err) {
+                    showToast(`Sync failed: ${err.message}`, 'error');
+                } finally {
+                    topRefreshBtn.disabled = false;
+                    topRefreshBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                        Sync Status
+                    `;
+                }
+            });
+        }
+
+        const topCompBtn = document.getElementById('profile-top-comp-btn');
+        if (topCompBtn) {
+            topCompBtn.addEventListener('click', () => this.switchToTab('competition'));
+        }
+
+        const crumbDash = document.getElementById('topbar-crumb-dash');
+        if (crumbDash) {
+            crumbDash.addEventListener('click', () => this.switchToTab('overview'));
         }
     }
 

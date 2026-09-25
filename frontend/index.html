@@ -9,9 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Main Style Sheet -->
-    <link rel="stylesheet" href="index.css?v=4">
+    <link rel="stylesheet" href="index.css?v=8">
     <!-- Modular ES6 Application Logic -->
-    <script type="module" src="js/app.js?v=4"></script>
+    <script type="module" src="js/app.js?v=8"></script>
 </head>
 <body class="dark-theme">
     <!-- Sticky Header -->
@@ -29,6 +29,11 @@
                 <a href="#leaderboard" class="nav-link">Leaderboard</a>
                 <a href="#faq" class="nav-link">FAQ</a>
             </nav>
+            <!-- Header Context Badge (shown on internal/dashboard routes) -->
+            <div class="header-context-badge flex-row align-center gap-2 hidden" id="header-context-badge">
+                <span class="pulse-dot-green"></span>
+                <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.02em;">MWM Championship 2026 · Partner: Delta Exchange</span>
+            </div>
             <div class="header-actions flex-row align-center gap-3">
                 <div class="auth-ctas flex-row gap-3" id="nav-auth-buttons">
                     <a href="/login" class="btn btn-ghost" id="login-nav-btn" data-link>Log in</a>

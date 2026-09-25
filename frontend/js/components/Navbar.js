@@ -239,14 +239,34 @@ export function initNavbar({ onLogout, onOpenAuth }) {
 
 export function updateNavbarRoute(pathname) {
     const isHomePage = pathname === '/' || pathname === '' || pathname === '/index.html';
+    const isAppShell = pathname === '/dashboard' || pathname === '/admin';
     const publicNav = document.getElementById('public-nav');
     const mobilePublicNav = document.getElementById('mobile-public-nav');
+    const contextBadge = document.getElementById('header-context-badge');
+    const mainFooter = document.querySelector('.main-footer');
+
+    // Toggle Salesforce-style full-height app shell mode
+    if (isAppShell) {
+        document.body.classList.add('app-shell-mode');
+        if (mainFooter) mainFooter.classList.add('hidden');
+    } else {
+        document.body.classList.remove('app-shell-mode');
+        if (mainFooter) mainFooter.classList.remove('hidden');
+    }
 
     if (publicNav) {
         if (isHomePage) {
             publicNav.classList.remove('hidden');
         } else {
             publicNav.classList.add('hidden');
+        }
+    }
+
+    if (contextBadge) {
+        if (!isHomePage) {
+            contextBadge.classList.remove('hidden');
+        } else {
+            contextBadge.classList.add('hidden');
         }
     }
 
