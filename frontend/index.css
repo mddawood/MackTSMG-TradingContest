@@ -2714,58 +2714,192 @@ select.form-control {
 /* ==========================================================================
    Salesforce Lightning-style Full-Height App Shell Mode
    ========================================================================== */
-body.app-shell-mode {
-    height: 100vh;
-    max-height: 100vh;
-    overflow: hidden;
+@media (min-width: 769px) {
+    body.app-shell-mode {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+    }
+
+    body.app-shell-mode .main-content {
+        height: calc(100vh - 4rem);
+        max-height: calc(100vh - 4rem);
+        overflow: hidden;
+        flex: 1 1 auto;
+    }
+
+    body.app-shell-mode .main-footer {
+        display: none !important;
+    }
+
+    body.app-shell-mode #dashboard-view,
+    body.app-shell-mode #admin-view {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    body.app-shell-mode .dashboard-layout {
+        height: 100%;
+        min-height: 100%;
+        width: 100%;
+        overflow: hidden;
+        display: flex;
+    }
+
+    body.app-shell-mode .dashboard-sidebar {
+        height: 100%;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        width: 260px;
+        background: rgba(15, 23, 42, 0.75);
+        border-right: 1px solid var(--border-color);
+    }
+
+    body.app-shell-mode .dashboard-main {
+        height: 100%;
+        overflow-y: auto;
+        flex: 1 1 auto;
+        min-width: 0;
+        padding: 1.5rem 2.25rem;
+        background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.04) 0%, transparent 60%), #09090b;
+    }
 }
 
-body.app-shell-mode .main-content {
-    height: calc(100vh - 4rem);
-    max-height: calc(100vh - 4rem);
-    overflow: hidden;
-    flex: 1 1 auto;
+/* Mobile & Tablet App Shell Mode Responsive Layout */
+@media (max-width: 768px) {
+    body.app-shell-mode {
+        height: auto;
+        min-height: 100vh;
+        max-height: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    body.app-shell-mode .main-content {
+        height: auto;
+        max-height: none;
+        overflow: visible;
+        flex: 1 0 auto;
+    }
+
+    body.app-shell-mode .main-footer {
+        display: none !important;
+    }
+
+    body.app-shell-mode #dashboard-view,
+    body.app-shell-mode #admin-view {
+        height: auto;
+        width: 100%;
+        overflow: visible;
+        display: block;
+    }
+
+    body.app-shell-mode .dashboard-layout {
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: 0 !important;
+        width: 100% !important;
+        overflow: visible !important;
+        display: flex !important;
+    }
+
+    body.app-shell-mode .dashboard-sidebar {
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        border-right: none !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        padding: 0.75rem 1rem !important;
+        flex-direction: column !important;
+        flex-shrink: 0 !important;
+        background: rgba(15, 23, 42, 0.95) !important;
+    }
+
+    body.app-shell-mode #dashboard-sidebar-nav,
+    body.app-shell-mode #admin-sidebar-nav {
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
+        padding-bottom: 0.4rem !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    body.app-shell-mode #dashboard-sidebar-nav::-webkit-scrollbar,
+    body.app-shell-mode #admin-sidebar-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    body.app-shell-mode .sidebar-link {
+        width: auto !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+        background: rgba(255, 255, 255, 0.04) !important;
+        border: 1px solid var(--border-color) !important;
+        padding: 0.5rem 0.85rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    body.app-shell-mode .sidebar-link.active {
+        background: rgba(37, 99, 235, 0.2) !important;
+        border-color: rgba(37, 99, 235, 0.5) !important;
+        color: #60a5fa !important;
+    }
+
+    body.app-shell-mode .dashboard-main {
+        height: auto !important;
+        overflow: visible !important;
+        padding: 1rem 0.75rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .workspace-header-bar {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem !important;
+    }
+
+    .workspace-header-bar h1 {
+        font-size: 1.25rem !important;
+    }
+
+    .workspace-header-bar .flex-row {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .card.p-6,
+    .card.glass.p-6 {
+        padding: 1rem !important;
+    }
 }
 
-body.app-shell-mode .main-footer {
-    display: none !important;
-}
-
-body.app-shell-mode #dashboard-view,
-body.app-shell-mode #admin-view {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-body.app-shell-mode .dashboard-layout {
-    height: 100%;
-    min-height: 100%;
-    width: 100%;
-    overflow: hidden;
-    display: flex;
-}
-
-body.app-shell-mode .dashboard-sidebar {
-    height: 100%;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    width: 260px;
-    background: rgba(15, 23, 42, 0.75);
-    border-right: 1px solid var(--border-color);
-}
-
-body.app-shell-mode .dashboard-main {
-    height: 100%;
-    overflow-y: auto;
-    flex: 1 1 auto;
-    min-width: 0;
-    padding: 1.5rem 2.25rem;
-    background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.04) 0%, transparent 60%), #09090b;
+@media (max-width: 480px) {
+    .workspace-header-bar .btn-sm {
+        flex: 1 1 auto;
+        justify-content: center;
+        text-align: center;
+    }
+    .stepper-header {
+        margin-bottom: 1.25rem;
+    }
+    .stepper-step-label {
+        font-size: 0.68rem;
+    }
+    .stepper-circle {
+        width: 1.85rem;
+        height: 1.85rem;
+        font-size: 0.75rem;
+    }
 }
 
 /* ==========================================================================
