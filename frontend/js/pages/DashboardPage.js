@@ -293,6 +293,10 @@ export class DashboardPage {
                     <div class="font-bold text-sm">${this.user?.full_name || '—'}</div>
                 </div>
                 <div>
+                    <span class="text-xs text-muted block mb-1">Username (Public Handle)</span>
+                    <div class="font-mono text-sm font-bold text-primary">@${this.user?.username || '—'}</div>
+                </div>
+                <div>
                     <span class="text-xs text-muted block mb-1">Email Address</span>
                     <div class="text-sm flex-row align-center gap-2">
                         <span>${this.user?.email || '—'}</span>
@@ -327,6 +331,9 @@ export class DashboardPage {
         // Initialize wizard data with current user state if not yet filled
         if (!this.wizardData.fullName && this.user?.full_name) {
             this.wizardData.fullName = this.user.full_name;
+        }
+        if (!this.wizardData.username && this.user?.username) {
+            this.wizardData.username = this.user.username;
         }
         if (!this.wizardData.phone && this.user?.phone) {
             this.wizardData.phone = this.user.phone;
@@ -374,14 +381,20 @@ export class DashboardPage {
             <div class="flex-column gap-4">
                 <div>
                     <h3 style="font-size: 1.25rem; font-weight: 700;">Step 1: Your Profile Details</h3>
-                    <p class="text-secondary text-sm">Enter the name and contact number you want displayed on the leaderboard and for competition updates.</p>
+                    <p class="text-secondary text-sm">Enter the name, unique public handle, and contact number for the championship.</p>
                 </div>
 
-                <div class="grid-2 gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+                <div class="grid-3 gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
                     <div class="form-group">
                         <label for="wizard-fullname">Full Name</label>
                         <input type="text" id="wizard-fullname" class="form-control" placeholder="John Doe" value="${this.wizardData.fullName || ''}" required>
-                        <span class="text-muted text-xs mt-1 block" style="font-size: 0.725rem;">Displayed on your certificate and public leaderboards.</span>
+                        <span class="text-muted text-xs mt-1 block" style="font-size: 0.725rem;">Displayed on your certificate &amp; official records.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="wizard-username">Username <span class="text-xs text-muted font-normal">(Public Handle)</span></label>
+                        <input type="text" id="wizard-username" class="form-control font-mono" placeholder="trader_pro" value="${this.wizardData.username || ''}" minlength="3" maxlength="20" required pattern="[a-zA-Z0-9_]{3,20}">
+                        <span class="text-muted text-xs mt-1 block" style="font-size: 0.725rem;">Unique handle displayed on public leaderboards.</span>
                     </div>
 
                     <div class="form-group">
@@ -974,9 +987,16 @@ export class DashboardPage {
         if (step1Next) {
             step1Next.addEventListener('click', async () => {
                 const nameInput = document.getElementById('wizard-fullname');
+                const usernameInput = document.getElementById('wizard-username');
                 const phoneInput = document.getElementById('wizard-phone');
                 if (!nameInput || !nameInput.value.trim()) {
                     showToast('Please enter your full name.', 'error');
+                    return;
+                }
+                const cleanUsername = usernameInput ? usernameInput.value.trim().toLowerCase() : '';
+                if (!cleanUsername || cleanUsername.length < 3 || cleanUsername.length > 20 || !/^[a-zA-Z0-9_]+$/.test(cleanUsername)) {
+                    showToast('Username must be 3-20 characters long and contain only letters, numbers, and underscores.', 'error');
+                    if (usernameInput) usernameInput.focus();
                     return;
                 }
                 if (!phoneInput || !phoneInput.value.trim()) {
@@ -985,6 +1005,7 @@ export class DashboardPage {
                 }
 
                 this.wizardData.fullName = nameInput.value.trim();
+                this.wizardData.username = cleanUsername;
                 this.wizardData.phone = phoneInput.value.trim();
 
                 step1Next.disabled = true;
@@ -993,6 +1014,7 @@ export class DashboardPage {
                 try {
                     this.user = await authAPI.updateProfile({
                         full_name: this.wizardData.fullName,
+                        username: this.wizardData.username,
                         phone: this.wizardData.phone
                     });
                     updateNavbar(this.user);

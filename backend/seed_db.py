@@ -19,6 +19,7 @@ def seed():
     if not user:
         user = User(
             email="admin@example.com",
+            username="admin",
             full_name="System Admin",
             hashed_password=get_password_hash("Password123"),
             role="admin",
@@ -33,6 +34,7 @@ def seed():
         print(f"Created main test user: {user.email} (Admin)")
     else:
         user.role = "admin"
+        user.username = "admin"
         user.is_verified = True
         db.commit()
 
@@ -40,6 +42,7 @@ def seed():
     if not admin_user:
         admin_user = User(
             email="admin@marketswithmack.com",
+            username="mack_admin",
             full_name="Mack Admin",
             hashed_password=get_password_hash("Password123"),
             role="admin",
@@ -54,6 +57,7 @@ def seed():
         print(f"Created prototype admin user: {admin_user.email}")
     else:
         admin_user.role = "admin"
+        admin_user.username = "mack_admin"
         admin_user.is_verified = True
         db.commit()
 
@@ -84,24 +88,24 @@ def seed():
     # 4. Realistic participants across all 4 tiers from Netlify prototype
     participants = [
         # Trader Tier
-        {"name": "Navya Iyer", "email": "navya@example.com", "roi": 140.02, "pnl": 70010.0, "volume": 6363919.0, "delta_id": "10001", "tier": "Trader", "trades": 415, "streak": 5, "rank_change": 1, "start_bal": 50000.0},
-        {"name": "Rohan Bose", "email": "rohan@example.com", "roi": 137.86, "pnl": 82716.0, "volume": 3784987.0, "delta_id": "10002", "tier": "Trader", "trades": 176, "streak": 3, "rank_change": -1, "start_bal": 60000.0},
-        {"name": "Ananya Verma", "email": "ananya@example.com", "roi": 132.23, "pnl": 99172.0, "volume": 3537350.0, "delta_id": "10003", "tier": "Trader", "trades": 403, "streak": 4, "rank_change": -1, "start_bal": 75000.0},
-        {"name": "Rahul Kapoor", "email": "rahul.k@example.com", "roi": 125.89, "pnl": 100712.0, "volume": 4441019.0, "delta_id": "10004", "tier": "Trader", "trades": 76, "streak": 2, "rank_change": 0, "start_bal": 80000.0},
-        {"name": "Saanvi Bhat", "email": "saanvi@example.com", "roi": 125.25, "pnl": 112725.0, "volume": 8873968.0, "delta_id": "10005", "tier": "Trader", "trades": 399, "streak": 6, "rank_change": -2, "start_bal": 90000.0},
-        {"name": "Rajesh Shetty", "email": "rajesh@example.com", "roi": 119.94, "pnl": 107946.0, "volume": 1393880.0, "delta_id": "10006", "tier": "Trader", "trades": 344, "streak": 3, "rank_change": -2, "start_bal": 90000.0},
+        {"name": "Navya Iyer", "username": "navya_trades", "email": "navya@example.com", "roi": 140.02, "pnl": 70010.0, "volume": 6363919.0, "delta_id": "10001", "tier": "Trader", "trades": 415, "streak": 5, "rank_change": 1, "start_bal": 50000.0},
+        {"name": "Rohan Bose", "username": "rohan_bose", "email": "rohan@example.com", "roi": 137.86, "pnl": 82716.0, "volume": 3784987.0, "delta_id": "10002", "tier": "Trader", "trades": 176, "streak": 3, "rank_change": -1, "start_bal": 60000.0},
+        {"name": "Ananya Verma", "username": "ananya_v", "email": "ananya@example.com", "roi": 132.23, "pnl": 99172.0, "volume": 3537350.0, "delta_id": "10003", "tier": "Trader", "trades": 403, "streak": 4, "rank_change": -1, "start_bal": 75000.0},
+        {"name": "Rahul Kapoor", "username": "rahul_k", "email": "rahul.k@example.com", "roi": 125.89, "pnl": 100712.0, "volume": 4441019.0, "delta_id": "10004", "tier": "Trader", "trades": 76, "streak": 2, "rank_change": 0, "start_bal": 80000.0},
+        {"name": "Saanvi Bhat", "username": "saanvi_b", "email": "saanvi@example.com", "roi": 125.25, "pnl": 112725.0, "volume": 8873968.0, "delta_id": "10005", "tier": "Trader", "trades": 399, "streak": 6, "rank_change": -2, "start_bal": 90000.0},
+        {"name": "Rajesh Shetty", "username": "rajesh_s", "email": "rajesh@example.com", "roi": 119.94, "pnl": 107946.0, "volume": 1393880.0, "delta_id": "10006", "tier": "Trader", "trades": 344, "streak": 3, "rank_change": -2, "start_bal": 90000.0},
 
         # Rookie Tier
-        {"name": "Vihaan Mehta", "email": "vihaan@example.com", "roi": 154.20, "pnl": 46260.0, "volume": 1416226.0, "delta_id": "10007", "tier": "Rookie", "trades": 241, "streak": 4, "rank_change": 2, "start_bal": 30000.0},
-        {"name": "Kiran Bose", "email": "kiran@example.com", "roi": 112.45, "pnl": 39357.0, "volume": 1215499.0, "delta_id": "10008", "tier": "Rookie", "trades": 166, "streak": 2, "rank_change": 1, "start_bal": 35000.0},
+        {"name": "Vihaan Mehta", "username": "vihaan_m", "email": "vihaan@example.com", "roi": 154.20, "pnl": 46260.0, "volume": 1416226.0, "delta_id": "10007", "tier": "Rookie", "trades": 241, "streak": 4, "rank_change": 2, "start_bal": 30000.0},
+        {"name": "Kiran Bose", "username": "kiran_b", "email": "kiran@example.com", "roi": 112.45, "pnl": 39357.0, "volume": 1215499.0, "delta_id": "10008", "tier": "Rookie", "trades": 166, "streak": 2, "rank_change": 1, "start_bal": 35000.0},
 
         # Pro Tier
-        {"name": "Diya Patel", "email": "diya@example.com", "roi": 165.40, "pnl": 248100.0, "volume": 9084582.0, "delta_id": "10009", "tier": "Pro", "trades": 387, "streak": 7, "rank_change": 3, "start_bal": 150000.0},
-        {"name": "Amit Malhotra", "email": "amit@example.com", "roi": 98.68, "pnl": 197360.0, "volume": 7440256.0, "delta_id": "10010", "tier": "Pro", "trades": 208, "streak": 4, "rank_change": 0, "start_bal": 200000.0},
+        {"name": "Diya Patel", "username": "diya_alpha", "email": "diya@example.com", "roi": 165.40, "pnl": 248100.0, "volume": 9084582.0, "delta_id": "10009", "tier": "Pro", "trades": 387, "streak": 7, "rank_change": 3, "start_bal": 150000.0},
+        {"name": "Amit Malhotra", "username": "amit_m", "email": "amit@example.com", "roi": 98.68, "pnl": 197360.0, "volume": 7440256.0, "delta_id": "10010", "tier": "Pro", "trades": 208, "streak": 4, "rank_change": 0, "start_bal": 200000.0},
 
         # Whale Tier
-        {"name": "Karan Mehta", "email": "karan@example.com", "roi": 142.15, "pnl": 710750.0, "volume": 18469256.0, "delta_id": "10011", "tier": "Whale", "trades": 429, "streak": 8, "rank_change": 1, "start_bal": 500000.0},
-        {"name": "Reyansh Mehta", "email": "reyansh@example.com", "roi": 128.47, "pnl": 1027760.0, "volume": 26387312.0, "delta_id": "10012", "tier": "Whale", "trades": 512, "streak": 5, "rank_change": -1, "start_bal": 800000.0}
+        {"name": "Karan Mehta", "username": "whale_karan", "email": "karan@example.com", "roi": 142.15, "pnl": 710750.0, "volume": 18469256.0, "delta_id": "10011", "tier": "Whale", "trades": 429, "streak": 8, "rank_change": 1, "start_bal": 500000.0},
+        {"name": "Reyansh Mehta", "username": "reyansh_m", "email": "reyansh@example.com", "roi": 128.47, "pnl": 1027760.0, "volume": 26387312.0, "delta_id": "10012", "tier": "Whale", "trades": 512, "streak": 5, "rank_change": -1, "start_bal": 800000.0}
     ]
 
     for p in participants:
@@ -109,6 +113,7 @@ def seed():
         if not p_user:
             p_user = User(
                 email=p["email"],
+                username=p["username"],
                 full_name=p["name"],
                 hashed_password=get_password_hash("Password123"),
                 delta_user_id=p["delta_id"],
@@ -120,6 +125,7 @@ def seed():
             db.refresh(p_user)
         else:
             p_user.full_name = p["name"]
+            p_user.username = p["username"]
             p_user.email = p["email"]
             p_user.delta_user_id = p["delta_id"]
             p_user.assigned_tier = p["tier"]

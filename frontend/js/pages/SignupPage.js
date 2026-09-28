@@ -45,6 +45,11 @@ export class SignupPage {
             </div>
 
             <div class="form-group">
+                <label for="page-signup-username">Username <span class="text-xs text-muted font-normal">(Unique handle on leaderboards)</span></label>
+                <input type="text" id="page-signup-username" class="form-control font-mono" placeholder="trader_pro" minlength="3" maxlength="20" required pattern="[a-zA-Z0-9_]{3,20}">
+            </div>
+
+            <div class="form-group">
                 <label for="page-signup-email">Email Address</label>
                 <input type="email" id="page-signup-email" class="form-control" placeholder="you@example.com" required>
             </div>
@@ -232,10 +237,18 @@ export class SignupPage {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const name = document.getElementById('page-signup-name').value.trim();
+                const usernameInput = document.getElementById('page-signup-username');
+                const username = usernameInput ? usernameInput.value.trim().toLowerCase() : '';
                 const email = document.getElementById('page-signup-email').value.trim();
                 const phone = document.getElementById('page-signup-phone').value.trim();
                 const password = document.getElementById('page-signup-password').value;
                 const confirmPassword = document.getElementById('page-signup-confirm-password').value;
+
+                if (!username || username.length < 3 || username.length > 20 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+                    showToast('Username must be 3-20 characters long and contain only letters, numbers, and underscores.', 'error');
+                    if (usernameInput) usernameInput.focus();
+                    return;
+                }
 
                 if (password.length < 8) {
                     showToast('Password must be at least 8 characters long.', 'error');
@@ -265,6 +278,7 @@ export class SignupPage {
                 try {
                     await authAPI.register({
                         full_name: name,
+                        username: username,
                         email: email,
                         phone: phone,
                         password: password

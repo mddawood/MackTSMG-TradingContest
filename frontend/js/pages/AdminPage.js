@@ -1006,7 +1006,7 @@ export class AdminPage {
 
                 row.innerHTML = `
                     <td>
-                        <div style="font-weight: 600;">${u.full_name}</div>
+                        <div style="font-weight: 600;">${u.full_name} ${u.username ? `<span class="font-mono text-primary font-normal" style="font-size:0.8rem;">(@${u.username})</span>` : ''}</div>
                         <div class="text-muted" style="font-size: 0.75rem;">${u.email}</div>
                     </td>
                     <td>${roleHtml}</td>

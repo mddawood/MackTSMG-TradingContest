@@ -52,7 +52,9 @@ def list_users(
     query = db.query(User)
     if q:
         query = query.filter(
-            (User.full_name.ilike(f"%{q}%")) | (User.email.ilike(f"%{q}%"))
+            (User.full_name.ilike(f"%{q}%")) | 
+            (User.email.ilike(f"%{q}%")) |
+            (User.username.ilike(f"%{q}%"))
         )
     total = query.count()
     offset = (page - 1) * limit
@@ -72,6 +74,7 @@ def list_users(
         result.append({
             "id": user.id,
             "email": user.email,
+            "username": user.username,
             "full_name": user.full_name,
             "role": user.role,
             "is_deleted": user.is_deleted,

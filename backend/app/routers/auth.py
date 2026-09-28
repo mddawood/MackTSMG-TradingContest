@@ -71,6 +71,7 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     Register a new user.
     """
     clean_email = user_in.email.strip().lower()
+    clean_username = user_in.username.strip().lower()
 
     # 1. Check if Email already exists (case-insensitive)
     db_user = db.query(User).filter(func.lower(User.email) == clean_email).first()
@@ -80,7 +81,15 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
             detail="Email already registered"
         )
 
-    # 2. Check Delta User ID if provided
+    # 2. Check if Username already exists (case-insensitive)
+    db_username_user = db.query(User).filter(func.lower(User.username) == clean_username).first()
+    if db_username_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This username is already taken. Please choose another."
+        )
+
+    # 3. Check Delta User ID if provided
     uid_status = "pending"
     if user_in.delta_user_id:
         db_delta_user = db.query(User).filter(User.delta_user_id == user_in.delta_user_id).first()
@@ -99,6 +108,7 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     hashed_password = security.get_password_hash(user_in.password)
     user = User(
         email=clean_email,
+        username=clean_username,
         full_name=user_in.full_name.strip(),
         hashed_password=hashed_password,
         delta_user_id=user_in.delta_user_id,
@@ -127,10 +137,13 @@ def login(
 ):
     """
     OAuth2 compatible token login, retrieving an access token for subsequent authorized API calls.
-    Performs case-insensitive email lookup with whitespace stripping.
+    Performs case-insensitive email or username lookup with whitespace stripping.
     """
-    username_clean = form_data.username.strip() if form_data.username else ""
-    user = db.query(User).filter(func.lower(User.email) == func.lower(username_clean)).first()
+    identifier_clean = form_data.username.strip() if form_data.username else ""
+    user = db.query(User).filter(
+        (func.lower(User.email) == func.lower(identifier_clean)) |
+        (func.lower(User.username) == func.lower(identifier_clean))
+    ).first()
     if not user or not security.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -318,6 +331,20 @@ def update_profile(
     """
     if profile_in.full_name is not None and profile_in.full_name.strip():
         current_user.full_name = profile_in.full_name.strip()
+
+    if profile_in.username is not None:
+        clean_username = profile_in.username.strip().lower()
+        if clean_username:
+            existing_user = db.query(User).filter(
+                func.lower(User.username) == clean_username,
+                User.id != current_user.id
+            ).first()
+            if existing_user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="This username is already taken. Please choose another."
+                )
+            current_user.username = clean_username
 
     if profile_in.phone is not None:
         current_user.phone = profile_in.phone.strip()

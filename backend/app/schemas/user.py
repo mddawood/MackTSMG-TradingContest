@@ -14,12 +14,24 @@ def validate_password_complexity(v: str) -> str:
     return v
 
 
+def validate_username_format(v: str) -> str:
+    cleaned = v.strip().lower()
+    if len(cleaned) < 3:
+        raise ValueError("Username must be at least 3 characters long.")
+    if len(cleaned) > 20:
+        raise ValueError("Username cannot exceed 20 characters.")
+    if not re.match(r"^[a-zA-Z0-9_]+$", cleaned):
+        raise ValueError("Username may only contain letters, numbers, and underscores.")
+    return cleaned
+
+
 class UserBase(BaseModel):
     email: EmailStr = Field(..., description="The user's email address")
     full_name: str = Field(..., description="The user's full name")
 
 
 class UserCreate(UserBase):
+    username: str = Field(..., min_length=3, max_length=20, description="Unique public handle across the organization")
     password: str = Field(..., min_length=8, description="Password must be at least 8 characters")
     delta_user_id: Optional[str] = Field(None, description="The user's Delta Exchange user ID")
     phone: Optional[str] = Field(None, description="WhatsApp or Phone number")
@@ -28,6 +40,11 @@ class UserCreate(UserBase):
     @classmethod
     def validate_password(cls, v: str) -> str:
         return validate_password_complexity(v)
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: str) -> str:
+        return validate_username_format(v)
 
 
 class UserLogin(UserBase):
@@ -38,6 +55,7 @@ class UserResponse(UserBase):
     id: int
     created_at: datetime
     role: str
+    username: Optional[str] = None
     delta_user_id: Optional[str] = None
     phone: Optional[str] = None
     exchange: Optional[str] = "Delta"
@@ -53,9 +71,18 @@ class UserResponse(UserBase):
 
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
+    username: Optional[str] = None
     phone: Optional[str] = None
     exchange: Optional[str] = None
     delta_user_id: Optional[str] = None
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        return validate_username_format(v)
+
 
 
 class ResendVerificationRequest(BaseModel):

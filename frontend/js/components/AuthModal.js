@@ -133,10 +133,18 @@ async function handleLogin(e) {
 async function handleRegister(e) {
     e.preventDefault();
     const fullName = document.getElementById('register-name').value;
+    const usernameInput = document.getElementById('register-username');
+    const username = usernameInput ? usernameInput.value.trim().toLowerCase() : '';
     const email = document.getElementById('register-email').value;
     const password = document.getElementById('register-password').value;
     const confirmPassword = document.getElementById('register-confirm-password').value;
     const deltaUserId = document.getElementById('register-delta-id').value;
+
+    if (!username || username.length < 3 || username.length > 20 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+        showToast('Username must be 3-20 characters long and contain only letters, numbers, and underscores.', 'error');
+        if (usernameInput) usernameInput.focus();
+        return;
+    }
 
     if (password.length < 8) {
         showToast('Password must be at least 8 characters long.', 'error');
@@ -162,6 +170,7 @@ async function handleRegister(e) {
     try {
         await authAPI.register({
             email,
+            username,
             full_name: fullName,
             password,
             delta_user_id: deltaUserId

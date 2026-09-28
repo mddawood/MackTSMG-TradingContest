@@ -298,7 +298,8 @@ export function updateNavbar(user) {
     if (user) {
         if (authBtns) authBtns.classList.add('hidden');
         if (userControls) userControls.classList.remove('hidden');
-        if (greetingSpan) greetingSpan.textContent = user.full_name || 'Trader';
+        const handleDisplay = user.username ? `@${user.username}` : (user.full_name || 'Trader');
+        if (greetingSpan) greetingSpan.textContent = handleDisplay;
 
         // Render Avatars with Progress Ring
         const navAvatarWrap = document.getElementById('nav-avatar-wrap');
@@ -319,12 +320,12 @@ export function updateNavbar(user) {
         }
 
         // Gear Dropdown Profile
-        if (gearUserName) gearUserName.textContent = user.full_name || 'Trader';
+        if (gearUserName) gearUserName.textContent = user.username ? `${user.full_name} (@${user.username})` : (user.full_name || 'Trader');
 
         // Mobile drawer updates
         if (mobileAuthBtns) mobileAuthBtns.classList.add('hidden');
         if (mobileUserControls) mobileUserControls.classList.remove('hidden');
-        if (mobileGreetingSpan) mobileGreetingSpan.textContent = user.full_name || 'Trader';
+        if (mobileGreetingSpan) mobileGreetingSpan.textContent = handleDisplay;
 
         if (user.role === 'admin') {
             if (gearAdminBtn) gearAdminBtn.classList.remove('hidden');

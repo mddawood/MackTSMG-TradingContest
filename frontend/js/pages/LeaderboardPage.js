@@ -192,7 +192,10 @@ export class LeaderboardPage {
 
         let filtered = this.entries;
         if (this.searchQuery) {
-            filtered = filtered.filter(item => item.full_name.toLowerCase().includes(this.searchQuery));
+            filtered = filtered.filter(item => 
+                item.full_name.toLowerCase().includes(this.searchQuery) ||
+                (item.username && item.username.toLowerCase().includes(this.searchQuery))
+            );
         }
 
         if (filtered.length === 0) {
@@ -249,9 +252,12 @@ export class LeaderboardPage {
                 <td style="padding: 0.85rem 1rem;">
                     <div class="flex-row align-center gap-3">
                         <span class="avatar-circle">${initials}</span>
-                        <div class="flex-column">
-                            <span style="font-weight: 600;">${entry.full_name}</span>
-                            <span class="tier-badge tier-${tierLower}" style="width: fit-content; margin-top: 0.2rem; font-size: 0.65rem; padding: 0.1rem 0.45rem;">${entry.tier || 'Trader'}</span>
+                        <div class="flex-column" style="min-width: 0;">
+                            <div class="flex-row align-center gap-1.5 flex-wrap" style="line-height: 1.3;">
+                                <span class="font-mono text-primary font-bold" style="font-size: 0.9rem;">${entry.username ? `@${entry.username}` : entry.full_name}</span>
+                                ${entry.username ? `<span class="text-xs text-muted" style="font-weight: 500;">(${entry.full_name})</span>` : ''}
+                            </div>
+                            <span class="tier-badge tier-${tierLower}" style="width: fit-content; margin-top: 0.25rem; font-size: 0.65rem; padding: 0.1rem 0.45rem;">${entry.tier || 'Trader'}</span>
                         </div>
                     </div>
                 </td>
