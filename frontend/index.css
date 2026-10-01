@@ -11,7 +11,7 @@
     --text-primary: #f4f4f5;
     --text-secondary: #a1a1aa;
     --text-muted: #71717a;
-    
+
     /* Accents & Brand Colors */
     --primary: #2563eb;
     --primary-hover: #1d4ed8;
@@ -19,10 +19,10 @@
     --accent: #10b981;
     --accent-glow: rgba(16, 185, 129, 0.1);
     --destructive: #ef4444;
-    
+
     /* Fonts */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    
+
     /* Transitions */
     --transition-fast: 0.15s ease;
     --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -97,12 +97,34 @@ body {
 }
 
 /* Common Padding & Spacing Utilities */
-.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
-.py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
-.py-8 { padding-top: 2rem; padding-bottom: 2rem; }
-.py-12 { padding-top: 3rem; padding-bottom: 3rem; }
-.py-16 { padding-top: 4rem; padding-bottom: 4rem; }
-.border-top { border-top: 1px solid var(--border-color); }
+.py-4 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.py-6 {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+.py-8 {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.py-12 {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+.py-16 {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+}
+
+.border-top {
+    border-top: 1px solid var(--border-color);
+}
 
 a {
     color: inherit;
@@ -153,11 +175,25 @@ button {
     flex-wrap: wrap;
 }
 
-.gap-2 { gap: 0.5rem; }
-.gap-3 { gap: 0.75rem; }
-.gap-4 { gap: 1rem; }
-.gap-6 { gap: 1.5rem; }
-.gap-8 { gap: 2rem; }
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.gap-3 {
+    gap: 0.75rem;
+}
+
+.gap-4 {
+    gap: 1rem;
+}
+
+.gap-6 {
+    gap: 1.5rem;
+}
+
+.gap-8 {
+    gap: 2rem;
+}
 
 .grid-2 {
     display: grid;
@@ -187,6 +223,7 @@ button {
     .grid-3 {
         grid-template-columns: repeat(2, 1fr);
     }
+
     .grid-4 {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -196,9 +233,11 @@ button {
     .grid-3 {
         grid-template-columns: repeat(3, 1fr);
     }
+
     .grid-4 {
         grid-template-columns: repeat(4, 1fr);
     }
+
     .span-2 {
         grid-column: span 2 / span 2;
     }
@@ -228,28 +267,97 @@ button {
     border-radius: 3px;
 }
 
-.py-10 { padding-top: 2.5rem; padding-bottom: 2.5rem; }
-.py-12 { padding-top: 3rem; padding-bottom: 3rem; }
-.py-20 { padding-top: 5rem; padding-bottom: 5rem; }
-.py-28 { padding-top: 7rem; padding-bottom: 7rem; }
-.mb-2 { margin-bottom: 0.5rem; }
-.mb-3 { margin-bottom: 0.75rem; }
-.mb-4 { margin-bottom: 1rem; }
-.mb-5 { margin-bottom: 1.25rem; }
-.mb-6 { margin-bottom: 1.5rem; }
-.mb-8 { margin-bottom: 2rem; }
-.mb-10 { margin-bottom: 2.5rem; }
-.mb-12 { margin-bottom: 3rem; }
-.mt-2 { margin-top: 0.5rem; }
-.mt-4 { margin-top: 1rem; }
-.mt-6 { margin-top: 1.5rem; }
-.mt-8 { margin-top: 2rem; }
-.pt-4 { padding-top: 1rem; }
-.h-16 { height: 4rem; }
-.w-20 { width: 5rem; }
-.w-full { width: 100%; }
-.max-w-sm { max-width: 24rem; }
-.max-w-xl { max-width: 36rem; }
+.py-10 {
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+}
+
+.py-12 {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+.py-20 {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+}
+
+.py-28 {
+    padding-top: 7rem;
+    padding-bottom: 7rem;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-3 {
+    margin-bottom: 0.75rem;
+}
+
+.mb-4 {
+    margin-bottom: 1rem;
+}
+
+.mb-5 {
+    margin-bottom: 1.25rem;
+}
+
+.mb-6 {
+    margin-bottom: 1.5rem;
+}
+
+.mb-8 {
+    margin-bottom: 2rem;
+}
+
+.mb-10 {
+    margin-bottom: 2.5rem;
+}
+
+.mb-12 {
+    margin-bottom: 3rem;
+}
+
+.mt-2 {
+    margin-top: 0.5rem;
+}
+
+.mt-4 {
+    margin-top: 1rem;
+}
+
+.mt-6 {
+    margin-top: 1.5rem;
+}
+
+.mt-8 {
+    margin-top: 2rem;
+}
+
+.pt-4 {
+    padding-top: 1rem;
+}
+
+.h-16 {
+    height: 4rem;
+}
+
+.w-20 {
+    width: 5rem;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.max-w-sm {
+    max-width: 24rem;
+}
+
+.max-w-xl {
+    max-width: 36rem;
+}
 
 .hidden {
     display: none !important;
@@ -263,7 +371,13 @@ button {
     background-color: var(--bg-muted);
 }
 
-#how, #tiers, #leaderboard, #leaderboard-section, #faq, #prizes, section[id] {
+#how,
+#tiers,
+#leaderboard,
+#leaderboard-section,
+#faq,
+#prizes,
+section[id] {
     scroll-margin-top: 5rem;
 }
 
@@ -439,6 +553,7 @@ button {
         opacity: 0;
         transform: translateY(-8px) scale(0.97);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -650,9 +765,9 @@ button {
 .background-grid {
     position: absolute;
     inset: 0;
-    background-image: 
-        linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
     background-size: 24px 24px;
     z-index: -20;
     pointer-events: none;
@@ -861,10 +976,25 @@ button {
     border-radius: 50%;
 }
 
-.rookie-dot { background-color: #64748b; box-shadow: 0 0 10px rgba(100, 116, 139, 0.5); }
-.trader-dot { background-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
-.pro-dot { background-color: #8b5cf6; box-shadow: 0 0 10px rgba(139, 92, 246, 0.5); }
-.whale-dot { background-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+.rookie-dot {
+    background-color: #64748b;
+    box-shadow: 0 0 10px rgba(100, 116, 139, 0.5);
+}
+
+.trader-dot {
+    background-color: #3b82f6;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.pro-dot {
+    background-color: #8b5cf6;
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+}
+
+.whale-dot {
+    background-color: #10b981;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
 
 .tier-name {
     font-size: 1.25rem;
@@ -942,9 +1072,23 @@ button {
     background-color: var(--bg-muted);
 }
 
-.rank-1 { background-color: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.3); }
-.rank-2 { background-color: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
-.rank-3 { background-color: rgba(180, 83, 9, 0.15); color: #b45309; border: 1px solid rgba(180, 83, 9, 0.3); }
+.rank-1 {
+    background-color: rgba(234, 179, 8, 0.15);
+    color: #eab308;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.rank-2 {
+    background-color: rgba(148, 163, 184, 0.15);
+    color: #94a3b8;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.rank-3 {
+    background-color: rgba(180, 83, 9, 0.15);
+    color: #b45309;
+    border: 1px solid rgba(180, 83, 9, 0.3);
+}
 
 .roi-positive {
     color: var(--accent);
@@ -1076,6 +1220,7 @@ select.form-control {
         opacity: 0;
         transform: scale(0.95) translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -1134,16 +1279,32 @@ select.form-control {
     text-transform: uppercase;
 }
 
-.env-testnet, .env-testnet_india { background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
-.env-mainnet, .env-mainnet_india { background-color: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.env-testnet,
+.env-testnet_india {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.env-mainnet,
+.env-mainnet_india {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
 
 .key-status {
     font-size: 0.75rem;
     font-weight: 500;
 }
 
-.status-active { color: var(--accent); }
-.status-invalid { color: var(--destructive); }
+.status-active {
+    color: var(--accent);
+}
+
+.status-invalid {
+    color: var(--destructive);
+}
 
 /* Competition / Registration dashboard items */
 .comp-item {
@@ -1219,6 +1380,7 @@ select.form-control {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -1315,6 +1477,7 @@ select.form-control {
 .mobile-menu-toggle:hover {
     background-color: rgba(255, 255, 255, 0.05);
 }
+
 .mobile-drawer {
     position: fixed;
     inset: 0;
@@ -1345,6 +1508,7 @@ select.form-control {
     from {
         transform: translateX(100%);
     }
+
     to {
         transform: translateX(0);
     }
@@ -1433,11 +1597,11 @@ select.form-control {
     .grid-3 {
         gap: 1.5rem;
     }
-    
+
     .dashboard-col.span-2 {
         grid-column: span 1;
     }
-    
+
     /* Show mobile menu toggle button */
     .mobile-menu-toggle {
         display: flex;
@@ -1449,7 +1613,7 @@ select.form-control {
         gap: 0.5rem;
         margin-left: auto;
     }
-    
+
     #nav-auth-buttons {
         display: none !important;
     }
@@ -1467,7 +1631,7 @@ select.form-control {
     }
 
     .user-pill,
-    #nav-user-controls > #logout-btn {
+    #nav-user-controls>#logout-btn {
         display: none !important;
     }
 
@@ -1475,13 +1639,13 @@ select.form-control {
         right: -2.25rem;
         width: min(280px, calc(100vw - 1.5rem));
     }
-    
+
     /* Ensure tables don't squish excessively on smaller viewports */
     #leaderboard-table,
     .leaderboard-table {
         min-width: 650px;
     }
-    
+
     #admin-view table {
         min-width: 720px;
     }
@@ -1511,23 +1675,23 @@ select.form-control {
     .container {
         padding: 0 1rem;
     }
-    
+
     .hero-title {
         font-size: 2rem;
     }
-    
+
     .hero-subtitle {
         font-size: 1.1rem;
     }
-    
+
     .welcome-title {
         font-size: 1.35rem;
     }
-    
+
     .main-header .container {
         padding: 0 1rem;
     }
-    
+
     /* Stack and size actions on mobile */
     .hero-actions {
         flex-direction: column !important;
@@ -1536,47 +1700,47 @@ select.form-control {
         margin: 2rem auto 0;
         gap: 0.75rem;
     }
-    
+
     .hero-actions .btn {
         width: 100%;
     }
-    
+
     /* Reduce large paddings for mobile view */
     .py-20 {
         padding-top: 2.5rem !important;
         padding-bottom: 2.5rem !important;
     }
-    
+
     .py-12 {
         padding-top: 1.75rem !important;
         padding-bottom: 1.75rem !important;
     }
-    
+
     .p-8 {
         padding: 1.25rem !important;
     }
-    
+
     .modal-box {
         padding: 1.5rem 1.25rem !important;
         max-width: 95% !important;
     }
-    
+
     /* Shrink logo and buttons slightly on mobile */
     .logo {
         font-size: 1.125rem;
     }
-    
+
     .logo-icon {
         width: 1.75rem;
         height: 1.75rem;
     }
-    
+
     .btn:not(.btn-lg) {
         height: 2.25rem;
         padding: 0 0.85rem;
         font-size: 0.8rem;
     }
-    
+
     .auth-controls {
         gap: 0.5rem;
     }
@@ -1613,13 +1777,13 @@ select.form-control {
     .stepper-step-label {
         font-size: 0.65rem;
     }
-    
+
     /* Adjust cards and text sizes inside dashboard metrics */
     .comp-metrics {
         grid-template-columns: 1fr;
         gap: 0.75rem;
     }
-    
+
     .metric-box {
         flex-direction: row;
         justify-content: space-between;
@@ -1627,28 +1791,28 @@ select.form-control {
         border-bottom: 1px dashed var(--border-color);
         padding-bottom: 0.5rem;
     }
-    
+
     .metric-box:last-child {
         border-bottom: none;
         padding-bottom: 0;
     }
-    
+
     .metric-value {
         margin-top: 0;
     }
-    
-    .leaderboard-table th, 
+
+    .leaderboard-table th,
     .leaderboard-table td {
         padding: 0.75rem 0.5rem;
         font-size: 0.75rem;
     }
-    
+
     .rank-badge {
         width: 1.5rem;
         height: 1.5rem;
         font-size: 0.75rem;
     }
-    
+
     .toast {
         bottom: 1rem;
         left: 1rem;
@@ -1665,9 +1829,11 @@ select.form-control {
     background: rgba(239, 68, 68, 0.03) !important;
     transition: opacity var(--transition-normal);
 }
+
 .soft-deleted-row:hover {
     opacity: 0.85;
 }
+
 .badge {
     display: inline-flex;
     align-items: center;
@@ -1677,26 +1843,31 @@ select.form-control {
     font-weight: 600;
     line-height: 1;
 }
+
 .badge-admin {
     background-color: rgba(37, 99, 235, 0.15);
     border: 1px solid rgba(37, 99, 235, 0.4);
     color: #60a5fa;
 }
+
 .badge-user {
     background-color: rgba(161, 161, 170, 0.1);
     border: 1px solid rgba(161, 161, 170, 0.25);
     color: var(--text-secondary);
 }
+
 .badge-active {
     background-color: rgba(16, 185, 129, 0.15);
     border: 1px solid rgba(16, 185, 129, 0.4);
     color: #34d399;
 }
+
 .badge-deleted {
     background-color: rgba(239, 68, 68, 0.15);
     border: 1px solid rgba(239, 68, 68, 0.4);
     color: #f87171;
 }
+
 .badge-delta {
     background-color: rgba(99, 102, 241, 0.15);
     border: 1px solid rgba(99, 102, 241, 0.4);
@@ -1706,6 +1877,7 @@ select.form-control {
     gap: 0.3rem;
     font-weight: 600;
 }
+
 .badge-shark {
     background-color: rgba(6, 182, 212, 0.15);
     border: 1px solid rgba(6, 182, 212, 0.4);
@@ -1715,9 +1887,11 @@ select.form-control {
     gap: 0.3rem;
     font-weight: 600;
 }
+
 .text-destructive {
     color: var(--destructive) !important;
 }
+
 .action-btn-group {
     display: flex;
     justify-content: flex-end;
@@ -2090,6 +2264,7 @@ select.form-control {
     .dashboard-layout {
         flex-direction: column;
     }
+
     .dashboard-sidebar {
         width: 100%;
         border-right: none;
@@ -2098,10 +2273,12 @@ select.form-control {
         flex-direction: column;
         gap: 0.75rem;
     }
+
     .dashboard-sidebar .p-3 {
         padding: 0.25rem 0 !important;
         margin-bottom: 0 !important;
     }
+
     #dashboard-sidebar-nav,
     #admin-sidebar-nav {
         display: flex;
@@ -2113,10 +2290,12 @@ select.form-control {
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
     }
+
     #dashboard-sidebar-nav::-webkit-scrollbar,
     #admin-sidebar-nav::-webkit-scrollbar {
         display: none;
     }
+
     .sidebar-link {
         width: auto;
         white-space: nowrap;
@@ -2126,14 +2305,17 @@ select.form-control {
         padding: 0.5rem 0.85rem;
         font-size: 0.8rem;
     }
+
     .sidebar-link:hover {
         background: rgba(255, 255, 255, 0.08);
     }
+
     .sidebar-link.active {
         background: rgba(37, 99, 235, 0.2);
         border-color: rgba(37, 99, 235, 0.5);
         color: #60a5fa;
     }
+
     .dashboard-main {
         padding: 1rem;
     }
@@ -2275,6 +2457,7 @@ select.form-control {
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-secondary);
 }
+
 /* ServiceNow & Salesforce style DateTime Picker */
 .snow-datetime-picker {
     display: flex;
@@ -2530,9 +2713,18 @@ select.form-control {
 .pwd-strength-text {
     font-weight: 600;
 }
-.pwd-strength-text.is-weak { color: #ef4444; }
-.pwd-strength-text.is-fair { color: #f59e0b; }
-.pwd-strength-text.is-strong { color: #10b981; }
+
+.pwd-strength-text.is-weak {
+    color: #ef4444;
+}
+
+.pwd-strength-text.is-fair {
+    color: #f59e0b;
+}
+
+.pwd-strength-text.is-strong {
+    color: #10b981;
+}
 
 /* Password Checklist */
 .pwd-checklist {
@@ -2701,10 +2893,13 @@ select.form-control {
 }
 
 @keyframes pulseHalo {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(0.95);
         opacity: 0.6;
     }
+
     50% {
         transform: scale(1.15);
         opacity: 1;
@@ -2889,12 +3084,15 @@ select.form-control {
         justify-content: center;
         text-align: center;
     }
+
     .stepper-header {
         margin-bottom: 1.25rem;
     }
+
     .stepper-step-label {
         font-size: 0.68rem;
     }
+
     .stepper-circle {
         width: 1.85rem;
         height: 1.85rem;
@@ -2943,13 +3141,201 @@ select.form-control {
     0% {
         box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
     }
+
     70% {
         box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
     }
+
     100% {
         box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
     }
 }
 
+/* ==========================================================================
+   Connected Profile Completion Timeline (Matching Reference Image)
+   ========================================================================== */
 
+.milestone-timeline-container {
+    position: relative;
+    width: 100%;
+    margin-top: 1.75rem;
+    padding-bottom: 0.5rem;
+}
 
+/* Continuous Horizontal Connector Track running behind the circles */
+.milestone-timeline-track {
+    position: absolute;
+    top: 14px; /* Center aligned with 30px circles */
+    left: 12.5%; /* Centers at first column (100% / 4 / 2) */
+    right: 12.5%; /* Centers at last column */
+    height: 4px;
+    background: #27272a; /* Inactive track color */
+    z-index: 1;
+    border-radius: 9999px;
+}
+
+.milestone-timeline-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb 0%, #3b82f6 33%, #8b5cf6 66%, #a855f7 100%);
+    border-radius: 9999px;
+    box-shadow: 0 0 14px rgba(99, 102, 241, 0.7);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 4 Milestone Columns */
+.milestone-nodes-grid {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    width: 100%;
+}
+
+.milestone-node-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+/* Subtle vertical divider between milestone label sections */
+.milestone-node-col:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0.15rem;
+    height: 1.15rem;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Node Circle on the track */
+.milestone-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #18181b;
+    border: 3px solid #3f3f46;
+    margin-bottom: 0.85rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.milestone-check {
+    width: 14px;
+    height: 14px;
+    color: #ffffff;
+}
+
+/* Glowing Nodes from Reference Image */
+.milestone-circle.node-blue {
+    background: #2563eb;
+    border-color: #3b82f6;
+    box-shadow: 0 0 16px rgba(37, 99, 235, 0.9), 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.milestone-circle.node-purple-blue {
+    background: #4f46e5;
+    border-color: #6366f1;
+    box-shadow: 0 0 16px rgba(99, 102, 241, 0.9), 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+.milestone-circle.node-purple {
+    background: #7c3aed;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.9), 0 0 0 3px rgba(139, 92, 246, 0.25);
+}
+
+.milestone-circle.node-inactive {
+    background: #12141d;
+    border: 3px solid #3f3f46;
+    box-shadow: none;
+}
+
+/* Labels and Badges */
+.milestone-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    text-align: center;
+}
+
+.milestone-name {
+    font-size: 0.825rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.milestone-pct-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.15rem 0.45rem;
+    border-radius: 9999px;
+    line-height: 1;
+}
+
+.badge-blue {
+    background: rgba(37, 99, 235, 0.18);
+    border: 1px solid rgba(59, 130, 246, 0.45);
+    color: #60a5fa;
+}
+
+.badge-purple {
+    background: rgba(139, 92, 246, 0.18);
+    border: 1px solid rgba(168, 85, 247, 0.45);
+    color: #c084fc;
+}
+
+.badge-inactive {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-muted);
+}
+
+/* Stepper step locked status indicator */
+.stepper-step.locked .stepper-circle {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Mobile Responsiveness for Timeline (Preserving mobile view) */
+@media (max-width: 640px) {
+    .milestone-timeline-container {
+        margin-top: 1.25rem;
+    }
+    .milestone-timeline-track {
+        top: 11px;
+        height: 3px;
+    }
+    .milestone-circle {
+        width: 24px;
+        height: 24px;
+        margin-bottom: 0.5rem;
+    }
+    .milestone-check {
+        width: 11px;
+        height: 11px;
+    }
+    .milestone-meta {
+        gap: 0.25rem;
+    }
+    .milestone-name {
+        font-size: 0.68rem;
+        white-space: normal;
+        line-height: 1.2;
+    }
+    .milestone-pct-badge {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.35rem;
+    }
+    .milestone-node-col:not(:last-child)::after {
+        display: none; /* Hide vertical dividers on small screens to prevent crowding */
+    }
+}

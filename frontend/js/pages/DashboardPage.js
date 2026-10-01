@@ -16,10 +16,12 @@ export class DashboardPage {
         this.loadingTrades = false;
 
         // Profile Completion Wizard State
-        this.wizardStep = 1; // 1: Name/Contact, 2: Exchange, 3: UID, 4: API Key
+        this.wizardStep = 2; // Default to Step 2 since Step 1 is completed/locked at signup
+        this.wizardStepInitialSet = false;
         this.isEditingProfile = false;
         this.wizardData = {
             fullName: '',
+            username: '',
             phone: '',
             exchange: 'Delta Exchange',
             uid: '',
@@ -33,6 +35,29 @@ export class DashboardPage {
                 this.switchToTab(e.detail.tab);
             }
         };
+    }
+
+    isStep1Locked() {
+        return Boolean(this.user?.full_name && this.user?.phone);
+    }
+
+    getInitialWizardStep() {
+        // If user already provided name and phone during signup, Step 1 is locked.
+        // User starts at Step 2 (Exchange selection) onwards.
+        if (!this.isStep1Locked()) {
+            return 1;
+        }
+        if (!this.user?.exchange) {
+            return 2;
+        }
+        if (!this.user?.delta_user_id) {
+            return 3;
+        }
+        const hasAPI = Boolean(this.user?.has_api_key || (this.apiKeys && this.apiKeys.some(k => k.is_valid)));
+        if (!hasAPI) {
+            return 4;
+        }
+        return 2;
     }
 
     switchToTab(tabName) {
@@ -193,6 +218,35 @@ export class DashboardPage {
         const hasUID = Boolean(this.user?.delta_user_id);
         const hasAPI = Boolean(this.user?.has_api_key || (this.apiKeys && this.apiKeys.some(k => k.is_valid)));
 
+        // Automatically determine initial wizard step
+        if (!this.wizardStepInitialSet) {
+            this.wizardStep = this.getInitialWizardStep();
+            this.wizardStepInitialSet = true;
+        }
+
+        // If step 1 is locked, ensure user cannot access step 1
+        if (this.isStep1Locked() && this.wizardStep < 2) {
+            this.wizardStep = 2;
+        }
+
+        // Calculate progress line fill percentage (Node 1 to Node 4 track)
+        // 25% (Node 1) -> 0% fill
+        // 50% (Node 2) -> 34% fill
+        // 75% (Node 3) -> 68% fill (extends to Node 3 exactly matching screenshot)
+        // 100% (Node 4) -> 100% fill
+        let timelineLineWidth = 0;
+        if (pct === 100) {
+            timelineLineWidth = 100;
+        } else if (pct >= 75) {
+            timelineLineWidth = 68;
+        } else if (pct >= 50) {
+            timelineLineWidth = 34;
+        } else {
+            timelineLineWidth = 0;
+        }
+
+        const checkIcon = `<svg class="milestone-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
         return `
         <div class="flex-column gap-6 w-full">
             <!-- Salesforce-style Workspace Breadcrumb & Action Toolbar -->
@@ -223,14 +277,14 @@ export class DashboardPage {
 
             <!-- Full-Width Profile Container -->
             <div class="profile-layout-container flex-column gap-6 w-full">
-                <!-- Profile Completion Header Banner -->
+                <!-- Profile Completion Header Banner (Exact Match to Reference Image) -->
                 <div class="card glass p-6" style="border: 1px solid var(--border-color); border-radius: 1rem;">
-                    <div class="flex-row align-center justify-between flex-wrap gap-4 mb-4">
+                    <div class="flex-row align-center justify-between flex-wrap gap-4 mb-6">
                         <div class="flex-row align-center gap-4">
                             ${renderAvatarWithProgress(this.user, 64, true)}
                             <div>
                                 <div class="flex-row align-center gap-2">
-                                    <h2 style="font-size: 1.35rem; font-weight: 700;">Profile Completion Overview</h2>
+                                    <h2 style="font-size: 1.35rem; font-weight: 700; color: #fff;">Profile Completion Overview</h2>
                                     ${pct === 100 ? '<span class="badge badge-active" style="font-size: 0.75rem;">100% Complete</span>' : ''}
                                 </div>
                                 <p class="text-secondary text-sm mt-1">
@@ -239,29 +293,63 @@ export class DashboardPage {
                             </div>
                         </div>
                         <div class="flex-column align-end">
-                            <div class="font-mono text-xl font-bold ${pct === 100 ? 'text-accent' : 'text-primary'}">${pct}%</div>
+                            <div class="font-mono text-xl font-bold ${pct === 100 ? 'text-accent' : 'text-primary'}" style="font-size: 1.45rem; color: #fff;">${pct}%</div>
                             <span class="text-muted text-xs">Profile Completion</span>
                         </div>
                     </div>
 
-                    <!-- Progress Bar -->
-                    <div class="progress-bar-wrap mb-4" style="height: 8px; background: rgba(255,255,255,0.08); border-radius: 9999px; overflow: hidden;">
-                        <div style="width: ${pct}%; height: 100%; background: ${pct === 100 ? '#10b981' : 'linear-gradient(90deg, #3b82f6, #8b5cf6)'}; border-radius: 9999px; transition: width 0.6s ease;"></div>
-                    </div>
+                    <!-- Connected Milestone Timeline Track -->
+                    <div class="milestone-timeline-container">
+                        <!-- Horizontal Track Line -->
+                        <div class="milestone-timeline-track">
+                            <div class="milestone-timeline-fill" style="width: ${timelineLineWidth}%;"></div>
+                        </div>
 
-                    <!-- 4 Milestones Checklist -->
-                    <div class="grid-4 gap-2 text-xs" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
-                        <div class="flex-row align-center gap-1.5 ${hasEmail ? 'text-accent font-semibold' : 'text-muted'}">
-                            <span>${hasEmail ? '✓' : '○'}</span> Email Verified (25%)
-                        </div>
-                        <div class="flex-row align-center gap-1.5 ${hasInfo ? 'text-accent font-semibold' : 'text-muted'}">
-                            <span>${hasInfo ? '✓' : '○'}</span> Personal Info (25%)
-                        </div>
-                        <div class="flex-row align-center gap-1.5 ${hasUID ? 'text-accent font-semibold' : 'text-muted'}">
-                            <span>${hasUID ? '✓' : '○'}</span> Exchange &amp; UID (25%)
-                        </div>
-                        <div class="flex-row align-center gap-1.5 ${hasAPI ? 'text-accent font-semibold' : 'text-muted'}">
-                            <span>${hasAPI ? '✓' : '○'}</span> Read-Only API (25%)
+                        <!-- 4 Connected Nodes Grid -->
+                        <div class="milestone-nodes-grid">
+                            <!-- Node 1: Email Verified -->
+                            <div class="milestone-node-col">
+                                <div class="milestone-circle ${hasEmail ? 'node-blue' : 'node-inactive'}">
+                                    ${hasEmail ? checkIcon : ''}
+                                </div>
+                                <div class="milestone-meta">
+                                    <span class="milestone-name">Email Verified</span>
+                                    <span class="milestone-pct-badge ${hasEmail ? 'badge-blue' : 'badge-inactive'}">25%</span>
+                                </div>
+                            </div>
+
+                            <!-- Node 2: Personal Info (Locked) -->
+                            <div class="milestone-node-col">
+                                <div class="milestone-circle ${hasInfo ? 'node-purple-blue' : 'node-inactive'}">
+                                    ${hasInfo ? checkIcon : ''}
+                                </div>
+                                <div class="milestone-meta">
+                                    <span class="milestone-name">Personal Info</span>
+                                    <span class="milestone-pct-badge ${hasInfo ? 'badge-purple' : 'badge-inactive'}">25%</span>
+                                </div>
+                            </div>
+
+                            <!-- Node 3: Exchange & UID -->
+                            <div class="milestone-node-col">
+                                <div class="milestone-circle ${hasUID ? 'node-purple' : 'node-inactive'}">
+                                    ${hasUID ? checkIcon : ''}
+                                </div>
+                                <div class="milestone-meta">
+                                    <span class="milestone-name">Exchange &amp; UID</span>
+                                    <span class="milestone-pct-badge ${hasUID ? 'badge-purple' : 'badge-inactive'}">25%</span>
+                                </div>
+                            </div>
+
+                            <!-- Node 4: Read-Only API -->
+                            <div class="milestone-node-col">
+                                <div class="milestone-circle ${hasAPI ? 'node-purple' : 'node-inactive'}">
+                                    ${hasAPI ? checkIcon : ''}
+                                </div>
+                                <div class="milestone-meta">
+                                    <span class="milestone-name">Read-Only API</span>
+                                    <span class="milestone-pct-badge ${hasAPI ? 'badge-purple' : 'badge-inactive'}">25%</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -289,12 +377,18 @@ export class DashboardPage {
 
             <div class="grid-2 gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
                 <div>
-                    <span class="text-xs text-muted block mb-1">Full Name</span>
-                    <div class="font-bold text-sm">${this.user?.full_name || '—'}</div>
+                    <span class="text-xs text-muted block mb-1">Full Name (Locked)</span>
+                    <div class="font-bold text-sm flex-row align-center gap-1.5">
+                        <span>${this.user?.full_name || '—'}</span>
+                        <span class="text-xs text-muted">🔒</span>
+                    </div>
                 </div>
                 <div>
                     <span class="text-xs text-muted block mb-1">Username (Public Handle)</span>
-                    <div class="font-mono text-sm font-bold text-primary">@${this.user?.username || '—'}</div>
+                    <div class="font-mono text-sm font-bold text-primary flex-row align-center gap-1.5">
+                        <span>@${this.user?.username || '—'}</span>
+                        <span class="text-xs text-muted">🔒</span>
+                    </div>
                 </div>
                 <div>
                     <span class="text-xs text-muted block mb-1">Email Address</span>
@@ -305,7 +399,10 @@ export class DashboardPage {
                 </div>
                 <div>
                     <span class="text-xs text-muted block mb-1">WhatsApp / Phone</span>
-                    <div class="font-bold text-sm">${this.user?.phone || '—'}</div>
+                    <div class="font-bold text-sm flex-row align-center gap-1.5">
+                        <span>${this.user?.phone || '—'}</span>
+                        <span class="text-xs text-muted">🔒</span>
+                    </div>
                 </div>
                 <div>
                     <span class="text-xs text-muted block mb-1">Connected Exchange</span>
@@ -345,13 +442,16 @@ export class DashboardPage {
             this.wizardData.exchange = this.user.exchange;
         }
 
+        const pct = calculateProfileCompletion(this.user);
+        const step1Locked = this.isStep1Locked();
+
         return `
         <div class="card glass p-6" style="border: 1px solid var(--border-color); border-radius: 1rem;">
             <!-- Stepper Progress Header -->
             <div class="stepper-header mb-6">
-                <div class="stepper-step ${this.wizardStep === 1 ? 'active' : (this.wizardStep > 1 ? 'completed' : '')}">
-                    <div class="stepper-circle">${this.wizardStep > 1 ? '✓' : '1'}</div>
-                    <span class="stepper-step-label">Name</span>
+                <div class="stepper-step ${step1Locked ? 'completed locked' : (this.wizardStep === 1 ? 'active' : '')}" title="Personal details verified &amp; locked at signup">
+                    <div class="stepper-circle">${step1Locked ? '✓' : '1'}</div>
+                    <span class="stepper-step-label">${step1Locked ? 'Name (Locked)' : 'Name'}</span>
                 </div>
                 <div class="stepper-step ${this.wizardStep === 2 ? 'active' : (this.wizardStep > 2 ? 'completed' : '')}">
                     <div class="stepper-circle">${this.wizardStep > 2 ? '✓' : '2'}</div>
@@ -361,8 +461,8 @@ export class DashboardPage {
                     <div class="stepper-circle">${this.wizardStep > 3 ? '✓' : '3'}</div>
                     <span class="stepper-step-label">UID</span>
                 </div>
-                <div class="stepper-step ${this.wizardStep === 4 ? 'active' : ''}">
-                    <div class="stepper-circle">4</div>
+                <div class="stepper-step ${this.wizardStep === 4 ? 'active' : (pct === 100 ? 'completed' : '')}">
+                    <div class="stepper-circle">${pct === 100 ? '✓' : '4'}</div>
                     <span class="stepper-step-label">API Key</span>
                 </div>
             </div>
@@ -520,8 +620,7 @@ export class DashboardPage {
                     </div>
                 </div>
 
-                <div class="flex-row justify-between mt-4">
-                    <button type="button" class="btn btn-secondary" id="wizard-back-btn">← Back</button>
+                <div class="flex-row justify-end mt-4">
                     <button type="button" class="btn btn-primary" id="wizard-step2-next">
                         Continue to UID Connection →
                     </button>
@@ -873,7 +972,7 @@ export class DashboardPage {
                 nav.querySelectorAll('.sidebar-link').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 this.activeTab = btn.dataset.tab;
-                
+
                 const main = document.getElementById('dashboard-tab-content');
                 if (main) {
                     main.innerHTML = this.renderActiveTabContent();
@@ -973,7 +1072,8 @@ export class DashboardPage {
         if (editSetupBtn) {
             editSetupBtn.addEventListener('click', () => {
                 this.isEditingProfile = true;
-                this.wizardStep = 1;
+                // Start from Step 2 onwards because Step 1 (Personal Info) is locked
+                this.wizardStep = this.isStep1Locked() ? 2 : 1;
                 const main = document.getElementById('dashboard-tab-content');
                 if (main) {
                     main.innerHTML = this.renderProfileTab();
@@ -1183,7 +1283,9 @@ export class DashboardPage {
         const backBtn = document.getElementById('wizard-back-btn');
         if (backBtn) {
             backBtn.addEventListener('click', () => {
-                if (this.wizardStep > 1) {
+                // If Step 1 is locked, user cannot go back past Step 2
+                const minStep = this.isStep1Locked() ? 2 : 1;
+                if (this.wizardStep > minStep) {
                     this.wizardStep -= 1;
                     const main = document.getElementById('dashboard-tab-content');
                     if (main) {
