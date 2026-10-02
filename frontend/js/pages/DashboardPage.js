@@ -275,34 +275,34 @@ export class DashboardPage {
                 </div>
             </div>
 
-            <!-- Full-Width Profile Container -->
-            <div class="profile-layout-container flex-column gap-6 w-full">
-                <!-- Profile Completion Header Banner (Exact Match to Reference Image) -->
-                <div class="card glass p-6" style="border: 1px solid var(--border-color); border-radius: 1rem;">
-                    <div class="flex-row align-center justify-between flex-wrap gap-4 mb-6">
+            <!-- Single Unified Profile Card (Consolidating Overview & Form) -->
+            <div class="card glass profile-unified-card p-6" style="border: 1px solid var(--border-color); border-radius: 1rem;">
+                <!-- Top Section: Profile Completion Header Banner & Single Milestone Track -->
+                <div class="profile-overview-section">
+                    <div class="overview-header-row flex-row align-center justify-between flex-wrap gap-4 mb-5">
                         <div class="flex-row align-center gap-4">
-                            ${renderAvatarWithProgress(this.user, 64, true)}
+                            ${renderAvatarWithProgress(this.user, 56, true)}
                             <div>
                                 <div class="flex-row align-center gap-2">
                                     <h2 style="font-size: 1.35rem; font-weight: 700; color: #fff;">Profile Completion Overview</h2>
                                     ${pct === 100 ? '<span class="badge badge-active" style="font-size: 0.75rem;">100% Complete</span>' : ''}
                                 </div>
-                                <p class="text-secondary text-sm mt-1">
+                                <p class="text-secondary text-sm mt-0.5">
                                     Complete all 4 verification steps to link your exchange credentials and qualify for official cash prize leaderboards.
                                 </p>
                             </div>
                         </div>
-                        <div class="flex-column align-end">
+                        <div class="overview-badge-col flex-column align-end">
                             <div class="font-mono text-xl font-bold ${pct === 100 ? 'text-accent' : 'text-primary'}" style="font-size: 1.45rem; color: #fff;">${pct}%</div>
                             <span class="text-muted text-xs">Profile Completion</span>
                         </div>
                     </div>
 
                     <!-- Connected Milestone Timeline Track -->
-                    <div class="milestone-timeline-container">
+                    <div class="milestone-timeline-container" style="--timeline-pct: ${timelineLineWidth}%;">
                         <!-- Horizontal Track Line -->
                         <div class="milestone-timeline-track">
-                            <div class="milestone-timeline-fill" style="width: ${timelineLineWidth}%;"></div>
+                            <div class="milestone-timeline-fill" style="width: ${timelineLineWidth}%; --timeline-pct: ${timelineLineWidth}%;"></div>
                         </div>
 
                         <!-- 4 Connected Nodes Grid -->
@@ -320,8 +320,8 @@ export class DashboardPage {
 
                             <!-- Node 2: Personal Info (Locked) -->
                             <div class="milestone-node-col">
-                                <div class="milestone-circle ${hasInfo ? 'node-purple-blue' : 'node-inactive'}">
-                                    ${hasInfo ? checkIcon : ''}
+                                <div class="milestone-circle ${hasInfo ? 'node-purple-blue' : (this.wizardStep === 1 ? 'node-current-active' : 'node-inactive')}">
+                                    ${hasInfo ? checkIcon : (this.wizardStep === 1 ? '●' : '')}
                                 </div>
                                 <div class="milestone-meta">
                                     <span class="milestone-name">Personal Info</span>
@@ -331,8 +331,8 @@ export class DashboardPage {
 
                             <!-- Node 3: Exchange & UID -->
                             <div class="milestone-node-col">
-                                <div class="milestone-circle ${hasUID ? 'node-purple' : 'node-inactive'}">
-                                    ${hasUID ? checkIcon : ''}
+                                <div class="milestone-circle ${hasUID ? 'node-purple' : ((this.wizardStep === 2 || this.wizardStep === 3) ? 'node-current-active' : 'node-inactive')}">
+                                    ${hasUID ? checkIcon : ((this.wizardStep === 2 || this.wizardStep === 3) ? '●' : '')}
                                 </div>
                                 <div class="milestone-meta">
                                     <span class="milestone-name">Exchange &amp; UID</span>
@@ -342,8 +342,8 @@ export class DashboardPage {
 
                             <!-- Node 4: Read-Only API -->
                             <div class="milestone-node-col">
-                                <div class="milestone-circle ${hasAPI ? 'node-purple' : 'node-inactive'}">
-                                    ${hasAPI ? checkIcon : ''}
+                                <div class="milestone-circle ${hasAPI ? 'node-purple' : (this.wizardStep === 4 ? 'node-current-active' : 'node-inactive')}">
+                                    ${hasAPI ? checkIcon : (this.wizardStep === 4 ? '●' : '')}
                                 </div>
                                 <div class="milestone-meta">
                                     <span class="milestone-name">Read-Only API</span>
@@ -354,8 +354,13 @@ export class DashboardPage {
                     </div>
                 </div>
 
-                <!-- Step Wizard / Completed Setup (Full-width) -->
-                ${pct === 100 && !this.isEditingProfile ? this.renderCompletedProfileView() : this.renderProfileWizard()}
+                <!-- Subtle Separator Line -->
+                <div class="profile-card-divider" style="height: 1px; background: linear-gradient(90deg, transparent, var(--border-color) 15%, var(--border-color) 85%, transparent); margin: 1.5rem 0 1.25rem 0;"></div>
+
+                <!-- Bottom Section: Active Step Form or Verified Profile Summary -->
+                <div id="profile-wizard-step-body" class="profile-form-section">
+                    ${pct === 100 && !this.isEditingProfile ? this.renderCompletedProfileView() : this.renderProfileWizard()}
+                </div>
             </div>
         </div>
         `;
@@ -364,7 +369,7 @@ export class DashboardPage {
     renderCompletedProfileView() {
         const exchangeName = this.user?.exchange || 'Delta Exchange';
         return `
-        <div class="card glass p-6 flex-column gap-5" style="border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 1rem;">
+        <div class="flex-column gap-5">
             <div class="flex-row justify-between align-center border-bottom pb-4" style="border-bottom: 1px solid var(--border-color);">
                 <div>
                     <h3 style="font-size: 1.15rem; font-weight: 700; color: #10b981;">✓ Profile Fully Verified</h3>
@@ -442,37 +447,7 @@ export class DashboardPage {
             this.wizardData.exchange = this.user.exchange;
         }
 
-        const pct = calculateProfileCompletion(this.user);
-        const step1Locked = this.isStep1Locked();
-
-        return `
-        <div class="card glass p-6" style="border: 1px solid var(--border-color); border-radius: 1rem;">
-            <!-- Stepper Progress Header -->
-            <div class="stepper-header mb-6">
-                <div class="stepper-step ${step1Locked ? 'completed locked' : (this.wizardStep === 1 ? 'active' : '')}" title="Personal details verified &amp; locked at signup">
-                    <div class="stepper-circle">${step1Locked ? '✓' : '1'}</div>
-                    <span class="stepper-step-label">${step1Locked ? 'Name (Locked)' : 'Name'}</span>
-                </div>
-                <div class="stepper-step ${this.wizardStep === 2 ? 'active' : (this.wizardStep > 2 ? 'completed' : '')}">
-                    <div class="stepper-circle">${this.wizardStep > 2 ? '✓' : '2'}</div>
-                    <span class="stepper-step-label">Exchange</span>
-                </div>
-                <div class="stepper-step ${this.wizardStep === 3 ? 'active' : (this.wizardStep > 3 ? 'completed' : '')}">
-                    <div class="stepper-circle">${this.wizardStep > 3 ? '✓' : '3'}</div>
-                    <span class="stepper-step-label">UID</span>
-                </div>
-                <div class="stepper-step ${this.wizardStep === 4 ? 'active' : (pct === 100 ? 'completed' : '')}">
-                    <div class="stepper-circle">${pct === 100 ? '✓' : '4'}</div>
-                    <span class="stepper-step-label">API Key</span>
-                </div>
-            </div>
-
-            <!-- Current Wizard Step Content -->
-            <div id="profile-wizard-step-body">
-                ${this.renderCurrentWizardStep()}
-            </div>
-        </div>
-        `;
+        return this.renderCurrentWizardStep();
     }
 
     renderCurrentWizardStep() {
@@ -504,7 +479,7 @@ export class DashboardPage {
                     </div>
                 </div>
 
-                <div class="flex-row justify-end mt-4">
+                <div class="wizard-actions-bar flex-row justify-end mt-4">
                     <button type="button" class="btn btn-primary" id="wizard-step1-next">
                         Continue to Exchange Selection →
                     </button>
@@ -620,7 +595,7 @@ export class DashboardPage {
                     </div>
                 </div>
 
-                <div class="flex-row justify-end mt-4">
+                <div class="wizard-actions-bar flex-row justify-end mt-4">
                     <button type="button" class="btn btn-primary" id="wizard-step2-next">
                         Continue to UID Connection →
                     </button>
@@ -644,7 +619,7 @@ export class DashboardPage {
                     </small>
                 </div>
 
-                <div class="flex-row justify-between mt-4">
+                <div class="wizard-actions-bar flex-row justify-between mt-4">
                     <button type="button" class="btn btn-secondary" id="wizard-back-btn">← Back</button>
                     <button type="button" class="btn btn-primary" id="wizard-step3-next">
                         Continue to API Connection →
@@ -695,7 +670,7 @@ export class DashboardPage {
                     Need help? <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="text-primary hover-underline">Watch: How to generate Delta read-only API Key ↗</a>
                 </div>
 
-                <div class="flex-row justify-between mt-4">
+                <div class="wizard-actions-bar flex-row justify-between mt-4">
                     <button type="button" class="btn btn-secondary" id="wizard-back-btn">← Back</button>
                     <button type="button" class="btn btn-primary flex-row align-center gap-2" id="wizard-submit-btn">
                         <span>Verify &amp; Complete Profile</span>
