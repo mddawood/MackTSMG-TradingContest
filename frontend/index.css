@@ -3479,4 +3479,309 @@ select.form-control {
     .profile-card-divider {
         margin: 0.85rem 0 0.75rem 0 !important;
     }
-}
+}
+
+/* ==========================================================================
+   Twitter-Style Verified Blue Tick & UID Verification Modals
+   ========================================================================== */
+
+.verified-badge-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    flex-shrink: 0;
+    line-height: 1;
+    margin-left: 0.15rem;
+    cursor: default;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.verified-badge-wrap:hover {
+    transform: scale(1.15);
+}
+
+.verified-tick-icon {
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+    filter: drop-shadow(0 1px 3px rgba(29, 155, 240, 0.4));
+}
+
+/* Modal Backdrop */
+.uid-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(3, 7, 18, 0.82);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: uidFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.uid-modal-backdrop.closing {
+    animation: uidFadeOut 0.2s ease forwards;
+}
+
+/* Modal Card */
+.uid-modal-card {
+    position: relative;
+    width: 92%;
+    max-width: 430px;
+    background: #0b1329;
+    border-radius: 1.15rem;
+    padding: 2rem 1.6rem;
+    text-align: center;
+    box-shadow: 0 25px 65px rgba(0, 0, 0, 0.8);
+    animation: uidModalPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    box-sizing: border-box;
+}
+
+/* Error Modal Specifics */
+.uid-error-card {
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    box-shadow: 0 25px 65px rgba(0, 0, 0, 0.8), 0 0 35px rgba(239, 68, 68, 0.12);
+}
+
+.uid-modal-icon-wrap {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin: 0 auto 1.25rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.uid-error-icon-wrap {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.28);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+}
+
+.uid-modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin: 0 0 0.5rem 0;
+    letter-spacing: -0.01em;
+}
+
+.uid-modal-message {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #f87171;
+    line-height: 1.45;
+    margin: 0 0 0.6rem 0;
+}
+
+.uid-modal-subtext {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    line-height: 1.5;
+    margin: 0 0 1.5rem 0;
+}
+
+.uid-error-btn {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    border: none !important;
+    font-weight: 600;
+    padding: 0.75rem 1.25rem !important;
+    border-radius: 0.55rem !important;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    transition: all 0.2s ease;
+}
+
+.uid-error-btn:hover {
+    background: linear-gradient(135deg, #f87171, #ef4444) !important;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
+    transform: translateY(-1px);
+}
+
+/* Celebration Modal & Animation */
+.uid-celebration-backdrop {
+    background: rgba(3, 7, 18, 0.88);
+}
+
+.uid-celebration-card {
+    border: 1px solid rgba(29, 155, 240, 0.4);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 45px rgba(29, 155, 240, 0.25);
+    overflow: hidden;
+}
+
+.uid-celebration-badge-wrap {
+    position: relative;
+    width: 84px;
+    height: 84px;
+    margin: 0 auto 1.15rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.uid-badge-pulse-ring {
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(29, 155, 240, 0.4) 0%, rgba(29, 155, 240, 0) 70%);
+    animation: uidPulseGlow 2s infinite;
+}
+
+.uid-large-verified-icon {
+    position: relative;
+    z-index: 2;
+    animation: uidBadgeBounceIn 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    filter: drop-shadow(0 4px 14px rgba(29, 155, 240, 0.6));
+}
+
+.uid-celebration-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0 0 0.6rem 0;
+    letter-spacing: -0.02em;
+}
+
+.uid-celebration-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: rgba(29, 155, 240, 0.12);
+    border: 1px solid rgba(29, 155, 240, 0.32);
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #38bdf8;
+    margin-bottom: 0.85rem;
+}
+
+.uid-celebration-desc {
+    font-size: 0.88rem;
+    color: #cbd5e1;
+    line-height: 1.5;
+    margin: 0 0 1.35rem 0;
+}
+
+.uid-celebration-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+}
+
+.uid-celebration-progress-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #1d9bf0, #38bdf8);
+    animation: uidTimerProgress 2.6s linear forwards;
+}
+
+.uid-celebration-btn {
+    background: linear-gradient(135deg, #1d9bf0, #2563eb) !important;
+    border: none !important;
+    font-weight: 600;
+    padding: 0.75rem 1.25rem !important;
+    border-radius: 0.55rem !important;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(29, 155, 240, 0.35);
+    transition: all 0.2s ease;
+}
+
+.uid-celebration-btn:hover {
+    background: linear-gradient(135deg, #38bdf8, #1d9bf0) !important;
+    box-shadow: 0 6px 20px rgba(29, 155, 240, 0.5);
+    transform: translateY(-1px);
+}
+
+/* Confetti particles */
+.celebration-confetti-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.celebration-confetti-dot {
+    position: absolute;
+    top: -12px;
+    border-radius: 2px;
+    opacity: 0.9;
+    animation: uidConfettiFall linear forwards;
+}
+
+/* Keyframe Animations */
+@keyframes uidFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes uidFadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes uidModalPopIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes uidBadgeBounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0) rotate(-45deg);
+    }
+    70% {
+        opacity: 1;
+        transform: scale(1.2) rotate(8deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+@keyframes uidPulseGlow {
+    0%, 100% {
+        transform: scale(0.95);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.35);
+        opacity: 0.9;
+    }
+}
+
+@keyframes uidTimerProgress {
+    from { width: 0%; }
+    to { width: 100%; }
+}
+
+@keyframes uidConfettiFall {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+    80% {
+        opacity: 0.9;
+    }
+    100% {
+        transform: translateY(105vh) rotate(var(--rot, 360deg));
+        opacity: 0;
+    }
+}
+

@@ -1,6 +1,6 @@
 // Navbar Component (Desktop & Mobile Drawer)
 import { router } from '../router.js';
-import { calculateProfileCompletion, renderAvatarWithProgress } from '../utils.js';
+import { calculateProfileCompletion, renderAvatarWithProgress, isUserVerified, renderVerifiedBadge } from '../utils.js';
 
 let logoutHandler = null;
 let authModalHandler = null;
@@ -295,11 +295,18 @@ export function updateNavbar(user) {
     const mobileAdminNavBtn = document.getElementById('mobile-admin-nav-btn');
     const mobileRoleBadge = document.getElementById('mobile-user-role-badge');
 
+    // Verified badges
+    const navVerifiedBadge = document.getElementById('nav-verified-badge');
+    const mobileVerifiedBadge = document.getElementById('mobile-verified-badge');
+
     if (user) {
         if (authBtns) authBtns.classList.add('hidden');
         if (userControls) userControls.classList.remove('hidden');
         const handleDisplay = user.username ? `@${user.username}` : (user.full_name || 'Trader');
         if (greetingSpan) greetingSpan.textContent = handleDisplay;
+        if (navVerifiedBadge) {
+            navVerifiedBadge.innerHTML = isUserVerified(user) ? renderVerifiedBadge(16) : '';
+        }
 
         // Render Avatars with Progress Ring
         const navAvatarWrap = document.getElementById('nav-avatar-wrap');
@@ -326,6 +333,9 @@ export function updateNavbar(user) {
         if (mobileAuthBtns) mobileAuthBtns.classList.add('hidden');
         if (mobileUserControls) mobileUserControls.classList.remove('hidden');
         if (mobileGreetingSpan) mobileGreetingSpan.textContent = handleDisplay;
+        if (mobileVerifiedBadge) {
+            mobileVerifiedBadge.innerHTML = isUserVerified(user) ? renderVerifiedBadge(14) : '';
+        }
 
         if (user.role === 'admin') {
             if (gearAdminBtn) gearAdminBtn.classList.remove('hidden');
@@ -356,6 +366,8 @@ export function updateNavbar(user) {
         if (gearDropdown) gearDropdown.classList.add('hidden');
         if (authBtns) authBtns.classList.remove('hidden');
         if (userControls) userControls.classList.add('hidden');
+        if (navVerifiedBadge) navVerifiedBadge.innerHTML = '';
+        if (mobileVerifiedBadge) mobileVerifiedBadge.innerHTML = '';
 
         // Mobile drawer updates
         if (mobileAuthBtns) mobileAuthBtns.classList.remove('hidden');

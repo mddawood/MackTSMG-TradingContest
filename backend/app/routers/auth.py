@@ -99,11 +99,13 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
                 detail="This Delta User ID is already associated with an account."
             )
         referred_entry = db.query(ReferredUser).filter(ReferredUser.delta_user_id == user_in.delta_user_id).first()
-        if referred_entry:
-            referred_entry.is_registered = True
-            uid_status = "verified"
-        else:
-            uid_status = "verified"  # Allow registration and mark verified for competition
+        if not referred_entry:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Your user ID does not exist in our database."
+            )
+        referred_entry.is_registered = True
+        uid_status = "verified"
 
     hashed_password = security.get_password_hash(user_in.password)
     user = User(
@@ -366,11 +368,16 @@ def update_profile(
                     detail="This Exchange User ID is already linked to another account."
                 )
 
-            current_user.delta_user_id = clean_uid
-            # Check if present in whitelist
+            # Check if present in whitelist database
             ref = db.query(ReferredUser).filter(ReferredUser.delta_user_id == clean_uid).first()
-            if ref:
-                ref.is_registered = True
+            if not ref:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Your user ID does not exist in our database."
+                )
+
+            ref.is_registered = True
+            current_user.delta_user_id = clean_uid
             current_user.uid_status = "verified"
         else:
             current_user.delta_user_id = None

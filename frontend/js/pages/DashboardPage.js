@@ -1,8 +1,9 @@
 // User Dashboard Component with Sidebar Navigation & Profile Completion Hub
 import { apiKeysAPI, competitionsAPI, authAPI } from '../api.js';
 import { showToast } from '../components/Toast.js';
-import { calculateProfileCompletion, renderAvatarWithProgress } from '../utils.js';
+import { calculateProfileCompletion, renderAvatarWithProgress, isUserVerified, renderVerifiedBadge } from '../utils.js';
 import { updateNavbar } from '../components/Navbar.js';
+import { showUidNotFoundModal, showUidSuccessCelebration } from '../components/UidVerificationModal.js';
 
 export class DashboardPage {
     constructor() {
@@ -90,7 +91,12 @@ export class DashboardPage {
                             ${renderAvatarWithProgress(this.user, 42, true)}
                         </div>
                         <div class="flex-column" style="overflow: hidden; min-width: 0;">
-                            <span style="font-weight: 700; font-size: 0.9rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${userName}</span>
+                            <div class="flex-row align-center gap-1.5" style="min-width: 0; overflow: hidden;">
+                                <span id="sidebar-user-name" style="font-weight: 700; font-size: 0.9rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${userName}</span>
+                                <span id="sidebar-verified-badge" class="flex-row align-center">
+                                    ${isUserVerified(this.user) ? renderVerifiedBadge(16) : ''}
+                                </span>
+                            </div>
                             <span class="tier-badge tier-${tierLower}" style="width: fit-content; font-size: 0.65rem; padding: 0.1rem 0.4rem; margin-top: 0.15rem;">${userTier} Tier</span>
                         </div>
                     </div>
@@ -1168,24 +1174,40 @@ export class DashboardPage {
                 this.wizardData.uid = cleanUID;
 
                 step3Next.disabled = true;
-                step3Next.innerText = 'Linking UID...';
+                step3Next.innerText = 'Verifying UID...';
 
                 try {
-                    this.user = await authAPI.updateProfile({
+                    const updatedUser = await authAPI.updateProfile({
                         delta_user_id: cleanUID,
                         exchange: this.wizardData.exchange
                     });
+                    this.user = updatedUser;
                     updateNavbar(this.user);
-                    this.updateSidebarAvatar();
-                    showToast('Exchange UID linked and verified!', 'success');
-                    this.wizardStep = 4;
-                    const main = document.getElementById('dashboard-tab-content');
-                    if (main) {
-                        main.innerHTML = this.renderProfileTab();
-                        this.bindTabEvents();
-                    }
+                    this.updateSidebarUserHeader();
+                    showToast('Exchange UID verified & whitelisted!', 'success');
+
+                    // Show temporary Hurray celebration animation with verified blue badge
+                    showUidSuccessCelebration({
+                        uid: cleanUID,
+                        exchange: this.wizardData.exchange,
+                        onComplete: () => {
+                            this.wizardStep = 4;
+                            const main = document.getElementById('dashboard-tab-content');
+                            if (main) {
+                                main.innerHTML = this.renderProfileTab();
+                                this.bindTabEvents();
+                            }
+                        }
+                    });
                 } catch (err) {
-                    showToast(`Error linking UID: ${err.message}`, 'error');
+                    const errorMsg = err.message || 'Your user ID does not exist in our database.';
+                    showUidNotFoundModal({
+                        message: errorMsg,
+                        onDismiss: () => {
+                            const uidEl = document.getElementById('wizard-uid');
+                            if (uidEl) uidEl.focus();
+                        }
+                    });
                     step3Next.disabled = false;
                     step3Next.innerText = 'Continue to API Connection →';
                 }
@@ -1315,6 +1337,18 @@ export class DashboardPage {
         const wrap = document.getElementById('sidebar-avatar-wrap');
         if (wrap) {
             wrap.innerHTML = renderAvatarWithProgress(this.user, 42, true);
+        }
+    }
+
+    updateSidebarUserHeader() {
+        this.updateSidebarAvatar();
+        const verifiedBadge = document.getElementById('sidebar-verified-badge');
+        if (verifiedBadge) {
+            verifiedBadge.innerHTML = isUserVerified(this.user) ? renderVerifiedBadge(16) : '';
+        }
+        const nameEl = document.getElementById('sidebar-user-name');
+        if (nameEl && this.user) {
+            nameEl.textContent = this.user.full_name || 'Trader';
         }
     }
 

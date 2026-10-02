@@ -76,3 +76,24 @@ export function renderAvatarWithProgress(user, size = 36, showBadge = true) {
     </div>
     `;
 }
+
+/**
+ * Checks if a user is verified and whitelisted with an exchange UID.
+ */
+export function isUserVerified(user) {
+    return Boolean(user && user.delta_user_id && (user.uid_status === 'verified' || !user.uid_status));
+}
+
+/**
+ * Renders the Twitter-style verified blue tick badge.
+ */
+export function renderVerifiedBadge(size = 16, title = "Whitelisted Trader") {
+    return `
+    <span class="verified-badge-wrap" title="${title}" aria-label="${title}" style="display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; flex-shrink: 0; line-height: 1;">
+        <svg class="verified-tick-icon" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true" style="display: inline-block; vertical-align: middle; flex-shrink: 0;">
+            <path fill="#1d9bf0" d="m22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.67-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.67-.88 3.34-2.19c1.39.45 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34z"/>
+            <path fill="#ffffff" d="m9.97 15.65-3.32-3.32 1.41-1.41 1.91 1.91 5.91-5.91 1.41 1.41-7.32 7.32z"/>
+        </svg>
+    </span>
+    `;
+}
