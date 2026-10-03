@@ -54,7 +54,8 @@ def list_users(
         query = query.filter(
             (User.full_name.ilike(f"%{q}%")) | 
             (User.email.ilike(f"%{q}%")) |
-            (User.username.ilike(f"%{q}%"))
+            (User.username.ilike(f"%{q}%")) |
+            (User.delta_user_id.ilike(f"%{q}%"))
         )
     total = query.count()
     offset = (page - 1) * limit
@@ -71,6 +72,10 @@ def list_users(
                 "is_valid": key.is_valid
             })
         
+        ex = user.exchange
+        if not ex and user.delta_user_id:
+            ex = "Shark" if len(user.delta_user_id) == 6 else "Delta"
+
         result.append({
             "id": user.id,
             "email": user.email,
@@ -80,6 +85,9 @@ def list_users(
             "is_deleted": user.is_deleted,
             "created_at": user.created_at,
             "registration_count": len(user.registrations),
+            "delta_user_id": user.delta_user_id,
+            "exchange": ex,
+            "uid_status": user.uid_status,
             "api_keys": api_keys_info
         })
     return {

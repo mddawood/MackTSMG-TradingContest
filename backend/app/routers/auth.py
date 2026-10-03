@@ -108,6 +108,13 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         uid_status = "verified"
 
     hashed_password = security.get_password_hash(user_in.password)
+    user_exchange = "Delta"
+    if user_in.delta_user_id:
+        if referred_entry and referred_entry.exchange:
+            user_exchange = referred_entry.exchange
+        elif len(user_in.delta_user_id) == 6:
+            user_exchange = "Shark"
+
     user = User(
         email=clean_email,
         username=clean_username,
@@ -116,7 +123,7 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         delta_user_id=user_in.delta_user_id,
         phone=user_in.phone,
         uid_status=uid_status,
-        exchange="Delta",
+        exchange=user_exchange,
         is_verified=False,
         assigned_tier="Rookie"
     )
@@ -379,6 +386,14 @@ def update_profile(
             ref.is_registered = True
             current_user.delta_user_id = clean_uid
             current_user.uid_status = "verified"
+            if ref.exchange:
+                current_user.exchange = ref.exchange
+            elif profile_in.exchange and profile_in.exchange.strip():
+                current_user.exchange = profile_in.exchange.strip()
+            elif len(clean_uid) == 6:
+                current_user.exchange = "Shark"
+            else:
+                current_user.exchange = "Delta"
         else:
             current_user.delta_user_id = None
 

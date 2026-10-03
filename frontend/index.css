@@ -4190,6 +4190,103 @@ select.form-control {
     border-radius: 3px;
 }
 
+/* Compact Registered Keys Connection Pill */
+.key-conn-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.2;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+    cursor: default;
+    user-select: none;
+}
+
+.key-conn-pill.connected {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34d399;
+}
+
+.key-conn-pill.connected:hover {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.5);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+}
+
+.key-conn-pill.failed {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #f87171;
+}
+
+.key-conn-pill.failed:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.55);
+}
+
+.conn-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.key-conn-pill.connected .conn-dot {
+    background: #10b981;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.85);
+}
+
+.key-conn-pill.failed .conn-dot {
+    background: #ef4444;
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.85);
+}
+
+.conn-text {
+    letter-spacing: 0.02em;
+}
+
+.conn-env-tag {
+    font-size: 0.58rem;
+    background: rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+    padding: 0.05rem 0.3rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-left: 0.15rem;
+}
+
+/* User Table Claimed UID Cell */
+.user-uid-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    white-space: nowrap;
+}
+
+.user-uid-value {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #60a5fa;
+    letter-spacing: 0.03em;
+}
+
+.user-uid-badge {
+    font-size: 0.62rem;
+    padding: 0.1rem 0.35rem;
+    line-height: 1.2;
+    border-radius: 0.25rem;
+}
+
 /* Lifecycle Action Gear & Floating Popover Menu */
 .action-gear-wrapper {
     position: relative;

@@ -234,6 +234,7 @@ export class AdminPage {
                             <button type="button" class="filter-chip ${this.currentFilter === 'active' ? 'active' : ''}" data-filter="active">Active</button>
                             <button type="button" class="filter-chip ${this.currentFilter === 'admin' ? 'active' : ''}" data-filter="admin">Admin</button>
                             <button type="button" class="filter-chip ${this.currentFilter === 'has-key' ? 'active' : ''}" data-filter="has-key">Has API Key</button>
+                            <button type="button" class="filter-chip ${this.currentFilter === 'has-uid' ? 'active' : ''}" data-filter="has-uid">Has UID</button>
                             <button type="button" class="filter-chip ${this.currentFilter === 'inactive' ? 'active' : ''}" data-filter="inactive">Inactive</button>
                         </div>
                     </div>
@@ -252,13 +253,16 @@ export class AdminPage {
                                 <th class="sortable-th" data-sort="status">
                                     STATUS <span class="sort-indicator" id="sort-icon-status">⇅</span>
                                 </th>
-                                <th>REGISTERED KEYS</th>
-                                <th class="text-right" style="text-align: right;">LIFECYCLE ACTIONS</th>
+                                <th style="width: 130px;">REGISTERED KEYS</th>
+                                <th class="sortable-th" data-sort="uid" style="width: 140px;">
+                                    UID <span class="sort-indicator" id="sort-icon-uid">⇅</span>
+                                </th>
+                                <th class="text-right" style="text-align: right; width: 80px;">LIFECYCLE ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody id="admin-users-tbody">
                             <tr>
-                                <td colspan="5" class="text-center py-8 text-muted">Loading user database...</td>
+                                <td colspan="6" class="text-center py-8 text-muted">Loading user database...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -583,7 +587,7 @@ export class AdminPage {
                     }
 
                     // Update header indicators
-                    ['name', 'role', 'status'].forEach(f => {
+                    ['name', 'role', 'status', 'uid'].forEach(f => {
                         const icon = document.getElementById(`sort-icon-${f}`);
                         const header = th.parentElement.querySelector(`[data-sort="${f}"]`);
                         if (icon && header) {
@@ -1067,7 +1071,7 @@ export class AdminPage {
         const tbody = document.getElementById('admin-users-tbody');
         if (!tbody) return;
 
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-muted">Loading user database...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-muted">Loading user database...</td></tr>';
 
         try {
             const data = await adminAPI.getUsers(this.adminUsers);
@@ -1084,7 +1088,7 @@ export class AdminPage {
             if (prevBtn) prevBtn.disabled = this.adminUsers.page <= 1;
             if (nextBtn) nextBtn.disabled = this.adminUsers.page >= totalPages;
         } catch (err) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-destructive">Failed to load user database.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-destructive">Failed to load user database.</td></tr>';
         }
     }
 
@@ -1101,6 +1105,8 @@ export class AdminPage {
             list = list.filter(u => u.role === 'admin');
         } else if (this.currentFilter === 'has-key') {
             list = list.filter(u => u.api_keys && u.api_keys.length > 0);
+        } else if (this.currentFilter === 'has-uid') {
+            list = list.filter(u => Boolean(u.delta_user_id));
         } else if (this.currentFilter === 'inactive') {
             list = list.filter(u => u.is_deleted);
         }
@@ -1123,6 +1129,16 @@ export class AdminPage {
                 const cmp = nameA.localeCompare(nameB);
                 return this.currentSort.order === 'asc' ? cmp : -cmp;
             });
+        } else if (this.currentSort.field === 'uid') {
+            list.sort((a, b) => {
+                const uidA = a.delta_user_id || '';
+                const uidB = b.delta_user_id || '';
+                if (!uidA && !uidB) return 0;
+                if (!uidA) return 1;
+                if (!uidB) return -1;
+                const cmp = uidA.localeCompare(uidB, undefined, { numeric: true });
+                return this.currentSort.order === 'asc' ? cmp : -cmp;
+            });
         }
 
         // Update count badge
@@ -1132,7 +1148,7 @@ export class AdminPage {
         }
 
         if (list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-muted">No traders found matching filter criteria.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-muted">No traders found matching filter criteria.</td></tr>';
             return;
         }
 
@@ -1197,24 +1213,39 @@ export class AdminPage {
                 `;
             }
 
-            // Keys pill
+            // Keys pill - compact connection status
             let keysHtml = '';
             if (!u.api_keys || u.api_keys.length === 0) {
                 keysHtml = '<span class="text-muted" style="font-size:0.75rem;">None</span>';
             } else {
                 keysHtml = u.api_keys.map(k => {
                     const isValid = k.is_valid !== false;
-                    const checkSvg = isValid 
-                        ? `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`
-                        : `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
+                    const isTestnet = k.environment && k.environment.toLowerCase().includes('test');
+                    const envTag = isTestnet ? 'test' : '';
                     return `
-                        <span class="key-badge-item ${isValid ? 'valid' : 'invalid'}">
-                            ${checkSvg}
-                            <span>${k.api_key}</span>
-                            <span class="key-env-tag">${k.environment || 'mainnet'}</span>
+                        <span class="key-conn-pill ${isValid ? 'connected' : 'failed'}" title="${isValid ? 'Connected' : 'Connection Failed'} • ${k.environment || 'mainnet'} (${k.api_key})">
+                            <span class="conn-dot"></span>
+                            <span class="conn-text">${isValid ? 'Connected' : 'Failed'}</span>
+                            ${envTag ? `<span class="conn-env-tag">${envTag}</span>` : ''}
                         </span>
                     `;
                 }).join('');
+            }
+
+            // Claimed UID from whitelist
+            let uidHtml = '';
+            if (u.delta_user_id) {
+                const isShark = u.exchange === 'Shark' || (u.delta_user_id && u.delta_user_id.length === 6);
+                const exName = u.exchange || (isShark ? 'Shark' : 'Delta');
+                const badgeClass = isShark ? 'badge-shark' : 'badge-delta';
+                uidHtml = `
+                    <div class="user-uid-cell" title="Claimed Whitelist UID: ${u.delta_user_id} (${exName})">
+                        <span class="user-uid-value">${u.delta_user_id}</span>
+                        <span class="badge ${badgeClass} user-uid-badge">${exName}</span>
+                    </div>
+                `;
+            } else {
+                uidHtml = '<span class="text-muted" style="font-size:0.75rem;">—</span>';
             }
 
             // Action gear & popover menu
@@ -1268,6 +1299,7 @@ export class AdminPage {
                 <td>${roleHtml}</td>
                 <td>${statusHtml}</td>
                 <td>${keysHtml}</td>
+                <td>${uidHtml}</td>
                 <td class="text-right" style="text-align: right;">${actionHtml}</td>
             `;
 
@@ -1404,6 +1436,12 @@ export class AdminPage {
                     <div class="flex-row justify-between" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.4rem;">
                         <span class="text-muted">User ID</span>
                         <span class="font-mono" style="font-weight: 600;">#${u.id}</span>
+                    </div>
+                    <div class="flex-row justify-between" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.4rem;">
+                        <span class="text-muted">Exchange UID</span>
+                        <span class="font-mono text-primary" style="font-weight: 600;">
+                            ${u.delta_user_id ? `${u.delta_user_id} <span class="badge ${u.exchange === 'Shark' || (u.delta_user_id && u.delta_user_id.length === 6) ? 'badge-shark' : 'badge-delta'}" style="font-size: 0.62rem; padding: 0.05rem 0.35rem; margin-left: 0.3rem;">${u.exchange || (u.delta_user_id.length === 6 ? 'Shark' : 'Delta')}</span>` : '<span class="text-muted font-normal">Not claimed</span>'}
+                        </span>
                     </div>
                     <div class="flex-row justify-between" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.4rem;">
                         <span class="text-muted">Role</span>
