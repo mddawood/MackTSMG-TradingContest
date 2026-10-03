@@ -44,6 +44,19 @@ def run_auto_migrations():
             conn.execute(text("ALTER TABLE users ADD COLUMN exchange VARCHAR DEFAULT 'Delta'"))
             conn.commit()
 
+        if "username" not in columns:
+            print("Production Migration: Adding username column to users table...")
+            conn.execute(text("ALTER TABLE users ADD COLUMN username VARCHAR"))
+            conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users (username)"))
+            conn.commit()
+            print("Production Migration: Completed successfully for username.")
+
+        if "is_deleted" not in columns:
+            print("Production Migration: Adding is_deleted column to users table...")
+            conn.execute(text("ALTER TABLE users ADD COLUMN is_deleted BOOLEAN DEFAULT 0"))
+            conn.commit()
+            print("Production Migration: Completed successfully for is_deleted.")
+
         if "is_verified" not in columns:
             print("Production Migration: Adding is_verified column to users table...")
             conn.execute(text("ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT 0"))
@@ -51,6 +64,12 @@ def run_auto_migrations():
             conn.execute(text("UPDATE users SET is_verified = 1"))
             conn.commit()
             print("Production Migration: is_verified column added and existing users backfilled.")
+
+        # Ensure legacy users created before migrations have safe defaults
+        conn.execute(text("UPDATE users SET username = substr(email, 1, instr(email, '@') - 1) WHERE username IS NULL OR username = ''"))
+        conn.execute(text("UPDATE users SET is_deleted = 0 WHERE is_deleted IS NULL"))
+        conn.execute(text("UPDATE users SET is_verified = 1 WHERE is_verified IS NULL"))
+        conn.commit()
 
         # Check leaderboard_snapshots table columns
         cursor = conn.execute(text("PRAGMA table_info(leaderboard_snapshots)"))
