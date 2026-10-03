@@ -65,11 +65,27 @@ def run_auto_migrations():
             conn.commit()
             print("Production Migration: is_verified column added and existing users backfilled.")
 
-        # Ensure legacy users created before migrations have safe defaults
-        conn.execute(text("UPDATE users SET username = substr(email, 1, instr(email, '@') - 1) WHERE username IS NULL OR username = ''"))
-        conn.execute(text("UPDATE users SET is_deleted = 0 WHERE is_deleted IS NULL"))
-        conn.execute(text("UPDATE users SET is_verified = 1 WHERE is_verified IS NULL"))
-        conn.commit()
+        # Ensure legacy users created before migrations have safe defaults with collision resolution
+        try:
+            unnamed_rows = conn.execute(text("SELECT id, email FROM users WHERE username IS NULL OR username = ''")).fetchall()
+            if unnamed_rows:
+                existing_usernames = set(r[0] for r in conn.execute(text("SELECT username FROM users WHERE username IS NOT NULL AND username != ''")).fetchall())
+                for uid, email in unnamed_rows:
+                    base = email.split("@")[0].replace(".", "_").replace("-", "_")[:15] if email else f"user_{uid}"
+                    candidate = base
+                    counter = 1
+                    while candidate in existing_usernames:
+                        candidate = f"{base}_{uid}" if counter == 1 else f"{base}_{uid}_{counter}"
+                        counter += 1
+                    existing_usernames.add(candidate)
+                    conn.execute(text("UPDATE users SET username = :u WHERE id = :id"), {"u": candidate, "id": uid})
+                    print(f"Production Migration: Backfilled username @{candidate} for user {email}")
+
+            conn.execute(text("UPDATE users SET is_deleted = 0 WHERE is_deleted IS NULL"))
+            conn.execute(text("UPDATE users SET is_verified = 1 WHERE is_verified IS NULL"))
+            conn.commit()
+        except Exception as e:
+            print(f"Production Migration Warning: Non-fatal error during legacy backfill: {e}")
 
         # Check leaderboard_snapshots table columns
         cursor = conn.execute(text("PRAGMA table_info(leaderboard_snapshots)"))
