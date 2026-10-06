@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -18,6 +18,7 @@ class User(Base):
     assigned_tier = Column(String, default="Rookie", nullable=False)
     uid_status = Column(String, default="verified", nullable=False)
     exchange = Column(String, default="Delta", nullable=True)
+    wallet_balance = Column(Float, default=0.0, nullable=True)
     is_verified = Column(Boolean, default=False, nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
 

@@ -4,14 +4,21 @@ Lightweight Development SPA Server
 Serves static files and rewrites 404s/unknown paths to /index.html
 matching Nginx's `try_files $uri $uri/ /index.html;` configuration.
 """
+import functools
 import http.server
 import os
 import sys
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+os.chdir(BASE_DIR)
 
 PORT = 3000
 BIND = "127.0.0.1"
 
 class SPAServerHandler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=BASE_DIR, **kwargs)
+
     def end_headers(self):
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
         self.send_header("Pragma", "no-cache")

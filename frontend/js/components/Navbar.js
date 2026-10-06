@@ -237,13 +237,17 @@ export function initNavbar({ onLogout, onOpenAuth }) {
     updateNavbarRoute(window.location.pathname);
 }
 
+let currentNavUser = null;
+
 export function updateNavbarRoute(pathname) {
     const isHomePage = pathname === '/' || pathname === '' || pathname === '/index.html';
+    const isDashboard = pathname === '/dashboard';
     const isAppShell = pathname === '/dashboard' || pathname === '/admin';
     const publicNav = document.getElementById('public-nav');
     const mobilePublicNav = document.getElementById('mobile-public-nav');
     const contextBadge = document.getElementById('header-context-badge');
     const mainFooter = document.querySelector('.main-footer');
+    const walletBadge = document.getElementById('nav-wallet-badge');
 
     // Toggle Salesforce-style full-height app shell mode
     if (isAppShell) {
@@ -252,6 +256,15 @@ export function updateNavbarRoute(pathname) {
     } else {
         document.body.classList.remove('app-shell-mode');
         if (mainFooter) mainFooter.classList.remove('hidden');
+    }
+
+    // Toggle wallet balance visibility strictly on /dashboard when exchange API is connected
+    if (walletBadge) {
+        if (isDashboard && currentNavUser && currentNavUser.has_api_key) {
+            walletBadge.classList.remove('hidden');
+        } else {
+            walletBadge.classList.add('hidden');
+        }
     }
 
     if (publicNav) {
@@ -280,6 +293,7 @@ export function updateNavbarRoute(pathname) {
 }
 
 export function updateNavbar(user) {
+    currentNavUser = user;
     const authBtns = document.getElementById('nav-auth-buttons');
     const userControls = document.getElementById('nav-user-controls');
     const greetingSpan = document.getElementById('user-greeting');
@@ -287,6 +301,8 @@ export function updateNavbar(user) {
     const gearAdminBtn = document.getElementById('gear-admin-btn');
     const gearUserName = document.getElementById('gear-user-name');
     const gearUserRole = document.getElementById('gear-user-role');
+    const walletBadge = document.getElementById('nav-wallet-badge');
+    const walletAmount = document.getElementById('nav-wallet-amount');
 
     // Mobile references
     const mobileAuthBtns = document.getElementById('mobile-nav-auth-buttons');
@@ -306,6 +322,21 @@ export function updateNavbar(user) {
         if (greetingSpan) greetingSpan.textContent = handleDisplay;
         if (navVerifiedBadge) {
             navVerifiedBadge.innerHTML = isUserVerified(user) ? renderVerifiedBadge(16) : '';
+        }
+
+        // Render Dashboard Navbar Wallet Balance Pill
+        if (walletBadge && walletAmount) {
+            const isDashboard = window.location.pathname === '/dashboard';
+            if (isDashboard && user.has_api_key) {
+                const bal = Number(user.wallet_balance || 0);
+                walletAmount.textContent = '₹' + bal.toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                walletBadge.classList.remove('hidden');
+            } else {
+                walletBadge.classList.add('hidden');
+            }
         }
 
         // Render Avatars with Progress Ring
@@ -363,6 +394,7 @@ export function updateNavbar(user) {
             }
         }
     } else {
+        if (walletBadge) walletBadge.classList.add('hidden');
         if (gearDropdown) gearDropdown.classList.add('hidden');
         if (authBtns) authBtns.classList.remove('hidden');
         if (userControls) userControls.classList.add('hidden');

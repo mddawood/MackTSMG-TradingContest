@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">
     <title>MWM Trading Championship 2026</title>
     <!-- Premium Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,9 +12,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <!-- Main Style Sheet -->
-    <link rel="stylesheet" href="index.css?v=50">
+    <link rel="stylesheet" href="/index.css?v=51">
     <!-- Modular ES6 Application Logic -->
-    <script type="module" src="js/app.js?v=50"></script>
+    <script type="module" src="/js/app.js?v=51"></script>
 </head>
 
 <body class="dark-theme">
@@ -50,6 +51,16 @@
                 </div>
                 <!-- Auth Nav Controls (hidden by default) -->
                 <div class="auth-controls flex-row align-center gap-3 hidden" id="nav-user-controls">
+                    <!-- Dashboard Exchange Wallet Balance Pill (Visible strictly on dashboard when connected) -->
+                    <div class="nav-wallet-badge hidden" id="nav-wallet-badge" title="Exchange Wallet Balance">
+                        <svg class="nav-wallet-icon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+                            <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+                            <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+                        </svg>
+                        <span class="nav-wallet-amount" id="nav-wallet-amount">₹0.00</span>
+                    </div>
+
                     <div class="user-pill flex-row align-center gap-2" id="nav-user-pill" title="View Profile"
                         style="cursor: pointer;">
                         <span id="nav-avatar-wrap" class="flex-row align-center justify-center">

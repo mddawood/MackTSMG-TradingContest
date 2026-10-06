@@ -3,7 +3,7 @@ import { apiKeysAPI, competitionsAPI, authAPI } from '../api.js';
 import { showToast } from '../components/Toast.js';
 import { calculateProfileCompletion, renderAvatarWithProgress, isUserVerified, renderVerifiedBadge } from '../utils.js';
 import { updateNavbar } from '../components/Navbar.js';
-import { showUidNotFoundModal, showUidSuccessCelebration } from '../components/UidVerificationModal.js';
+import { showUidNotFoundModal, showUidSuccessCelebration, showExchangeConnectedCelebration } from '../components/UidVerificationModal.js';
 
 export class DashboardPage {
     constructor() {
@@ -39,26 +39,29 @@ export class DashboardPage {
     }
 
     isStep1Locked() {
-        return Boolean(this.user?.full_name && this.user?.phone);
+        return Boolean(this.user?.email && (this.user?.full_name || this.user?.phone || this.user?.is_verified));
+    }
+
+    isUidLocked() {
+        return Boolean(this.user?.delta_user_id && (this.user?.uid_status === 'verified' || !this.user?.uid_status));
     }
 
     getInitialWizardStep() {
-        // If user already provided name and phone during signup, Step 1 is locked.
-        // User starts at Step 2 (Exchange selection) onwards.
+        // Step 1: Email & Personal Info is captured during signup
         if (!this.isStep1Locked()) {
             return 1;
         }
         if (!this.user?.exchange) {
             return 2;
         }
-        if (!this.user?.delta_user_id) {
+        if (!this.isUidLocked()) {
             return 3;
         }
         const hasAPI = Boolean(this.user?.has_api_key || (this.apiKeys && this.apiKeys.some(k => k.is_valid)));
         if (!hasAPI) {
             return 4;
         }
-        return 2;
+        return 4;
     }
 
     switchToTab(tabName) {
@@ -219,9 +222,9 @@ export class DashboardPage {
 
     renderProfileTab() {
         const pct = calculateProfileCompletion(this.user);
-        const hasEmail = Boolean(this.user?.is_verified);
-        const hasInfo = Boolean(this.user?.full_name && this.user?.phone);
-        const hasUID = Boolean(this.user?.delta_user_id);
+        const hasStep1 = this.isStep1Locked();
+        const hasExchange = Boolean(this.user?.exchange);
+        const hasUID = this.isUidLocked();
         const hasAPI = Boolean(this.user?.has_api_key || (this.apiKeys && this.apiKeys.some(k => k.is_valid)));
 
         // Automatically determine initial wizard step
@@ -230,15 +233,17 @@ export class DashboardPage {
             this.wizardStepInitialSet = true;
         }
 
-        // If step 1 is locked, ensure user cannot access step 1
-        if (this.isStep1Locked() && this.wizardStep < 2) {
+        // Enforce lock boundaries: if UID is locked, user cannot go back to step 1, 2, or 3
+        if (this.isUidLocked() && this.wizardStep < 4) {
+            this.wizardStep = 4;
+        } else if (this.isStep1Locked() && this.wizardStep < 2) {
             this.wizardStep = 2;
         }
 
         // Calculate progress line fill percentage (Node 1 to Node 4 track)
         // 25% (Node 1) -> 0% fill
         // 50% (Node 2) -> 34% fill
-        // 75% (Node 3) -> 68% fill (extends to Node 3 exactly matching screenshot)
+        // 75% (Node 3) -> 68% fill
         // 100% (Node 4) -> 100% fill
         let timelineLineWidth = 0;
         if (pct === 100) {
@@ -313,35 +318,35 @@ export class DashboardPage {
 
                         <!-- 4 Connected Nodes Grid -->
                         <div class="milestone-nodes-grid">
-                            <!-- Node 1: Email Verified -->
+                            <!-- Node 1: Email & Personal Info (Captured at Signup) -->
                             <div class="milestone-node-col">
-                                <div class="milestone-circle ${hasEmail ? 'node-blue' : 'node-inactive'}">
-                                    ${hasEmail ? checkIcon : ''}
+                                <div class="milestone-circle ${hasStep1 ? 'node-blue' : 'node-inactive'}">
+                                    ${hasStep1 ? checkIcon : ''}
                                 </div>
                                 <div class="milestone-meta">
-                                    <span class="milestone-name">Email Verified</span>
-                                    <span class="milestone-pct-badge ${hasEmail ? 'badge-blue' : 'badge-inactive'}">25%</span>
+                                    <span class="milestone-name">Email &amp; Info</span>
+                                    <span class="milestone-pct-badge ${hasStep1 ? 'badge-blue' : 'badge-inactive'}">25%</span>
                                 </div>
                             </div>
 
-                            <!-- Node 2: Personal Info (Locked) -->
+                            <!-- Node 2: Exchange Selection -->
                             <div class="milestone-node-col">
-                                <div class="milestone-circle ${hasInfo ? 'node-purple-blue' : (this.wizardStep === 1 ? 'node-current-active' : 'node-inactive')}">
-                                    ${hasInfo ? checkIcon : (this.wizardStep === 1 ? '●' : '')}
+                                <div class="milestone-circle ${hasExchange ? 'node-purple-blue' : (this.wizardStep === 2 ? 'node-current-active' : 'node-inactive')}">
+                                    ${hasExchange ? checkIcon : (this.wizardStep === 2 ? '●' : '')}
                                 </div>
                                 <div class="milestone-meta">
-                                    <span class="milestone-name">Personal Info</span>
-                                    <span class="milestone-pct-badge ${hasInfo ? 'badge-purple' : 'badge-inactive'}">25%</span>
+                                    <span class="milestone-name">Exchange</span>
+                                    <span class="milestone-pct-badge ${hasExchange ? 'badge-purple' : 'badge-inactive'}">25%</span>
                                 </div>
                             </div>
 
-                            <!-- Node 3: Exchange & UID -->
+                            <!-- Node 3: UID Whitelist Verification (Locked upon verification) -->
                             <div class="milestone-node-col">
-                                <div class="milestone-circle ${hasUID ? 'node-purple' : ((this.wizardStep === 2 || this.wizardStep === 3) ? 'node-current-active' : 'node-inactive')}">
-                                    ${hasUID ? checkIcon : ((this.wizardStep === 2 || this.wizardStep === 3) ? '●' : '')}
+                                <div class="milestone-circle ${hasUID ? 'node-purple' : (this.wizardStep === 3 ? 'node-current-active' : 'node-inactive')}">
+                                    ${hasUID ? checkIcon : (this.wizardStep === 3 ? '●' : '')}
                                 </div>
                                 <div class="milestone-meta">
-                                    <span class="milestone-name">Exchange &amp; UID</span>
+                                    <span class="milestone-name">UID Verification</span>
                                     <span class="milestone-pct-badge ${hasUID ? 'badge-purple' : 'badge-inactive'}">25%</span>
                                 </div>
                             </div>
@@ -461,27 +466,41 @@ export class DashboardPage {
             return `
             <div class="flex-column gap-4">
                 <div>
-                    <h3 style="font-size: 1.25rem; font-weight: 700;">Step 1: Your Profile Details</h3>
-                    <p class="text-secondary text-sm">Enter the name, unique public handle, and contact number for the championship.</p>
+                    <div class="flex-row align-center gap-2 mb-1">
+                        <h3 style="font-size: 1.25rem; font-weight: 700;">Step 1: Email &amp; Personal Info</h3>
+                        <span class="badge badge-active flex-row align-center gap-1" style="font-size: 0.7rem;">
+                            🔒 Captured at Signup · Locked
+                        </span>
+                    </div>
+                    <p class="text-secondary text-sm">Your contact details and public username were verified during account registration.</p>
                 </div>
 
-                <div class="grid-3 gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+                <div class="grid-3 gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
                     <div class="form-group">
-                        <label for="wizard-fullname">Full Name</label>
-                        <input type="text" id="wizard-fullname" class="form-control" placeholder="John Doe" value="${this.wizardData.fullName || ''}" required>
-                        <span class="text-muted text-xs mt-1 block" style="font-size: 0.725rem;">Displayed on your certificate &amp; official records.</span>
+                        <label>Full Name</label>
+                        <div class="form-control" style="background: rgba(255, 255, 255, 0.03); color: #cbd5e1; cursor: not-allowed; display: flex; align-items: center; justify-content: space-between;">
+                            <span>${this.user?.full_name || this.wizardData.fullName || '—'}</span>
+                            <span class="text-xs text-muted">🔒</span>
+                        </div>
+                        <span class="text-muted text-xs mt-1 block" style="font-size: 0.725rem;">Used for your official certificate &amp; records.</span>
                     </div>
 
                     <div class="form-group">
-                        <label for="wizard-username">Username <span class="text-xs text-muted font-normal">(Public Handle)</span></label>
-                        <input type="text" id="wizard-username" class="form-control font-mono" placeholder="trader_pro" value="${this.wizardData.username || ''}" minlength="3" maxlength="20" required pattern="[a-zA-Z0-9_]{3,20}">
+                        <label>Username <span class="text-xs text-muted font-normal">(Public Handle)</span></label>
+                        <div class="form-control font-mono" style="background: rgba(255, 255, 255, 0.03); color: #60a5fa; font-weight: 700; cursor: not-allowed; display: flex; align-items: center; justify-content: space-between;">
+                            <span>@${this.user?.username || this.wizardData.username || '—'}</span>
+                            <span class="text-xs text-muted">🔒</span>
+                        </div>
                         <span class="text-muted text-xs mt-1 block" style="font-size: 0.725rem;">Unique handle displayed on public leaderboards.</span>
                     </div>
 
                     <div class="form-group">
-                        <label for="wizard-phone">WhatsApp / Phone Number</label>
-                        <input type="tel" id="wizard-phone" class="form-control" placeholder="+91 98765 43210" value="${this.wizardData.phone || ''}" required>
-                        <span class="text-muted text-xs mt-1 block" style="font-size: 0.725rem;">Used strictly for urgent prize disbursement notifications.</span>
+                        <label>WhatsApp / Phone</label>
+                        <div class="form-control" style="background: rgba(255, 255, 255, 0.03); color: #cbd5e1; cursor: not-allowed; display: flex; align-items: center; justify-content: space-between;">
+                            <span>${this.user?.phone || this.wizardData.phone || '—'}</span>
+                            <span class="text-xs text-muted">🔒</span>
+                        </div>
+                        <span class="text-muted text-xs mt-1 block" style="font-size: 0.725rem;">Used strictly for urgent prize disbursement.</span>
                     </div>
                 </div>
 
@@ -493,16 +512,20 @@ export class DashboardPage {
             </div>
             `;
         } else if (this.wizardStep === 2) {
+            const isUidLocked = this.isUidLocked();
             return `
             <div class="flex-column gap-4">
                 <div>
-                    <h3 style="font-size: 1.25rem; font-weight: 700;">Step 2: Choose Your Exchange</h3>
-                    <p class="text-secondary text-sm">Select the exchange you trade with.</p>
+                    <div class="flex-row align-center gap-2 mb-1">
+                        <h3 style="font-size: 1.25rem; font-weight: 700;">Step 2: Choose Your Exchange</h3>
+                        ${isUidLocked ? '<span class="badge badge-active flex-row align-center gap-1" style="font-size: 0.7rem;">🔒 Locked (UID Verified)</span>' : ''}
+                    </div>
+                    <p class="text-secondary text-sm">${isUidLocked ? `Your verified UID is connected to ${this.wizardData.exchange || 'Delta Exchange'}. Exchange selection cannot be changed.` : 'Select the exchange you trade with to connect your account.'}</p>
                 </div>
 
                 <!-- Exchange Options Grid -->
                 <div class="grid-2 gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-                    <div class="choice-card ${this.wizardData.exchange === 'Delta Exchange' ? 'selected' : ''}" id="select-delta-exchange" style="cursor: pointer; padding: 1.35rem; border: 1.5px solid ${this.wizardData.exchange === 'Delta Exchange' ? 'var(--primary)' : 'var(--border-color)'}; background: ${this.wizardData.exchange === 'Delta Exchange' ? 'rgba(37, 99, 235, 0.05)' : 'rgba(18, 20, 29, 0.75)'}; border-radius: 0.75rem; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.2s ease; ${this.wizardData.exchange === 'Delta Exchange' ? 'box-shadow: 0 0 0 1px var(--primary), 0 8px 24px rgba(37, 99, 235, 0.12);' : ''}">
+                    <div class="choice-card ${this.wizardData.exchange === 'Delta Exchange' ? 'selected' : ''}" id="select-delta-exchange" style="cursor: ${isUidLocked ? 'default' : 'pointer'}; padding: 1.35rem; border: 1.5px solid ${this.wizardData.exchange === 'Delta Exchange' ? 'var(--primary)' : 'var(--border-color)'}; background: ${this.wizardData.exchange === 'Delta Exchange' ? 'rgba(37, 99, 235, 0.05)' : 'rgba(18, 20, 29, 0.75)'}; border-radius: 0.75rem; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.2s ease; ${this.wizardData.exchange === 'Delta Exchange' ? 'box-shadow: 0 0 0 1px var(--primary), 0 8px 24px rgba(37, 99, 235, 0.12);' : ''} ${isUidLocked && this.wizardData.exchange !== 'Delta Exchange' ? 'opacity: 0.45; pointer-events: none;' : ''}">
                         <div>
                             <div class="flex-row align-center justify-between mb-2.5">
                                 <div class="flex-row align-center gap-2.5">
@@ -514,7 +537,7 @@ export class DashboardPage {
                                 </div>
                                 ${this.wizardData.exchange === 'Delta Exchange' ? `
                                 <span class="badge badge-active flex-row align-center gap-1" style="font-size: 0.68rem; padding: 0.2rem 0.55rem;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Selected
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ${isUidLocked ? 'Verified Exchange' : 'Selected'}
                                 </span>` : `
                                 <span class="badge flex-row align-center gap-1" style="font-size: 0.68rem; padding: 0.2rem 0.55rem; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-color); color: var(--text-muted);">
                                     Select
@@ -544,14 +567,10 @@ export class DashboardPage {
                                     Sign Up <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                                 </span>
                             </a>
-                            <div class="flex-row align-center gap-1.5 text-xs text-muted mt-2" style="font-size: 0.72rem; line-height: 1.35;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--primary);"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                                <span>Copy your <strong>UID</strong> after account opening to link in Step 3.</span>
-                            </div>
                         </div>
                     </div>
 
-                    <div class="choice-card ${this.wizardData.exchange === 'Shark Exchange' ? 'selected' : ''}" id="select-shark-exchange" style="cursor: pointer; padding: 1.35rem; border: 1.5px solid ${this.wizardData.exchange === 'Shark Exchange' ? 'var(--primary)' : 'var(--border-color)'}; background: ${this.wizardData.exchange === 'Shark Exchange' ? 'rgba(37, 99, 235, 0.05)' : 'rgba(18, 20, 29, 0.75)'}; border-radius: 0.75rem; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.2s ease; ${this.wizardData.exchange === 'Shark Exchange' ? 'box-shadow: 0 0 0 1px var(--primary), 0 8px 24px rgba(37, 99, 235, 0.12);' : ''}">
+                    <div class="choice-card ${this.wizardData.exchange === 'Shark Exchange' ? 'selected' : ''}" id="select-shark-exchange" style="cursor: ${isUidLocked ? 'default' : 'pointer'}; padding: 1.35rem; border: 1.5px solid ${this.wizardData.exchange === 'Shark Exchange' ? 'var(--primary)' : 'var(--border-color)'}; background: ${this.wizardData.exchange === 'Shark Exchange' ? 'rgba(37, 99, 235, 0.05)' : 'rgba(18, 20, 29, 0.75)'}; border-radius: 0.75rem; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.2s ease; ${this.wizardData.exchange === 'Shark Exchange' ? 'box-shadow: 0 0 0 1px var(--primary), 0 8px 24px rgba(37, 99, 235, 0.12);' : ''} ${isUidLocked && this.wizardData.exchange !== 'Shark Exchange' ? 'opacity: 0.45; pointer-events: none;' : ''}">
                         <div>
                             <div class="flex-row align-center justify-between mb-2.5">
                                 <div class="flex-row align-center gap-2.5">
@@ -563,7 +582,7 @@ export class DashboardPage {
                                 </div>
                                 ${this.wizardData.exchange === 'Shark Exchange' ? `
                                 <span class="badge badge-active flex-row align-center gap-1" style="font-size: 0.68rem; padding: 0.2rem 0.55rem;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Selected
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ${isUidLocked ? 'Verified Exchange' : 'Selected'}
                                 </span>` : `
                                 <span class="badge flex-row align-center gap-1" style="font-size: 0.68rem; padding: 0.2rem 0.55rem; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-color); color: var(--text-muted);">
                                     Select
@@ -593,52 +612,66 @@ export class DashboardPage {
                                     Sign Up <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                                 </span>
                             </a>
-                            <div class="flex-row align-center gap-1.5 text-xs text-muted mt-2" style="font-size: 0.72rem; line-height: 1.35;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--accent);"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                                <span>Copy your <strong>UID</strong> after account opening to link in Step 3.</span>
-                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="wizard-actions-bar flex-row justify-end mt-4">
                     <button type="button" class="btn btn-primary" id="wizard-step2-next">
-                        Continue to UID Connection →
+                        ${isUidLocked ? 'Continue to API Connection →' : 'Continue to UID Connection →'}
                     </button>
                 </div>
             </div>
             `;
         } else if (this.wizardStep === 3) {
+            const isUidLocked = this.isUidLocked();
             const isShark = this.wizardData.exchange === 'Shark Exchange';
+            const displayUID = this.wizardData.uid || this.user?.delta_user_id || '';
+
             return `
             <div class="flex-column gap-4">
                 <div>
-                    <h3 style="font-size: 1.25rem; font-weight: 700;">Step 3: Connect Exchange UID</h3>
-                    <p class="text-secondary text-sm">Enter your ${this.wizardData.exchange} User ID to link your profile.</p>
+                    <div class="flex-row align-center gap-2 mb-1">
+                        <h3 style="font-size: 1.25rem; font-weight: 700;">Step 3: Connect Exchange UID</h3>
+                        ${isUidLocked ? '<span class="badge badge-active flex-row align-center gap-1" style="font-size: 0.7rem;">🔒 Whitelisted &amp; Locked</span>' : ''}
+                    </div>
+                    <p class="text-secondary text-sm">
+                        ${isUidLocked 
+                            ? `Your ${this.wizardData.exchange} User ID is verified against our whitelist database. This step is locked and cannot be edited.` 
+                            : `Enter your ${this.wizardData.exchange} User ID to link your profile.`}
+                    </p>
                 </div>
+
+                ${isUidLocked ? `
+                <div class="p-3 mb-2 flex-row align-center gap-2.5" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 0.5rem; color: #34d399; font-size: 0.85rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                    <span><strong>UID Whitelist Verified:</strong> Your UID (<strong>${displayUID}</strong>) is verified and permanently locked. Backtracking or editing is restricted.</span>
+                </div>
+                ` : ''}
 
                 <div class="form-group">
                     <label for="wizard-uid">${this.wizardData.exchange} User ID (UID)</label>
-                    <input type="text" id="wizard-uid" class="form-control font-mono" placeholder="${isShark ? 'e.g. 654321 (6 digits)' : 'e.g. 10001234 (7–8 digits)'}" value="${this.wizardData.uid || ''}" required>
+                    <input type="text" id="wizard-uid" class="form-control font-mono" placeholder="${isShark ? 'e.g. 654321 (6 digits)' : 'e.g. 10001234 (7–8 digits)'}" value="${displayUID}" ${isUidLocked ? 'disabled style="background: rgba(255,255,255,0.03); color: #94a3b8; cursor: not-allowed;"' : 'required'}>
                     <small class="text-muted text-xs mt-1" style="display: block;">
-                        Click on the Profile icon in the ${this.wizardData.exchange} app or website to find your UID.
+                        ${isUidLocked ? 'This UID is permanently locked to your trading championship profile.' : `Click on the Profile icon in the ${this.wizardData.exchange} app or website to find your UID.`}
                     </small>
                 </div>
 
-                <div class="wizard-actions-bar flex-row justify-between mt-4">
-                    <button type="button" class="btn btn-secondary" id="wizard-back-btn">← Back</button>
+                <div class="wizard-actions-bar flex-row ${isUidLocked ? 'justify-end' : 'justify-between'} mt-4">
+                    ${!isUidLocked ? '<button type="button" class="btn btn-secondary" id="wizard-back-btn">← Back</button>' : ''}
                     <button type="button" class="btn btn-primary" id="wizard-step3-next">
-                        Continue to API Connection →
+                        ${isUidLocked ? 'Continue to API Connection →' : 'Verify UID &amp; Continue →'}
                     </button>
                 </div>
             </div>
             `;
         } else if (this.wizardStep === 4) {
+            const isUidLocked = this.isUidLocked();
             return `
             <div class="flex-column gap-4">
                 <div>
                     <h3 style="font-size: 1.25rem; font-weight: 700;">Step 4: Connect Read-Only API</h3>
-                    <p class="text-secondary text-sm">Connect your read-only API credentials to sync your live trading volume and PnL.</p>
+                    <p class="text-secondary text-sm">Connect your read-only API credentials to authenticate and fetch your live exchange wallet balance.</p>
                 </div>
 
                 <!-- Security Rule Banner -->
@@ -676,10 +709,10 @@ export class DashboardPage {
                     Need help? <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="text-primary hover-underline">Watch: How to generate Delta read-only API Key ↗</a>
                 </div>
 
-                <div class="wizard-actions-bar flex-row justify-between mt-4">
-                    <button type="button" class="btn btn-secondary" id="wizard-back-btn">← Back</button>
+                <div class="wizard-actions-bar flex-row ${!isUidLocked ? 'justify-between' : 'justify-end'} mt-4">
+                    ${!isUidLocked ? '<button type="button" class="btn btn-secondary" id="wizard-back-btn">← Back</button>' : ''}
                     <button type="button" class="btn btn-primary flex-row align-center gap-2" id="wizard-submit-btn">
-                        <span>Verify &amp; Complete Profile</span>
+                        <span>Verify &amp; Connect Exchange</span>
                     </button>
                 </div>
             </div>
@@ -1053,8 +1086,14 @@ export class DashboardPage {
         if (editSetupBtn) {
             editSetupBtn.addEventListener('click', () => {
                 this.isEditingProfile = true;
-                // Start from Step 2 onwards because Step 1 (Personal Info) is locked
-                this.wizardStep = this.isStep1Locked() ? 2 : 1;
+                // If UID is verified and locked, user can only update API credentials (Step 4)
+                if (this.isUidLocked()) {
+                    this.wizardStep = 4;
+                } else if (this.isStep1Locked()) {
+                    this.wizardStep = 2;
+                } else {
+                    this.wizardStep = 1;
+                }
                 const main = document.getElementById('dashboard-tab-content');
                 if (main) {
                     main.innerHTML = this.renderProfileTab();
@@ -1070,46 +1109,21 @@ export class DashboardPage {
                 const nameInput = document.getElementById('wizard-fullname');
                 const usernameInput = document.getElementById('wizard-username');
                 const phoneInput = document.getElementById('wizard-phone');
-                if (!nameInput || !nameInput.value.trim()) {
-                    showToast('Please enter your full name.', 'error');
-                    return;
+                if (nameInput && nameInput.value.trim()) {
+                    this.wizardData.fullName = nameInput.value.trim();
                 }
-                const cleanUsername = usernameInput ? usernameInput.value.trim().toLowerCase() : '';
-                if (!cleanUsername || cleanUsername.length < 3 || cleanUsername.length > 20 || !/^[a-zA-Z0-9_]+$/.test(cleanUsername)) {
-                    showToast('Username must be 3-20 characters long and contain only letters, numbers, and underscores.', 'error');
-                    if (usernameInput) usernameInput.focus();
-                    return;
+                if (usernameInput && usernameInput.value.trim()) {
+                    this.wizardData.username = usernameInput.value.trim().toLowerCase();
                 }
-                if (!phoneInput || !phoneInput.value.trim()) {
-                    showToast('Please enter your WhatsApp or phone number.', 'error');
-                    return;
+                if (phoneInput && phoneInput.value.trim()) {
+                    this.wizardData.phone = phoneInput.value.trim();
                 }
 
-                this.wizardData.fullName = nameInput.value.trim();
-                this.wizardData.username = cleanUsername;
-                this.wizardData.phone = phoneInput.value.trim();
-
-                step1Next.disabled = true;
-                step1Next.innerText = 'Saving...';
-
-                try {
-                    this.user = await authAPI.updateProfile({
-                        full_name: this.wizardData.fullName,
-                        username: this.wizardData.username,
-                        phone: this.wizardData.phone
-                    });
-                    updateNavbar(this.user);
-                    this.updateSidebarAvatar();
-                    this.wizardStep = 2;
-                    const main = document.getElementById('dashboard-tab-content');
-                    if (main) {
-                        main.innerHTML = this.renderProfileTab();
-                        this.bindTabEvents();
-                    }
-                } catch (err) {
-                    showToast(`Failed to save details: ${err.message}`, 'error');
-                    step1Next.disabled = false;
-                    step1Next.innerText = 'Continue to Exchange Selection →';
+                this.wizardStep = 2;
+                const main = document.getElementById('dashboard-tab-content');
+                if (main) {
+                    main.innerHTML = this.renderProfileTab();
+                    this.bindTabEvents();
                 }
             });
         }
@@ -1118,6 +1132,7 @@ export class DashboardPage {
         const deltaCard = document.getElementById('select-delta-exchange');
         if (deltaCard) {
             deltaCard.addEventListener('click', () => {
+                if (this.isUidLocked()) return;
                 this.wizardData.exchange = 'Delta Exchange';
                 this.wizardStep = 2;
                 const main = document.getElementById('dashboard-tab-content');
@@ -1131,6 +1146,7 @@ export class DashboardPage {
         const sharkCard = document.getElementById('select-shark-exchange');
         if (sharkCard) {
             sharkCard.addEventListener('click', () => {
+                if (this.isUidLocked()) return;
                 this.wizardData.exchange = 'Shark Exchange';
                 this.wizardStep = 2;
                 const main = document.getElementById('dashboard-tab-content');
@@ -1144,6 +1160,16 @@ export class DashboardPage {
         const step2Next = document.getElementById('wizard-step2-next');
         if (step2Next) {
             step2Next.addEventListener('click', async () => {
+                if (this.isUidLocked()) {
+                    this.wizardStep = 4;
+                    const main = document.getElementById('dashboard-tab-content');
+                    if (main) {
+                        main.innerHTML = this.renderProfileTab();
+                        this.bindTabEvents();
+                    }
+                    return;
+                }
+
                 try {
                     this.user = await authAPI.updateProfile({
                         exchange: this.wizardData.exchange
@@ -1164,6 +1190,16 @@ export class DashboardPage {
         const step3Next = document.getElementById('wizard-step3-next');
         if (step3Next) {
             step3Next.addEventListener('click', async () => {
+                if (this.isUidLocked()) {
+                    this.wizardStep = 4;
+                    const main = document.getElementById('dashboard-tab-content');
+                    if (main) {
+                        main.innerHTML = this.renderProfileTab();
+                        this.bindTabEvents();
+                    }
+                    return;
+                }
+
                 const uidInput = document.getElementById('wizard-uid');
                 if (!uidInput || !uidInput.value.trim()) {
                     showToast(`Please enter your ${this.wizardData.exchange} UID.`, 'error');
@@ -1209,7 +1245,7 @@ export class DashboardPage {
                         }
                     });
                     step3Next.disabled = false;
-                    step3Next.innerText = 'Continue to API Connection →';
+                    step3Next.innerText = 'Verify UID &amp; Continue →';
                 }
             });
         }
@@ -1232,7 +1268,7 @@ export class DashboardPage {
                 const env = envSelect ? envSelect.value : 'mainnet_india';
 
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = 'Verifying with Delta...';
+                submitBtn.innerHTML = 'Authenticating with Delta...';
 
                 try {
                     // 1. Save and validate API credentials with Delta
@@ -1261,17 +1297,24 @@ export class DashboardPage {
                     this.updateSidebarAvatar();
                     this.isEditingProfile = false;
 
-                    showToast('Profile 100% Complete! Delta credentials connected.', 'success');
-
-                    const main = document.getElementById('dashboard-tab-content');
-                    if (main) {
-                        main.innerHTML = this.renderProfileTab();
-                        this.bindTabEvents();
-                    }
+                    // Trigger animated Hurray celebration modal with live balance
+                    showExchangeConnectedCelebration({
+                        exchange: this.user?.exchange || this.wizardData.exchange || 'Delta Exchange',
+                        uid: this.user?.delta_user_id || this.wizardData.uid || '',
+                        balance: this.user?.wallet_balance || 0,
+                        onComplete: () => {
+                            showToast('Profile 100% Complete! Delta credentials connected.', 'success');
+                            const main = document.getElementById('dashboard-tab-content');
+                            if (main) {
+                                main.innerHTML = this.renderProfileTab();
+                                this.bindTabEvents();
+                            }
+                        }
+                    });
                 } catch (err) {
                     showToast(`Delta Verification Error: ${err.message}`, 'error');
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = 'Verify &amp; Complete Profile';
+                    submitBtn.innerHTML = 'Verify &amp; Connect Exchange';
                 }
             });
         }
@@ -1280,6 +1323,10 @@ export class DashboardPage {
         const backBtn = document.getElementById('wizard-back-btn');
         if (backBtn) {
             backBtn.addEventListener('click', () => {
+                // If UID is locked, user cannot go back past Step 4
+                if (this.isUidLocked()) {
+                    return;
+                }
                 // If Step 1 is locked, user cannot go back past Step 2
                 const minStep = this.isStep1Locked() ? 2 : 1;
                 if (this.wizardStep > minStep) {

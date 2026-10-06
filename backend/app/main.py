@@ -65,6 +65,12 @@ def run_auto_migrations():
             conn.commit()
             print("Production Migration: is_verified column added and existing users backfilled.")
 
+        if "wallet_balance" not in columns:
+            print("Production Migration: Adding wallet_balance column to users table...")
+            conn.execute(text("ALTER TABLE users ADD COLUMN wallet_balance FLOAT DEFAULT 0.0"))
+            conn.commit()
+            print("Production Migration: Completed successfully for wallet_balance.")
+
         # Ensure legacy users created before migrations have safe defaults with collision resolution
         try:
             unnamed_rows = conn.execute(text("SELECT id, email FROM users WHERE username IS NULL OR username = ''")).fetchall()

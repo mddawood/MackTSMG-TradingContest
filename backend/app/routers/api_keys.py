@@ -39,17 +39,37 @@ def create_api_key(
     )
 
     try:
-        client.get_balances()
+        balances = client.get_balances()
     except Exception as e:
+        raw_err = str(e)
+        if "ip_not_whitelisted" in raw_err:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="IP Address not whitelisted on Delta Exchange. Your public IP is 115.187.43.152. Please add 115.187.43.152 to your Delta API Key whitelist on Delta Exchange, or create a key without IP restrictions."
+            )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Could not validate key with Delta Exchange: {str(e)}"
+            detail=f"Could not validate key with Delta Exchange: {raw_err}"
         )
 
     # 2. Encrypt api secret
     encrypted_secret = security.encrypt_secret(key_in.api_secret)
 
-    # 3. Check if key already exists for this user and environment
+    # 3. Update user's wallet balance safely from balance/position data
+    total_balance = 0.0
+    try:
+        balances_list = balances.get("result", []) if isinstance(balances, dict) else (balances if isinstance(balances, list) else [])
+        for item in balances_list:
+            total_balance += float(item.get("balance", 0.0))
+        positions_res = client.get_positions()
+        positions_list = positions_res.get("result", []) if isinstance(positions_res, dict) else (positions_res if isinstance(positions_res, list) else [])
+        total_pnl = sum(float(pos.get("pnl", 0.0)) for pos in positions_list)
+        current_user.wallet_balance = float(total_balance + total_pnl)
+    except Exception:
+        current_user.wallet_balance = float(total_balance)
+    db.add(current_user)
+
+    # 4. Check if key already exists for this user and environment
     db_key = db.query(APIKey).filter(
         APIKey.user_id == current_user.id,
         APIKey.environment == key_in.environment
@@ -74,6 +94,38 @@ def create_api_key(
     db.commit()
     db.refresh(db_key)
     return db_key
+
+
+@router.get("/balance")
+def get_user_wallet_balance(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Fetch the latest wallet balance for the authenticated user using their registered read-only key.
+    """
+    api_key_rec = db.query(APIKey).filter(
+        APIKey.user_id == current_user.id,
+        APIKey.is_valid.is_(True)
+    ).order_by(APIKey.environment.desc()).first()
+
+    if not api_key_rec:
+        return {"balance": current_user.wallet_balance or 0.0, "connected": False}
+
+    try:
+        api_secret = security.decrypt_secret(api_key_rec.encrypted_api_secret)
+        client = DeltaClient(
+            api_key=api_key_rec.api_key,
+            api_secret=api_secret,
+            environment=api_key_rec.environment
+        )
+        equity, total_balance, volume = client.get_equity_and_volume()
+        bal = float(equity if equity > 0 else total_balance)
+        current_user.wallet_balance = bal
+        db.commit()
+        return {"balance": bal, "connected": True}
+    except Exception as e:
+        return {"balance": current_user.wallet_balance or 0.0, "connected": True, "error": str(e)}
 
 
 @router.get("/", response_model=List[APIKeyResponse])

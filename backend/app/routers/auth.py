@@ -358,11 +358,25 @@ def update_profile(
     if profile_in.phone is not None:
         current_user.phone = profile_in.phone.strip()
 
+    # Enforce UID and Exchange locking once verified
+    is_uid_locked = bool(current_user.delta_user_id and (current_user.uid_status == "verified" or current_user.uid_status is None))
+
     if profile_in.exchange is not None and profile_in.exchange.strip():
-        current_user.exchange = profile_in.exchange.strip()
+        new_exchange = profile_in.exchange.strip()
+        if is_uid_locked and current_user.exchange and new_exchange.lower() != current_user.exchange.lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Exchange selection cannot be modified once your UID is verified and locked."
+            )
+        current_user.exchange = new_exchange
 
     if profile_in.delta_user_id is not None:
         clean_uid = profile_in.delta_user_id.strip()
+        if is_uid_locked and clean_uid != current_user.delta_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Your Exchange UID is already verified and locked. It cannot be changed."
+            )
         if clean_uid:
             # Check uniqueness against other users
             existing_uid = db.query(User).filter(
@@ -394,7 +408,7 @@ def update_profile(
                 current_user.exchange = "Shark"
             else:
                 current_user.exchange = "Delta"
-        else:
+        elif not is_uid_locked:
             current_user.delta_user_id = None
 
     db.commit()

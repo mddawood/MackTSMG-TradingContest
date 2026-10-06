@@ -2,26 +2,26 @@
 
 /**
  * Calculates user profile completion percentage (0 - 100%) across 4 milestones:
- * 1. Email Verified (25%)
- * 2. Basic Details / Full Name & Phone (25%)
- * 3. Exchange & UID Connected (25%)
- * 4. Read-Only API Key Connected (25%)
+ * 1. Email & Personal Info (25%) - Captured during signup
+ * 2. Exchange Selection (25%) - Delta or Shark Exchange selected
+ * 3. Exchange UID Whitelist Verification (25%) - UID linked & whitelisted
+ * 4. Read-Only API Connection (25%) - Read-only API key validated
  */
 export function calculateProfileCompletion(user) {
     if (!user) return 0;
     let score = 0;
 
-    // Milestone 1: Email verified
-    if (user.is_verified) {
+    // Milestone 1: Email & Personal Info (Captured during signup)
+    if (user.email && (user.full_name || user.phone || user.is_verified)) {
         score += 25;
     }
 
-    // Milestone 2: Basic profile info (Full Name & WhatsApp/Phone)
-    if (user.full_name && user.phone) {
+    // Milestone 2: Exchange Selected
+    if (user.exchange) {
         score += 25;
     }
 
-    // Milestone 3: Exchange & UID connected
+    // Milestone 3: Exchange UID verified in whitelist
     if (user.delta_user_id) {
         score += 25;
     }

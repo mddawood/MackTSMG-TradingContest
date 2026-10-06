@@ -284,6 +284,9 @@ def sync_user_snapshot(registration_id: int):
             )
             db.add(snapshot)
 
+        if reg.user:
+            reg.user.wallet_balance = float(equity if equity > 0 else balance)
+
         db.commit()
     except Exception as e:
         # If API key has authentication issues, mark it invalid

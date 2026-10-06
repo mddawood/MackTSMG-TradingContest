@@ -4401,4 +4401,52 @@ select.form-control {
     height: 1px;
     background: rgba(255, 255, 255, 0.07);
     margin: 0.25rem 0;
+}
+
+/* ==========================================================================
+   Dashboard Navbar Wallet Balance Component (Exact Replica of Reference Image)
+   ========================================================================== */
+
+.nav-wallet-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    background: rgba(18, 20, 29, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    user-select: none;
+    cursor: default;
+}
+
+.nav-wallet-badge:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.nav-wallet-icon {
+    width: 17px;
+    height: 17px;
+    color: #cbd5e1;
+    stroke-width: 2px;
+    flex-shrink: 0;
+}
+
+.nav-wallet-amount {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1;
+}
+
+/* Ensure mobile header remains 100% clean and unchanged */
+@media (max-width: 768px) {
+    .nav-wallet-badge {
+        display: none !important;
+    }
 }

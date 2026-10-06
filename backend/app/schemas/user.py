@@ -63,6 +63,7 @@ class UserResponse(UserBase):
     uid_status: Optional[str] = "verified"
     is_verified: bool = False
     has_api_key: bool = False
+    wallet_balance: Optional[float] = 0.0
     is_deleted: bool
 
     class Config:
