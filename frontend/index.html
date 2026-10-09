@@ -1,25 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">
     <title>MWM Trading Championship 2026</title>
     <!-- Premium Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <!-- Main Style Sheet -->
-    <link rel="stylesheet" href="index.css?v=4">
+    <link rel="stylesheet" href="/index.css?v=51">
     <!-- Modular ES6 Application Logic -->
-    <script type="module" src="js/app.js?v=4"></script>
+    <script type="module" src="/js/app.js?v=51"></script>
 </head>
+
 <body class="dark-theme">
     <!-- Sticky Header -->
     <header class="main-header">
         <div class="container flex-row justify-between align-center h-16">
             <a href="/" class="logo flex-row align-center gap-2" id="nav-logo" data-link>
                 <span class="logo-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                        <polyline points="16 7 22 7 22 13"></polyline>
+                    </svg>
                 </span>
                 MWM
             </a>
@@ -29,6 +37,13 @@
                 <a href="#leaderboard" class="nav-link">Leaderboard</a>
                 <a href="#faq" class="nav-link">FAQ</a>
             </nav>
+            <!-- Header Context Badge (shown on internal/dashboard routes) -->
+            <div class="header-context-badge flex-row align-center gap-2 hidden" id="header-context-badge">
+                <span class="pulse-dot-green"></span>
+                <span
+                    style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.02em;">MWM
+                    Championship 2026</span>
+            </div>
             <div class="header-actions flex-row align-center gap-3">
                 <div class="auth-ctas flex-row gap-3" id="nav-auth-buttons">
                     <a href="/login" class="btn btn-ghost" id="login-nav-btn" data-link>Log in</a>
@@ -36,18 +51,35 @@
                 </div>
                 <!-- Auth Nav Controls (hidden by default) -->
                 <div class="auth-controls flex-row align-center gap-3 hidden" id="nav-user-controls">
-                    <div class="user-pill flex-row align-center gap-2">
-                        <span class="user-avatar-mini flex-row align-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <!-- Dashboard Exchange Wallet Balance Pill (Visible strictly on dashboard when connected) -->
+                    <div class="nav-wallet-badge hidden" id="nav-wallet-badge" title="Exchange Wallet Balance">
+                        <svg class="nav-wallet-icon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+                            <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+                            <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+                        </svg>
+                        <span class="nav-wallet-amount" id="nav-wallet-amount">₹0.00</span>
+                    </div>
+
+                    <div class="user-pill flex-row align-center gap-2" id="nav-user-pill" title="View Profile"
+                        style="cursor: pointer;">
+                        <span id="nav-avatar-wrap" class="flex-row align-center justify-center">
+                            <!-- Injected by renderAvatarWithProgress -->
                         </span>
                         <span class="user-greeting" id="user-greeting">Welcome, User</span>
+                        <span id="nav-verified-badge" class="flex-row align-center"></span>
                     </div>
 
                     <!-- Salesforce Setup Gear Icon Dropdown Container -->
                     <div class="gear-menu-container" id="gear-menu-container">
-                        <button class="gear-btn" id="gear-menu-btn" type="button" title="Setup &amp; Navigation" aria-label="Setup &amp; Navigation" aria-expanded="false">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                        <button class="gear-btn" id="gear-menu-btn" type="button" title="Setup &amp; Navigation"
+                            aria-label="Setup &amp; Navigation" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path
+                                    d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z">
+                                </path>
                                 <circle cx="12" cy="12" r="3"></circle>
                             </svg>
                         </button>
@@ -56,15 +88,31 @@
                         <div class="gear-dropdown hidden" id="gear-dropdown-menu">
                             <div class="gear-dropdown-header">
                                 <span class="gear-dropdown-label">SETUP &amp; NAVIGATION</span>
-                                <div class="flex-row align-center justify-between mt-1">
-                                    <span class="gear-user-name" id="gear-user-name">Trader</span>
+                                <div class="flex-row align-center justify-between mt-2 gap-2">
+                                    <div class="flex-row align-center gap-2" style="min-width: 0;">
+                                        <span id="gear-avatar-wrap" class="flex-row align-center justify-center"></span>
+                                        <div class="flex-column" style="min-width: 0;">
+                                            <span class="gear-user-name" id="gear-user-name"
+                                                style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Trader</span>
+                                            <span class="gear-pct-text text-xs" id="gear-pct-text"
+                                                style="color: var(--primary); font-weight: 600;">50% Profile
+                                                Complete</span>
+                                        </div>
+                                    </div>
                                     <span class="badge badge-user" id="gear-user-role">Trader</span>
                                 </div>
                             </div>
                             <div class="gear-dropdown-body">
                                 <button class="gear-dropdown-item" id="gear-dash-btn" type="button">
                                     <span class="gear-item-icon dash-icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="10" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+                                            <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+                                            <rect width="7" height="9" x="14" y="10" rx="1"></rect>
+                                            <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+                                        </svg>
                                     </span>
                                     <div class="gear-item-text">
                                         <div class="gear-item-title">Dashboard</div>
@@ -73,7 +121,12 @@
                                 </button>
                                 <button class="gear-dropdown-item hidden" id="gear-admin-btn" type="button">
                                     <span class="gear-item-icon admin-icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                            <path d="m9 12 2 2 4-4"></path>
+                                        </svg>
                                     </span>
                                     <div class="gear-item-text">
                                         <div class="gear-item-title flex-row align-center gap-2">
@@ -87,7 +140,13 @@
                             <div class="gear-dropdown-footer">
                                 <button class="gear-dropdown-item logout-item" id="gear-logout-btn" type="button">
                                     <span class="gear-item-icon logout-icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                            <polyline points="16 17 21 12 16 7"></polyline>
+                                            <line x1="21" x2="9" y1="12" y2="12"></line>
+                                        </svg>
                                     </span>
                                     <div class="gear-item-text">
                                         <div class="gear-item-title" style="color: #f87171;">Log out</div>
@@ -99,10 +158,15 @@
 
                     <button class="btn btn-ghost btn-sm" id="logout-btn">Log out</button>
                 </div>
-                
+
                 <!-- Hamburger menu button for mobile -->
                 <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle Menu">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="12" y2="12"></line><line x1="3" x2="21" y1="6" y2="6"></line><line x1="3" x2="21" y1="18" y2="18"></line></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" x2="21" y1="12" y2="12"></line>
+                        <line x1="3" x2="21" y1="6" y2="6"></line>
+                        <line x1="3" x2="21" y1="18" y2="18"></line>
+                    </svg>
                 </button>
             </div>
         </div>
@@ -111,75 +175,151 @@
     <!-- Mobile Menu Drawer Overlay -->
     <div id="mobile-menu-drawer" class="mobile-drawer hidden">
         <div class="mobile-drawer-content flex-column gap-6">
-            <div class="flex-row justify-between align-center pb-4 border-bottom" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+            <div class="flex-row justify-between align-center pb-4 border-bottom"
+                style="border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
                 <span class="logo flex-row align-center gap-2">
                     <span class="logo-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                            <polyline points="16 7 22 7 22 13"></polyline>
+                        </svg>
                     </span>
                     MWM
                 </span>
                 <button class="mobile-drawer-close" id="mobile-menu-close-btn" aria-label="Close Menu">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"></line><line x1="6" x2="18" y1="6" y2="18"></line></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" x2="6" y1="6" y2="18"></line>
+                        <line x1="6" x2="18" y1="6" y2="18"></line>
+                    </svg>
                 </button>
             </div>
-            
+
             <!-- Public Navigation Links inside Drawer -->
             <nav class="mobile-nav-links flex-column gap-2" id="mobile-public-nav">
                 <a href="#how" class="mobile-nav-link flex-row align-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary);"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="color: var(--text-secondary);">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
                     How it works
                 </a>
                 <a href="#tiers" class="mobile-nav-link flex-row align-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary);"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="color: var(--text-secondary);">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
                     Tiers
                 </a>
                 <a href="#leaderboard" class="mobile-nav-link flex-row align-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary);"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="color: var(--text-secondary);">
+                        <path d="M3 3v16a2 2 0 0 0 2 2h16"></path>
+                        <path d="M18 17V9"></path>
+                        <path d="M13 17V5"></path>
+                        <path d="M8 17v-3"></path>
+                    </svg>
                     Leaderboard
                 </a>
                 <a href="#faq" class="mobile-nav-link flex-row align-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary);"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="color: var(--text-secondary);">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
                     FAQ
                 </a>
             </nav>
-            
+
             <div class="border-top pt-4 flex-column gap-4" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
                 <!-- Auth CTAs inside Drawer -->
                 <div class="mobile-auth-ctas flex-column gap-3" id="mobile-nav-auth-buttons">
-                    <a href="/login" class="btn btn-secondary w-full flex-row align-center justify-center gap-2" id="mobile-login-nav-btn" data-link>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" x2="3" y1="12" y2="12"></line></svg>
+                    <a href="/login" class="btn btn-secondary w-full flex-row align-center justify-center gap-2"
+                        id="mobile-login-nav-btn" data-link>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                            <polyline points="10 17 15 12 10 7"></polyline>
+                            <line x1="15" x2="3" y1="12" y2="12"></line>
+                        </svg>
                         Log in
                     </a>
-                    <a href="/signup" class="btn btn-primary w-full flex-row align-center justify-center gap-2" id="mobile-join-nav-btn" data-link>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" x2="19" y1="8" y2="14"></line><line x1="22" x2="16" y1="11" y2="11"></line></svg>
+                    <a href="/signup" class="btn btn-primary w-full flex-row align-center justify-center gap-2"
+                        id="mobile-join-nav-btn" data-link>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <line x1="19" x2="19" y1="8" y2="14"></line>
+                            <line x1="22" x2="16" y1="11" y2="11"></line>
+                        </svg>
                         Sign Up
                     </a>
                 </div>
-                
+
                 <!-- Auth Controls inside Drawer (hidden by default) -->
                 <div class="mobile-auth-controls flex-column gap-4 hidden" id="mobile-nav-user-controls">
                     <!-- User Profile Card -->
                     <div class="mobile-user-card flex-row align-center gap-3">
                         <div class="user-avatar flex-row align-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary" style="color: #60a5fa;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="text-primary" style="color: #60a5fa;">
+                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
                         </div>
                         <div class="flex-column" style="overflow: hidden;">
-                            <span class="user-card-name" id="mobile-user-greeting">Trader</span>
+                            <div class="flex-row align-center gap-1.5" style="overflow: hidden;">
+                                <span class="user-card-name" id="mobile-user-greeting">Trader</span>
+                                <span id="mobile-verified-badge" class="flex-row align-center"></span>
+                            </div>
                             <span class="user-card-role" id="mobile-user-role-badge">Trader</span>
                         </div>
                     </div>
-                    
+
                     <div class="flex-column gap-2">
-                        <button class="btn btn-secondary w-full flex-row align-center justify-start gap-3" id="mobile-dashboard-nav-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="10" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>
+                        <button class="btn btn-secondary w-full flex-row align-center justify-start gap-3"
+                            id="mobile-dashboard-nav-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+                                <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+                                <rect width="7" height="9" x="14" y="10" rx="1"></rect>
+                                <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+                            </svg>
                             Dashboard
                         </button>
-                        <button class="btn btn-secondary w-full hidden flex-row align-center justify-start gap-3" id="mobile-admin-nav-btn" style="border-color: rgba(37, 99, 235, 0.3); color: #60a5fa;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        <button class="btn btn-secondary w-full hidden flex-row align-center justify-start gap-3"
+                            id="mobile-admin-nav-btn" style="border-color: rgba(37, 99, 235, 0.3); color: #60a5fa;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
                             Admin Panel
                         </button>
-                        <button class="btn btn-ghost w-full flex-row align-center justify-start gap-3 mt-4" id="mobile-logout-btn" style="color: #f87171; background: rgba(239, 68, 68, 0.07); border: 1px solid rgba(239, 68, 68, 0.15);">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg>
+                        <button class="btn btn-ghost w-full flex-row align-center justify-start gap-3 mt-4"
+                            id="mobile-logout-btn"
+                            style="color: #f87171; background: rgba(239, 68, 68, 0.07); border: 1px solid rgba(239, 68, 68, 0.15);">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" x2="9" y1="12" y2="12"></line>
+                            </svg>
                             Log out
                         </button>
                     </div>
@@ -213,7 +353,7 @@
                 <button class="modal-tab-btn active" id="tab-login-btn">Log In</button>
                 <button class="modal-tab-btn" id="tab-register-btn">Sign Up</button>
             </div>
-            
+
             <!-- Login Form -->
             <form id="login-form" class="modal-form flex-column gap-4 py-4">
                 <div class="form-group">
@@ -223,9 +363,21 @@
                 <div class="form-group">
                     <div class="flex-row justify-between align-center mb-1">
                         <label for="login-password">Password</label>
-                        <a href="/forgot-password" id="modal-forgot-password-link" class="text-xs text-primary hover-underline">Forgot?</a>
+                        <a href="/forgot-password" id="modal-forgot-password-link"
+                            class="text-xs text-primary hover-underline">Forgot?</a>
                     </div>
-                    <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+                    <div class="password-input-wrap">
+                        <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+                        <button type="button" class="password-toggle-btn" id="toggle-modal-login-pwd-btn"
+                            aria-label="Toggle password visibility" title="Show password">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg w-full mt-2">Log In</button>
             </form>
@@ -237,20 +389,51 @@
                     <input type="text" id="register-name" class="form-control" placeholder="John Doe" required>
                 </div>
                 <div class="form-group">
+                    <label for="register-username">Username <span class="text-xs text-muted font-normal">(Unique public
+                            handle)</span></label>
+                    <input type="text" id="register-username" class="form-control font-mono" placeholder="trader_pro"
+                        minlength="3" maxlength="20" required pattern="[a-zA-Z0-9_]{3,20}">
+                </div>
+                <div class="form-group">
                     <label for="register-email">Email Address</label>
                     <input type="email" id="register-email" class="form-control" placeholder="you@example.com" required>
                 </div>
                 <div class="form-group">
-                    <label for="register-password">Password</label>
-                    <input type="password" id="register-password" class="form-control" placeholder="Min. 6 characters" minlength="6" required>
+                    <label for="register-password">Password (Min. 8 characters)</label>
+                    <div class="password-input-wrap">
+                        <input type="password" id="register-password" class="form-control"
+                            placeholder="Min. 8 characters" minlength="8" required>
+                        <button type="button" class="password-toggle-btn" id="toggle-modal-register-pwd-btn"
+                            aria-label="Toggle password visibility" title="Show password">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="register-confirm-password">Confirm Password</label>
-                    <input type="password" id="register-confirm-password" class="form-control" placeholder="Re-enter password" minlength="6" required>
+                    <div class="password-input-wrap">
+                        <input type="password" id="register-confirm-password" class="form-control"
+                            placeholder="Re-enter password" minlength="8" required>
+                        <button type="button" class="password-toggle-btn" id="toggle-modal-register-confirm-pwd-btn"
+                            aria-label="Toggle password visibility" title="Show password">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="register-delta-id">Delta User ID</label>
-                    <input type="text" id="register-delta-id" class="form-control" placeholder="Enter your Delta User ID (referred only)" required>
+                    <input type="text" id="register-delta-id" class="form-control"
+                        placeholder="Enter your Delta User ID (referred only)" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg w-full mt-2">Create Account</button>
             </form>
@@ -267,42 +450,64 @@
             <form id="admin-comp-form-modal" class="flex-column gap-4 py-2">
                 <div class="form-group">
                     <label for="modal-comp-title">Competition Title</label>
-                    <input type="text" id="modal-comp-title" class="form-control" placeholder="e.g. Weekly Sprint - Week 2" required>
+                    <input type="text" id="modal-comp-title" class="form-control"
+                        placeholder="e.g. Weekly Sprint - Week 2" required>
                 </div>
                 <div class="form-group">
                     <label for="modal-comp-desc">Description</label>
-                    <textarea id="modal-comp-desc" class="form-control" placeholder="Championship rules, terms & requirements..." rows="3" required style="resize: none;"></textarea>
+                    <textarea id="modal-comp-desc" class="form-control"
+                        placeholder="Championship rules, terms & requirements..." rows="3" required
+                        style="resize: none;"></textarea>
                 </div>
                 <!-- Start Date & Time (IST) -->
                 <div class="form-group">
                     <div class="flex-row justify-between align-center mb-1">
                         <label style="margin-bottom: 0;">Start Date &amp; Time (IST)</label>
-                        <span class="badge" style="background: rgba(37, 99, 235, 0.15); color: #60a5fa; font-size: 0.68rem; padding: 0.1rem 0.4rem; border: 1px solid rgba(37, 99, 235, 0.3);">IST (UTC+5:30)</span>
+                        <span class="badge"
+                            style="background: rgba(37, 99, 235, 0.15); color: #60a5fa; font-size: 0.68rem; padding: 0.1rem 0.4rem; border: 1px solid rgba(37, 99, 235, 0.3);">IST
+                            (UTC+5:30)</span>
                     </div>
                     <div class="snow-datetime-picker" id="start-datetime-picker">
                         <div class="snow-date-container">
                             <input type="date" id="modal-comp-start-date" class="form-control snow-date-input" required>
-                            <button type="button" class="snow-picker-trigger snow-cal-btn" id="modal-comp-start-cal-btn" title="Select Date from Calendar">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                            <button type="button" class="snow-picker-trigger snow-cal-btn" id="modal-comp-start-cal-btn"
+                                title="Select Date from Calendar">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                                    <line x1="16" x2="16" y1="2" y2="6" />
+                                    <line x1="8" x2="8" y1="2" y2="6" />
+                                    <line x1="3" x2="21" y1="10" y2="10" />
+                                </svg>
                             </button>
                         </div>
                         <div class="snow-time-container">
-                            <input type="text" id="modal-comp-start-time" class="form-control snow-time-input" placeholder="Select Time (IST)" readonly required>
+                            <input type="text" id="modal-comp-start-time" class="form-control snow-time-input"
+                                placeholder="Select Time (IST)" readonly required>
                             <input type="hidden" id="modal-comp-start-time-24" value="09:15">
-                            <button type="button" class="snow-picker-trigger snow-clock-btn" id="modal-comp-start-clock-btn" title="Select Time from Clock">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <button type="button" class="snow-picker-trigger snow-clock-btn"
+                                id="modal-comp-start-clock-btn" title="Select Time from Clock">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                </svg>
                             </button>
                             <!-- Time Options Popover (Salesforce / ServiceNow style) -->
                             <div class="snow-time-popover hidden" id="modal-comp-start-time-popover">
                                 <div class="snow-time-popover-header">
                                     <span>SELECT TIME (IST)</span>
-                                    <button type="button" class="snow-time-now-btn" data-target="start">Now (IST)</button>
+                                    <button type="button" class="snow-time-now-btn" data-target="start">Now
+                                        (IST)</button>
                                 </div>
                                 <div class="snow-time-slots" id="modal-comp-start-slots"></div>
                             </div>
                         </div>
                     </div>
-                    <div class="snow-datetime-preview text-muted" id="modal-comp-start-preview" style="font-size: 0.75rem; margin-top: 0.35rem;">
+                    <div class="snow-datetime-preview text-muted" id="modal-comp-start-preview"
+                        style="font-size: 0.75rem; margin-top: 0.35rem;">
                         📅 No start date &amp; time selected
                     </div>
                 </div>
@@ -311,20 +516,37 @@
                 <div class="form-group">
                     <div class="flex-row justify-between align-center mb-1">
                         <label style="margin-bottom: 0;">End Date &amp; Time (IST)</label>
-                        <span class="badge" style="background: rgba(37, 99, 235, 0.15); color: #60a5fa; font-size: 0.68rem; padding: 0.1rem 0.4rem; border: 1px solid rgba(37, 99, 235, 0.3);">IST (UTC+5:30)</span>
+                        <span class="badge"
+                            style="background: rgba(37, 99, 235, 0.15); color: #60a5fa; font-size: 0.68rem; padding: 0.1rem 0.4rem; border: 1px solid rgba(37, 99, 235, 0.3);">IST
+                            (UTC+5:30)</span>
                     </div>
                     <div class="snow-datetime-picker" id="end-datetime-picker">
                         <div class="snow-date-container">
                             <input type="date" id="modal-comp-end-date" class="form-control snow-date-input" required>
-                            <button type="button" class="snow-picker-trigger snow-cal-btn" id="modal-comp-end-cal-btn" title="Select Date from Calendar">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                            <button type="button" class="snow-picker-trigger snow-cal-btn" id="modal-comp-end-cal-btn"
+                                title="Select Date from Calendar">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                                    <line x1="16" x2="16" y1="2" y2="6" />
+                                    <line x1="8" x2="8" y1="2" y2="6" />
+                                    <line x1="3" x2="21" y1="10" y2="10" />
+                                </svg>
                             </button>
                         </div>
                         <div class="snow-time-container">
-                            <input type="text" id="modal-comp-end-time" class="form-control snow-time-input" placeholder="Select Time (IST)" readonly required>
+                            <input type="text" id="modal-comp-end-time" class="form-control snow-time-input"
+                                placeholder="Select Time (IST)" readonly required>
                             <input type="hidden" id="modal-comp-end-time-24" value="23:59">
-                            <button type="button" class="snow-picker-trigger snow-clock-btn" id="modal-comp-end-clock-btn" title="Select Time from Clock">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <button type="button" class="snow-picker-trigger snow-clock-btn"
+                                id="modal-comp-end-clock-btn" title="Select Time from Clock">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                </svg>
                             </button>
                             <!-- Time Options Popover (Salesforce / ServiceNow style) -->
                             <div class="snow-time-popover hidden" id="modal-comp-end-time-popover">
@@ -336,11 +558,13 @@
                             </div>
                         </div>
                     </div>
-                    <div class="snow-datetime-preview text-muted" id="modal-comp-end-preview" style="font-size: 0.75rem; margin-top: 0.35rem;">
+                    <div class="snow-datetime-preview text-muted" id="modal-comp-end-preview"
+                        style="font-size: 0.75rem; margin-top: 0.35rem;">
                         📅 No end date &amp; time selected
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary btn-lg w-full mt-2" id="modal-comp-submit-btn">Launch Competition</button>
+                <button type="submit" class="btn btn-primary btn-lg w-full mt-2" id="modal-comp-submit-btn">Launch
+                    Competition</button>
             </form>
         </div>
     </div>
@@ -350,4 +574,5 @@
         <span id="toast-message">Message text goes here</span>
     </div>
 </body>
+
 </html>

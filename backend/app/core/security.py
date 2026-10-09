@@ -97,3 +97,37 @@ def encrypt_secret(secret: str) -> str:
 def decrypt_secret(encrypted_secret: str) -> str:
     """Decrypt an encrypted secret string"""
     return fernet.decrypt(encrypted_secret.encode()).decode()
+
+
+def create_email_verification_token(user_id: int, email: str) -> str:
+    """
+    Create a signed JWT token specifically for email address verification.
+    Expires in 24 hours.
+    """
+    expire = datetime.utcnow() + timedelta(hours=24)
+    to_encode = {
+        "exp": expire,
+        "sub": str(user_id),
+        "email": email.strip().lower(),
+        "type": "email_verification"
+    }
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def decode_email_verification_token(token: str) -> Optional[dict]:
+    """
+    Decode and validate an email verification token.
+    Returns dictionary with {"user_id": int, "email": str} if valid, else None.
+    """
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if payload.get("type") != "email_verification":
+            return None
+        sub = payload.get("sub")
+        email = payload.get("email")
+        if sub is None or email is None:
+            return None
+        return {"user_id": int(sub), "email": str(email)}
+    except (jwt.JWTError, ValueError, TypeError):
+        return None
+

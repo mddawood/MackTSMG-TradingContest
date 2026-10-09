@@ -4,14 +4,21 @@ Lightweight Development SPA Server
 Serves static files and rewrites 404s/unknown paths to /index.html
 matching Nginx's `try_files $uri $uri/ /index.html;` configuration.
 """
+import functools
 import http.server
 import os
 import sys
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+os.chdir(BASE_DIR)
 
 PORT = 3000
 BIND = "127.0.0.1"
 
 class SPAServerHandler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=BASE_DIR, **kwargs)
+
     def end_headers(self):
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
         self.send_header("Pragma", "no-cache")
@@ -40,10 +47,19 @@ class SPAServerHandler(http.server.SimpleHTTPRequestHandler):
                 
         return super().do_GET()
 
+class RobustThreadingHTTPServer(http.server.ThreadingHTTPServer):
+    daemon_threads = True
+
+    def handle_error(self, request, client_address):
+        ex_type, _, _ = sys.exc_info()
+        if ex_type in (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
+            return
+        super().handle_error(request, client_address)
+
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else PORT
     server_address = (BIND, port)
-    httpd = http.server.ThreadingHTTPServer(server_address, SPAServerHandler)
+    httpd = RobustThreadingHTTPServer(server_address, SPAServerHandler)
     print(f"SPA Development Server running at http://{BIND}:{port}/ (try_files fallback enabled)")
     try:
         httpd.serve_forever()

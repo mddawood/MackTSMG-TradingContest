@@ -284,6 +284,9 @@ def sync_user_snapshot(registration_id: int):
             )
             db.add(snapshot)
 
+        if reg.user:
+            reg.user.wallet_balance = float(equity if equity > 0 else balance)
+
         db.commit()
     except Exception as e:
         # If API key has authentication issues, mark it invalid
@@ -382,6 +385,7 @@ def get_competition_leaderboard(
 
         entries.append({
             "full_name": reg.user.full_name,
+            "username": getattr(reg.user, "username", None),
             "roi_percentage": roi,
             "absolute_pnl": pnl,
             "trading_volume": vol,
@@ -403,6 +407,7 @@ def get_competition_leaderboard(
             LeaderboardEntry(
                 rank=i + 1,
                 full_name=entry["full_name"],
+                username=entry.get("username"),
                 roi_percentage=entry["roi_percentage"],
                 absolute_pnl=entry["absolute_pnl"],
                 trading_volume=entry["trading_volume"],

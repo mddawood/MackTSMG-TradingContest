@@ -37,8 +37,13 @@ export class LoginPage {
                             <label for="page-login-password">Password</label>
                             <a href="/forgot-password" id="forgot-password-link" class="text-xs text-primary hover-underline" data-link>Forgot password?</a>
                         </div>
-                        <input type="password" id="page-login-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
-                    </div>
+                        <div class="password-input-wrap">
+                            <input type="password" id="page-login-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+                            <button type="button" class="password-toggle-btn" id="toggle-page-login-pwd-btn" aria-label="Toggle password visibility" title="Show password">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
+                    <div id="login-alert-container"></div>
 
                     <button type="submit" class="btn btn-primary btn-lg w-full mt-2" id="login-submit-btn">
                         Log in
@@ -82,6 +87,12 @@ export class LoginPage {
         const pageView = document.getElementById('login-page-view');
         if (pageView) {
             pageView.addEventListener('click', (e) => {
+                if (!e.target || !e.target.isConnected) {
+                    return;
+                }
+                if (e.composedPath && e.composedPath().some(el => el && el.classList && el.classList.contains('auth-card'))) {
+                    return;
+                }
                 if (!e.target.closest('.auth-card')) {
                     handleClose();
                 }
@@ -95,6 +106,23 @@ export class LoginPage {
             }
         };
         document.addEventListener('keydown', this.escListener);
+
+        // Password visibility toggle
+        const toggleBtn = document.getElementById('toggle-page-login-pwd-btn');
+        const passwordInput = document.getElementById('page-login-password');
+        if (toggleBtn && passwordInput) {
+            const eyeOpen = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+            const eyeOff = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+            toggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const isPassword = passwordInput.type === 'password';
+                passwordInput.type = isPassword ? 'text' : 'password';
+                toggleBtn.innerHTML = isPassword ? eyeOff : eyeOpen;
+                toggleBtn.title = isPassword ? 'Hide password' : 'Show password';
+            });
+        }
 
         const form = document.getElementById('standalone-login-form');
         if (form) {
@@ -114,7 +142,43 @@ export class LoginPage {
                     }
                     showToast('Logged in successfully!', 'success');
                 } catch (err) {
-                    showToast(`Login failed: ${err.message}`, 'error');
+                    const alertContainer = document.getElementById('login-alert-container');
+                    if (err.message && err.message.includes('EMAIL_NOT_VERIFIED')) {
+                        if (alertContainer) {
+                            alertContainer.innerHTML = `
+                            <div class="p-3 my-2 text-left" style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 0.5rem;">
+                                <div class="text-xs font-bold mb-1" style="color: #facc15;">⚠️ Email Not Verified</div>
+                                <p class="text-xs mb-2" style="color: #fef08a; line-height: 1.4;">
+                                    Please verify your email before logging in. Check your mailbox for the verification link.
+                                </p>
+                                <button type="button" class="btn btn-secondary btn-sm w-full" id="login-resend-verify-btn">
+                                    Resend Verification Link
+                                </button>
+                            </div>
+                            `;
+
+                            const resendBtn = document.getElementById('login-resend-verify-btn');
+                            if (resendBtn) {
+                                resendBtn.addEventListener('click', async () => {
+                                    resendBtn.disabled = true;
+                                    resendBtn.innerText = 'Sending...';
+                                    try {
+                                        await authAPI.resendVerification(email);
+                                        showToast('Verification email resent! Please check your inbox.', 'success');
+                                        resendBtn.innerText = 'Link Sent ✓';
+                                    } catch (e) {
+                                        showToast(`Failed to resend: ${e.message}`, 'error');
+                                        resendBtn.disabled = false;
+                                        resendBtn.innerText = 'Resend Verification Link';
+                                    }
+                                });
+                            }
+                        }
+                        showToast('Please verify your email address to log in.', 'error');
+                    } else {
+                        if (alertContainer) alertContainer.innerHTML = '';
+                        showToast(`Login failed: ${err.message}`, 'error');
+                    }
                     submitBtn.disabled = false;
                     submitBtn.innerText = 'Log in';
                 }
